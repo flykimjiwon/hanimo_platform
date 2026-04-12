@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — Ocean × Cyberpunk Neon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --sky: #38bdf8;
+    --cyan: #22d3ee;
+    --sky-dim: #0ea5e9;
+    --bg: #0f172a;
+    --bg2: #0a1020;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --t-bg: #0f172a;
+    --t-surface: #1e293b;
+    --t-border: #0ea5e9;
+    --t-text: #38bdf8;
+    --t-muted: #334155;
+    --t-accent: #38bdf8;
+  }
+  [data-theme="light"] {
+    --t-bg: #f0f9ff;
+    --t-surface: #e0f2fe;
+    --t-border: #0ea5e9;
+    --t-text: #0c4a6e;
+    --t-muted: #0369a1;
+    --t-accent: #0ea5e9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: 'Space Mono', monospace;
+    overflow-x: hidden;
+  }
+
+  /* Cyberpunk neon glow */
+  .neon-sky {
+    color: var(--sky);
+    text-shadow:
+      0 0 5px #fff,
+      0 0 10px var(--sky),
+      0 0 20px var(--sky),
+      0 0 40px var(--sky),
+      0 0 80px var(--sky-dim);
+  }
+  .neon-cyan {
+    color: var(--cyan);
+    text-shadow:
+      0 0 5px #fff,
+      0 0 10px var(--cyan),
+      0 0 20px var(--cyan),
+      0 0 40px var(--cyan);
+  }
+
+  /* Glitch effect */
+  @keyframes glitch1 {
+    0%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+    20% { clip-path: inset(20% 0 60% 0); transform: translate(-4px, 0); }
+    40% { clip-path: inset(50% 0 30% 0); transform: translate(4px, 0); }
+    60% { clip-path: inset(10% 0 80% 0); transform: translate(-2px, 0); }
+    80% { clip-path: inset(70% 0 10% 0); transform: translate(2px, 0); }
+  }
+  @keyframes glitch2 {
+    0%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+    20% { clip-path: inset(60% 0 20% 0); transform: translate(4px, 0); }
+    40% { clip-path: inset(30% 0 50% 0); transform: translate(-4px, 0); }
+    60% { clip-path: inset(80% 0 10% 0); transform: translate(2px, 0); }
+    80% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 0); }
+  }
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  .glitch-wrap { position: relative; display: inline-block; }
+  .glitch-wrap::before {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    color: #ff79c6;
+    text-shadow: none;
+    animation: glitch1 3s infinite;
+    opacity: 0.7;
+    left: -3px;
+  }
+  .glitch-wrap::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    color: var(--cyan);
+    text-shadow: none;
+    animation: glitch2 3s infinite;
+    opacity: 0.7;
+    left: 3px;
+  }
+
+  /* Grid floor */
+  .grid-floor {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background:
+      linear-gradient(rgba(56,189,248,0.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.15) 1px, transparent 1px);
+    background-size: 40px 40px;
+    transform: perspective(400px) rotateX(60deg);
+    transform-origin: bottom;
+    mask-image: linear-gradient(to top, rgba(56,189,248,0.4), transparent);
+    -webkit-mask-image: linear-gradient(to top, rgba(56,189,248,0.4), transparent);
+  }
+
+  /* Scanline sweep */
+  .scanline-sweep {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(transparent, rgba(56,189,248,0.06), transparent);
+    animation: scanline 6s linear infinite;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Static scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.08),
+      rgba(0,0,0,0.08) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* Controls row */
+  .ctrl-row {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10000;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  /* Lang toggle */
+  #lang-toggle {
+    background: transparent;
+    border: 1px solid var(--sky);
+    color: var(--t-text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    box-shadow: 0 0 8px var(--sky-dim);
+    transition: all 0.2s;
+  }
+  #lang-toggle:hover {
+    background: var(--sky);
+    color: var(--t-bg);
+    box-shadow: 0 0 20px var(--sky);
+  }
+  /* Theme segmented control */
+  .theme-ctrl {
+    display: flex;
+    background: transparent;
+    border: 1px solid var(--sky);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    overflow: hidden;
+  }
+  .theme-btn {
+    padding: 0.3rem 0.55rem;
+    background: none;
+    border: none;
+    color: var(--t-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    transition: all 0.15s;
+  }
+  .theme-btn.active { background: var(--sky); color: var(--t-bg); }
+  .theme-btn:not(.active):hover { color: var(--t-text); }
+
+  /* Terminal */
+  .terminal {
+    background: var(--t-surface);
+    border: 1px solid var(--sky-dim);
+    padding: 1.5rem;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    box-shadow: 0 0 20px rgba(56,189,248,0.08), inset 0 0 20px rgba(56,189,248,0.02);
+  }
+  .prompt { color: var(--t-text); }
+  .comment { color: var(--t-muted); }
+  .out { color: var(--t-muted); }
+  .ok { color: var(--cyan); }
+
+  /* Feature card */
+  .feat-card {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    border-left: 3px solid var(--sky-dim);
+    padding: 1.25rem;
+    transition: all 0.2s;
+  }
+  .feat-card:hover {
+    border-left-color: var(--sky);
+    box-shadow: 0 0 16px rgba(56,189,248,0.1);
+  }
+
+  /* Table */
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--t-border); padding: 0.6rem 1rem; font-size: 0.8rem; }
+  th { color: var(--t-text); background: var(--t-surface); }
+  td { color: var(--t-muted); }
+  tr:hover td { background: rgba(56,189,248,0.03); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glitch-wrap::before, .glitch-wrap::after { animation: none; }
+    .scanline-sweep { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scanline-sweep"></div>
+<div class="ctrl-row">
+  <div class="theme-ctrl">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <button id="lang-toggle" onclick="toggleLang()">KO/EN</button>
+</div>
+
+<!-- HERO -->
+<section class="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 text-center overflow-hidden">
+  <div class="grid-floor"></div>
+
+  <!-- Cyberpunk side accents -->
+  <div class="absolute left-0 top-1/4 w-1 h-48" style="background: linear-gradient(to bottom, transparent, var(--sky), transparent);"></div>
+  <div class="absolute right-0 top-1/3 w-1 h-32" style="background: linear-gradient(to bottom, transparent, var(--cyan), transparent);"></div>
+
+  <div class="text-xs tracking-widest mb-6" style="color: var(--surface2)">
+    <span data-ko="SYSTEM:ONLINE // PROVIDER:ANTHROPIC // SESSION:ACTIVE" data-en="SYSTEM:ONLINE // PROVIDER:ANTHROPIC // SESSION:ACTIVE">SYSTEM:ONLINE // PROVIDER:ANTHROPIC // SESSION:ACTIVE</span>
+  </div>
+
+  <h1 class="text-7xl md:text-9xl font-bold neon-sky mb-4 glitch-wrap" data-text="HANIMO" style="letter-spacing: 0.08em;">
+    HANIMO
+  </h1>
+
+  <p class="text-lg md:text-xl mb-2 neon-cyan">
+    <span data-ko="바다 깊이에서 코드를 짠다" data-en="Code from the ocean depths">바다 깊이에서 코드를 짠다</span>
+  </p>
+  <p class="text-sm mb-10" style="color: var(--surface2)">
+    <span data-ko="오픈소스 Go AI 코딩 에이전트 · Apache-2.0" data-en="Open-source Go AI coding agent · Apache-2.0">오픈소스 Go AI 코딩 에이전트 · Apache-2.0</span>
+  </p>
+
+  <div class="terminal mb-8" style="max-width: 460px; width: 100%;">
+    <div class="prompt">$ curl -sSL hanimo.dev/install | bash</div>
+  </div>
+
+  <div class="flex gap-4 flex-wrap justify-center">
+    <a href="https://github.com/flykimjiwon/hanimo"
+      class="px-6 py-2 text-sm transition"
+      style="border: 1px solid var(--sky); color: var(--sky); box-shadow: 0 0 10px rgba(56,189,248,0.2);"
+      onmouseover="this.style.background='rgba(56,189,248,0.1)'"
+      onmouseout="this.style.background=''"
+    >
+      <span data-ko="→ GitHub" data-en="→ GitHub">→ GitHub</span>
+    </a>
+    <a href="#install"
+      class="px-6 py-2 text-sm font-bold transition"
+      style="background: var(--sky); color: var(--bg);"
+    >
+      <span data-ko="설치하기" data-en="INSTALL NOW">설치하기</span>
+    </a>
+  </div>
+</section>
+
+<!-- TERMINAL PREVIEW -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-xl mb-6 neon-cyan" data-ko="// OCEAN DEPTHS — 터미널 세션" data-en="// OCEAN DEPTHS — TERMINAL SESSION">// OCEAN DEPTHS — 터미널 세션</h2>
+  <div class="terminal">
+    <div class="comment"># ocean theme active · anthropic claude-3-5-sonnet</div>
+    <div class="prompt">$ hanimo --theme ocean --mode super</div>
+    <div class="out">hanimo v0.1.0 | session: ocean-dive-042</div>
+    <div class="prompt">&gt; /auto implement OAuth2 PKCE flow</div>
+    <div class="ok">  [READING] 6 files · hash-anchored</div>
+    <div class="out">  [PLAN] 1. add pkce.go 2. update handler.go 3. test</div>
+    <div class="ok">  [WRITE] pkce.go → MD5:c7e2f1 anchored</div>
+    <div class="ok">  [PATCH] handler.go:88 → no conflicts</div>
+    <div class="ok">  [DONE] 2.3s · 2 files changed · 0 stale</div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="max-w-6xl mx-auto px-6 py-16">
+  <h2 class="text-xl mb-8 neon-cyan" data-ko="// 핵심 기능" data-en="// CORE FEATURES">// 핵심 기능</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--sky-dim)">HASH-ANCHORED EDITING</div>
+      <p class="text-xs" style="color: #64748b">
+        <span data-ko="라인별 MD5. 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 충돌 없음.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--sky-dim)">14+ PROVIDERS</div>
+      <p class="text-xs" style="color: #64748b">
+        <span data-ko="Ollama·OpenAI·Anthropic·Google 등." data-en="Ollama·OpenAI·Anthropic·Google etc.">Ollama·OpenAI·Anthropic·Google 등.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--sky-dim)">SMART COMPACTION</div>
+      <p class="text-xs" style="color: #64748b">
+        <span data-ko="자동 압축. 토큰 절약." data-en="Auto-compress. Save tokens.">자동 압축. 토큰 절약.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--sky-dim)">/AUTO MODE</div>
+      <p class="text-xs" style="color: #64748b">
+        <span data-ko="자율 루프. 목표까지 실행." data-en="Autonomous loop. Runs to goal.">자율 루프. 목표까지 실행.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--sky-dim)">SQLITE SESSIONS</div>
+      <p class="text-xs" style="color: #64748b">
+        <span data-ko="세션 영구 저장. 언제든 재개." data-en="Persist sessions. Resume anytime.">세션 영구 저장. 언제든 재개.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--sky-dim)">MCP SUPPORT</div>
+      <p class="text-xs" style="color: #64748b">
+        <span data-ko="MCP 도구 연동. 확장 무제한." data-en="MCP tools. Unlimited extension.">MCP 도구 연동. 확장 무제한.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-xl mb-6 neon-cyan" data-ko="// 비교" data-en="// COMPARISON">// 비교</h2>
+  <div class="overflow-x-auto">
+    <table>
+      <thead>
+        <tr>
+          <th data-ko="항목" data-en="Feature">항목</th>
+          <th class="neon-sky">hanimo</th>
+          <th>Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-ko="해시 앵커" data-en="Hash anchor">해시 앵커</td>
+          <td style="color: var(--cyan)">✓ native</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+        </tr>
+        <tr>
+          <td data-ko="로컬 모델" data-en="Local models">로컬 모델</td>
+          <td style="color: var(--cyan)">✓ Ollama</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="제한적" data-en="Limited">제한적</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td data-ko="비용" data-en="Cost">비용</td>
+          <td style="color: var(--cyan)" data-ko="무료" data-en="Free">무료</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="무료" data-en="Free">무료</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install" class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-xl mb-6 neon-cyan" data-ko="// 설치" data-en="// INSTALL">// 설치</h2>
+  <div class="space-y-4">
+    <div class="terminal">
+      <div class="comment"># curl</div>
+      <div class="prompt">$ curl -sSL hanimo.dev/install | bash</div>
+    </div>
+    <div class="terminal">
+      <div class="comment"># homebrew</div>
+      <div class="prompt">$ brew install flykimjiwon/tap/hanimo</div>
+    </div>
+    <div class="terminal">
+      <div class="comment"># go</div>
+      <div class="prompt">$ go install github.com/flykimjiwon/hanimo@latest</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t px-6 py-10 text-center" style="border-color: var(--surface)">
+  <p class="text-sm mb-1" style="color: var(--surface2)">hanimo · flykimjiwon/hanimo · hanimo.dev</p>
+  <p class="text-xs" style="color: #334155">Apache-2.0 · <span data-ko="오픈소스" data-en="Open Source">오픈소스</span></p>
+</footer>
+
+<script>
+  let lang = 'ko';
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+
+  function toggleLang() {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+  }
+
+  (function() {
+    const saved = localStorage.getItem('hanimo-theme') || 'dark';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

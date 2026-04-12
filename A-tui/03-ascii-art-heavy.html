@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — AI Coding Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fg: #d4d4d4;
+    --fg-dim: #6b6b6b;
+    --fg-faint: #2e2e2e;
+    --bg: #0c0c0c;
+    --bg-panel: #111111;
+    --honey: #F9E2AF;
+    --honey-dim: #b8a170;
+    --honey-faint: #3d3022;
+    /* theme tokens */
+    --surface: #111111;
+    --border: #2e2e2e;
+    --text: #d4d4d4;
+    --muted: #6b6b6b;
+    --accent: #F9E2AF;
+  }
+
+  [data-theme="light"] {
+    --bg: #fafaf8;
+    --bg-panel: #f0f0ec;
+    --surface: #f0f0ec;
+    --border: #ccccb8;
+    --fg: #1a1a18;
+    --fg-dim: #5a5a50;
+    --fg-faint: #c8c8b8;
+    --text: #1a1a18;
+    --muted: #5a5a50;
+    --honey: #c8820a;
+    --honey-dim: #a06808;
+    --honey-faint: #f0e4c0;
+    --accent: #c8820a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .cursor {
+    display: inline-block;
+    width: 9px;
+    height: 1.1em;
+    background: var(--honey);
+    vertical-align: text-bottom;
+    animation: blink 1.2s step-end infinite;
+  }
+
+  /* ════ NAV ════ */
+  nav {
+    padding: 0 48px;
+    border-bottom: 1px solid var(--fg-faint);
+    background: var(--bg);
+  }
+
+  .nav-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    height: 48px;
+  }
+
+  .nav-logo {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--honey);
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--fg-faint);
+    padding-right: 32px;
+    margin-right: 32px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .nav-links a {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    color: var(--fg-dim);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    border-right: 1px solid var(--fg-faint);
+    transition: color 0.15s;
+  }
+
+  .nav-links a:hover { color: var(--honey); }
+
+  .nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    font-size: 10px;
+    color: var(--fg-faint);
+    letter-spacing: 0.08em;
+  }
+
+  /* ════ HERO ════ */
+  .hero {
+    padding: 64px 48px 56px;
+    border-bottom: 1px solid var(--fg-faint);
+    position: relative;
+  }
+
+  .ascii-logo {
+    font-size: clamp(5px, 1.4vw, 13px);
+    line-height: 1.2;
+    white-space: pre;
+    color: var(--honey);
+    margin-bottom: 48px;
+    overflow-x: auto;
+    font-weight: 400;
+  }
+
+  .ascii-sub {
+    font-size: clamp(5px, 1.1vw, 10px);
+    line-height: 1.2;
+    white-space: pre;
+    color: var(--fg-dim);
+    margin-top: 8px;
+    overflow-x: auto;
+  }
+
+  .hero-below {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    margin-top: 48px;
+  }
+
+  .hero-left {}
+
+  .tagline {
+    font-size: clamp(15px, 2.2vw, 22px);
+    font-weight: 700;
+    color: var(--honey);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .tagline-kr {
+    font-size: 12px;
+    color: var(--fg-dim);
+    margin-bottom: 32px;
+    letter-spacing: 0.1em;
+  }
+
+  .install-box {
+    background: var(--bg-panel);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .install-box-border {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* ASCII box-drawing borders */
+  .box-tl { position: absolute; top: -1px; left: -1px; color: var(--honey); }
+  .box-tr { position: absolute; top: -1px; right: -1px; color: var(--honey); }
+  .box-bl { position: absolute; bottom: -1px; left: -1px; color: var(--honey); }
+  .box-br { position: absolute; bottom: -1px; right: -1px; color: var(--honey); }
+
+  .install-label {
+    font-size: 9px;
+    color: var(--honey-dim);
+    letter-spacing: 0.2em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .install-cmd {
+    font-size: 12px;
+    color: var(--fg);
+    letter-spacing: 0.03em;
+  }
+
+  .install-cmd .p { color: var(--fg-dim); }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .btn-ascii {
+    background: transparent;
+    border: none;
+    color: var(--honey);
+    padding: 8px 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: color 0.15s;
+  }
+
+  .btn-ascii::before { content: '[ '; color: var(--honey-dim); }
+  .btn-ascii::after { content: ' ]'; color: var(--honey-dim); }
+  .btn-ascii:hover { color: #fff; }
+
+  .hero-right {
+    border: 1px solid var(--fg-faint);
+    padding: 20px;
+    font-size: 11px;
+    color: var(--fg-dim);
+    line-height: 2;
+    position: relative;
+  }
+
+  .hero-right-label {
+    position: absolute;
+    top: -9px;
+    left: 16px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-size: 9px;
+    color: var(--honey-dim);
+    letter-spacing: 0.2em;
+  }
+
+  .spec-key { color: var(--fg-dim); }
+  .spec-val { color: var(--honey); }
+  .spec-row { display: flex; gap: 8px; }
+  .spec-dot { color: var(--fg-faint); }
+
+  /* ════ BOX-DRAWING DIVIDERS ════ */
+  .box-divider {
+    font-size: clamp(7px, 1.2vw, 11px);
+    white-space: pre;
+    color: var(--fg-faint);
+    overflow: hidden;
+    line-height: 1;
+    padding: 0 0;
+    overflow-x: auto;
+  }
+
+  .box-divider .accent { color: var(--honey-dim); }
+
+  /* ════ SECTIONS ════ */
+  .section {
+    padding: 64px 48px;
+    border-bottom: 1px solid var(--fg-faint);
+  }
+
+  .section-head {
+    margin-bottom: 40px;
+  }
+
+  .section-title-ascii {
+    font-size: clamp(5px, 1vw, 9px);
+    white-space: pre;
+    color: var(--honey);
+    line-height: 1.1;
+    margin-bottom: 12px;
+    overflow-x: auto;
+  }
+
+  .section-sub {
+    font-size: 11px;
+    color: var(--fg-dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* ════ TERMINAL ════ */
+  .terminal-frame {
+    border: 1px solid var(--fg-faint);
+    max-width: 760px;
+    background: var(--bg-panel);
+  }
+
+  .t-header {
+    border-bottom: 1px solid var(--fg-faint);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 10px;
+    color: var(--fg-faint);
+    letter-spacing: 0.1em;
+  }
+
+  .t-header-title { color: var(--fg-dim); flex: 1; text-align: center; }
+
+  .t-body { padding: 20px 24px; }
+  .t-row { margin-bottom: 4px; font-size: 12px; }
+  .t-p { color: var(--fg-faint); }
+  .t-c { color: var(--fg); }
+  .t-o { color: var(--fg-dim); }
+  .t-h { color: var(--honey); }
+  .t-sp { height: 10px; }
+
+  .theme-ascii {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--fg-faint);
+    font-size: 10px;
+    color: var(--fg-faint);
+    letter-spacing: 0.08em;
+  }
+
+  .theme-tag-a {
+    display: inline-block;
+    padding: 0 6px;
+    border: 1px solid var(--fg-faint);
+    margin: 4px 4px 0 0;
+    font-size: 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .theme-tag-a.on {
+    border-color: var(--honey-dim);
+    color: var(--honey);
+  }
+
+  /* ════ FEATURES ════ */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0;
+    border: 1px solid var(--fg-faint);
+  }
+
+  .feat-item {
+    padding: 28px 24px;
+    border-right: 1px solid var(--fg-faint);
+    border-bottom: 1px solid var(--fg-faint);
+    transition: background 0.2s;
+  }
+
+  .feat-item:hover { background: rgba(249, 226, 175, 0.02); }
+  .feat-item:last-child { border-right: none; }
+
+  .feat-id {
+    font-size: 9px;
+    color: var(--fg-faint);
+    letter-spacing: 0.2em;
+    margin-bottom: 10px;
+  }
+
+  .feat-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--honey);
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .feat-desc {
+    font-size: 11px;
+    color: var(--fg-dim);
+    line-height: 1.8;
+  }
+
+  /* ════ COMPARISON ════ */
+  .comp-ascii {
+    font-size: clamp(6px, 0.85vw, 8px);
+    white-space: pre;
+    color: var(--fg-dim);
+    overflow-x: auto;
+    line-height: 1.4;
+  }
+
+  .comp-ascii .hl { color: var(--honey); }
+  .comp-ascii .yes { color: var(--honey); }
+  .comp-ascii .no { color: var(--fg-faint); }
+  .comp-ascii .par { color: var(--fg-dim); }
+  .comp-ascii .hdr { color: var(--fg); }
+
+  /* ════ INSTALL ════ */
+  .install-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0;
+    border: 1px solid var(--fg-faint);
+  }
+
+  .install-panel-a {
+    padding: 28px 24px;
+    border-right: 1px solid var(--fg-faint);
+  }
+
+  .install-panel-a:last-child { border-right: none; }
+
+  .ip-label {
+    font-size: 9px;
+    color: var(--honey-dim);
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+  }
+
+  .ip-code {
+    font-size: 11px;
+    line-height: 2;
+    color: var(--fg-dim);
+  }
+
+  .ip-code .p { color: var(--fg-faint); }
+  .ip-code .cmd { color: var(--fg); }
+  .ip-code .cmt { color: var(--fg-faint); font-style: italic; }
+
+  /* ════ FOOTER ════ */
+  footer {
+    padding: 28px 48px;
+    border-top: 1px solid var(--fg-faint);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--fg-faint);
+  }
+
+  footer a { color: var(--fg-dim); text-decoration: none; }
+  footer a:hover { color: var(--honey); }
+
+  .footer-logo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--honey);
+    letter-spacing: 0.2em;
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .hero { padding: 40px 20px 32px; }
+    .hero-below { grid-template-columns: 1fr; gap: 24px; }
+    .section { padding: 48px 20px; }
+    footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+    .ascii-logo { font-size: 5px; }
+  }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 12px; right: 16px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  }
+  .ctl-row { display: flex; border: 1px solid var(--fg-faint); background: var(--bg-panel); }
+  .ctl-btn {
+    background: transparent; border: none; color: var(--fg-dim);
+    padding: 4px 10px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.1em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 1px solid var(--fg-faint); }
+  .ctl-btn.active { background: rgba(249,226,175,0.08); color: var(--honey); }
+</style>
+</head>
+<body>
+
+<!-- TOGGLE CONTROLS -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">HANIMO</div>
+    <div class="nav-links">
+      <a href="#features" data-ko="기능" data-en="FEATURES">기능</a>
+      <a href="#compare" data-ko="비교" data-en="COMPARE">비교</a>
+      <a href="#install" data-ko="설치" data-en="INSTALL">설치</a>
+      <a href="https://github.com/flykimjiwon/hanimo">GITHUB</a>
+    </div>
+    <div class="nav-right">Apache-2.0 &nbsp;·&nbsp; Go 1.22+</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="ascii-logo">██╗  ██╗ █████╗ ███╗   ██╗██╗███╗   ███╗ ██████╗
+██║  ██║██╔══██╗████╗  ██║██║████╗ ████║██╔═══██╗
+███████║███████║██╔██╗ ██║██║██╔████╔██║██║   ██║
+██╔══██║██╔══██║██║╚██╗██║██║██║╚██╔╝██║██║   ██║
+██║  ██║██║  ██║██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝
+╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝</div>
+  <div class="ascii-sub">                          The open-source AI coding platform · 오픈소스를 위한 AI 코딩 에이전트</div>
+
+  <div class="hero-below">
+    <div class="hero-left">
+      <div class="tagline" data-ko="오픈소스 AI 코딩 플랫폼" data-en="Open-source AI coding platform">오픈소스 AI 코딩 플랫폼</div>
+      <div class="tagline-kr" data-ko="Go로 제작 · 어디서나 실행" data-en="Built in Go · Runs anywhere">Go로 제작 · 어디서나 실행</div>
+
+      <div class="install-box">
+        <div class="install-label">╔═ QUICK INSTALL ═╗</div>
+        <div class="install-cmd">
+          <span class="p">$ </span>curl -fsSL https://hanimo.dev/install.sh | sh<span class="cursor"></span>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-ascii" data-ko="시작하기" data-en="GET STARTED">시작하기</a>
+        <a href="https://hanimo.dev" class="btn-ascii" data-ko="문서" data-en="DOCUMENTATION">문서</a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-right-label">SYSTEM INFO</div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">VERSION  </span><span class="spec-val">v0.9.4</span></div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">RUNTIME  </span><span class="spec-val">Go 1.22+</span></div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">LICENSE  </span><span class="spec-val">Apache-2.0</span></div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">PROVIDERS</span><span class="spec-val">14+</span></div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">MODES    </span><span class="spec-val">Super / Dev / Plan</span></div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">CONTEXT  </span><span class="spec-val">up to 200K tokens</span></div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">STORAGE  </span><span class="spec-val">SQLite (local)</span></div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">PROTOCOL </span><span class="spec-val">MCP supported</span></div>
+      <div class="spec-row"><span class="spec-dot">│</span> <span class="spec-key">PLATFORMS</span><span class="spec-val">Linux / macOS / Windows</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOX DIVIDER -->
+<div class="box-divider" style="padding: 0 48px; overflow:hidden; color: var(--fg-faint)">
+╠══════════════════════════════<span class="accent">[ LIVE PREVIEW ]</span>══════════════════════════════════════╣</div>
+
+<!-- TERMINAL PREVIEW -->
+<div class="section" id="demo">
+  <div class="terminal-frame">
+    <div class="t-header">
+      <span>[---]</span>
+      <span class="t-header-title">hanimo · claude-sonnet-4 · Super Mode · session:f7a2c9</span>
+      <span>[120x40]</span>
+    </div>
+    <div class="t-body">
+      <div class="t-row"><span class="t-p">$ </span><span class="t-c">hanimo --provider anthropic --model claude-sonnet-4</span></div>
+      <div class="t-sp"></div>
+      <div class="t-row t-o">╔══════════════════════════════════════════════════╗</div>
+      <div class="t-row t-o">║  hanimo v0.9.4 · Super · tokens: 0/200K          ║</div>
+      <div class="t-row t-o">║  session: f7a2c9 · MCP tools: 3                  ║</div>
+      <div class="t-row t-o">╚══════════════════════════════════════════════════╝</div>
+      <div class="t-sp"></div>
+      <div class="t-row"><span class="t-p">you&gt; </span><span class="t-c">implement OAuth2 PKCE flow for the mobile client</span></div>
+      <div class="t-sp"></div>
+      <div class="t-row t-h">● READING  src/auth/</div>
+      <div class="t-row t-o">  → oauth.go  token.go  middleware.go</div>
+      <div class="t-row t-h">● WRITING  src/auth/pkce.go          [NEW · +84 lines]</div>
+      <div class="t-row t-o">  ✓ code_verifier generation (S256)</div>
+      <div class="t-row t-o">  ✓ challenge derivation</div>
+      <div class="t-row t-o">  ✓ token exchange handler</div>
+      <div class="t-row t-h">● PATCHING src/auth/oauth.go         [hash-anchored]</div>
+      <div class="t-row t-o">  ✓ +31 lines  -4 lines</div>
+      <div class="t-sp"></div>
+      <div class="t-row" style="color: var(--fg-faint)">  /auto  /save  /remember  /diagnostics  /plan  /?</div>
+      <div class="t-row"><span class="t-p">you&gt; </span><span class="cursor"></span></div>
+
+      <div class="theme-ascii">
+        THEME: &nbsp;
+        <span class="theme-tag-a on">HONEY</span>
+        <span class="theme-tag-a">OCEAN</span>
+        <span class="theme-tag-a">DRACULA</span>
+        <span class="theme-tag-a">GRUVBOX</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOX DIVIDER -->
+<div class="box-divider" style="padding: 0 48px; color: var(--fg-faint)">
+╠══════════════════════════════<span class="accent">[ CAPABILITIES ]</span>═════════════════════════════════════╣</div>
+
+<!-- FEATURES -->
+<div class="section" id="features">
+  <div class="section-head">
+    <div class="section-title-ascii">███████╗███████╗ █████╗ ████████╗██╗   ██╗██████╗ ███████╗███████╗
+██╔════╝██╔════╝██╔══██╗╚══██╔══╝██║   ██║██╔══██╗██╔════╝██╔════╝
+█████╗  █████╗  ███████║   ██║   ██║   ██║██████╔╝█████╗  ███████╗
+██╔══╝  ██╔══╝  ██╔══██║   ██║   ██║   ██║██╔══██╗██╔══╝  ╚════██║
+██║     ███████╗██║  ██║   ██║   ╚██████╔╝██║  ██║███████╗███████║
+╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝</div>
+    <div class="section-sub" data-ko="6가지 핵심 기능" data-en="SIX CORE CAPABILITIES">6가지 핵심 기능</div>
+  </div>
+
+  <div class="feat-grid">
+    <div class="feat-item">
+      <div class="feat-id">01 ── EDIT ENGINE</div>
+      <div class="feat-name" data-ko="해시 기반 편집" data-en="Hash-Anchored Editing">해시 기반 편집</div>
+      <div class="feat-desc" data-ko="콘텐츠 해시로 정밀 편집. 오류 없는 수술적 수정." data-en="Hash-anchored edits. Surgical precision, no phantom rewrites.">콘텐츠 해시로 정밀 편집. 오류 없는 수술적 수정.</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-id">02 ── PROVIDERS</div>
+      <div class="feat-name" data-ko="14+ LLM 프로바이더" data-en="14+ LLM Providers">14+ LLM 프로바이더</div>
+      <div class="feat-desc" data-ko="Ollama, OpenAI, Anthropic 등. 세션 중 전환 가능." data-en="Ollama, OpenAI, Anthropic and more. Switch mid-session.">Ollama, OpenAI, Anthropic 등. 세션 중 전환 가능.</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-id">03 ── MEMORY</div>
+      <div class="feat-name" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</div>
+      <div class="feat-desc" data-ko="컨텍스트 한계 시 자동 요약. 200K 토큰 이상 작업." data-en="Auto-summarizes at context limits. Work past 200K tokens.">컨텍스트 한계 시 자동 요약. 200K 토큰 이상 작업.</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-id">04 ── AGENT</div>
+      <div class="feat-name" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</div>
+      <div class="feat-desc" data-ko="작업 위임 후 자율 실행. 전체 감사 추적 제공." data-en="Delegate tasks. Autonomous execution with full auditability.">작업 위임 후 자율 실행. 전체 감사 추적 제공.</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-id">05 ── PERSISTENCE</div>
+      <div class="feat-name" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+      <div class="feat-desc" data-ko="로컬 SQLite에 대화 저장. 데이터는 내 기기에." data-en="Sessions stored locally in SQLite. Your data, your machine.">로컬 SQLite에 대화 저장. 데이터는 내 기기에.</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-id">06 ── PROTOCOL</div>
+      <div class="feat-name" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+      <div class="feat-desc" data-ko="외부 도구·DB·API를 컨텍스트로. 포크 없이 확장." data-en="Connect tools, DBs, APIs as context providers. No forking.">외부 도구·DB·API를 컨텍스트로. 포크 없이 확장.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BOX DIVIDER -->
+<div class="box-divider" style="padding: 0 48px; color: var(--fg-faint)">
+╠══════════════════════════════<span class="accent">[ COMPARISON ]</span>══════════════════════════════════════╣</div>
+
+<!-- COMPARISON — full ASCII table -->
+<div class="section" id="compare">
+  <div class="section-head">
+    <div class="section-sub" style="color: var(--honey-dim)">COMPETITIVE ANALYSIS</div>
+  </div>
+
+  <div class="comp-ascii">
+<span class="hdr">╔═══════════════════════════════════╦══════════════╦══════════════╦══════════════╦══════════════╗
+║ CAPABILITY                        ║    HANIMO    ║ CLAUDE CODE  ║    CURSOR    ║    AIDER     ║
+╠═══════════════════════════════════╬══════════════╬══════════════╬══════════════╬══════════════╣</span>
+║ Open Source (Apache-2.0)          ║  <span class="yes">✓  YES     </span> ║  <span class="no">✗  NO      </span> ║  <span class="no">✗  NO      </span> ║  <span class="yes">✓  YES     </span> ║
+║ Local LLM (Ollama)                ║  <span class="yes">✓  YES     </span> ║  <span class="no">✗  NO      </span> ║  <span class="par">△  PARTIAL </span> ║  <span class="yes">✓  YES     </span> ║
+║ Hash-Anchored Edits               ║  <span class="yes">✓  YES     </span> ║  <span class="par">△  PARTIAL </span> ║  <span class="no">✗  NO      </span> ║  <span class="par">△  PARTIAL </span> ║
+║ SQLite Session Store              ║  <span class="yes">✓  YES     </span> ║  <span class="no">✗  NO      </span> ║  <span class="no">✗  NO      </span> ║  <span class="no">✗  NO      </span> ║
+║ MCP Protocol Support              ║  <span class="yes">✓  YES     </span> ║  <span class="yes">✓  YES     </span> ║  <span class="no">✗  NO      </span> ║  <span class="no">✗  NO      </span> ║
+║ IDE-Free Terminal Operation       ║  <span class="yes">✓  YES     </span> ║  <span class="yes">✓  YES     </span> ║  <span class="no">✗  NO      </span> ║  <span class="yes">✓  YES     </span> ║
+║ Smart Context Compaction          ║  <span class="yes">✓  YES     </span> ║  <span class="yes">✓  YES     </span> ║  <span class="no">✗  NO      </span> ║  <span class="no">✗  NO      </span> ║
+<span class="hdr">╚═══════════════════════════════════╩══════════════╩══════════════╩══════════════╩══════════════╝</span>
+  </div>
+</div>
+
+<!-- BOX DIVIDER -->
+<div class="box-divider" style="padding: 0 48px; color: var(--fg-faint)">
+╠═══════════════════════════════<span class="accent">[ INSTALLATION ]</span>═════════════════════════════════════╣</div>
+
+<!-- INSTALL -->
+<div class="section" id="install">
+  <div class="install-grid">
+    <div class="install-panel-a">
+      <div class="ip-label">╔═ CURL BINARY ═╗</div>
+      <div class="ip-code">
+        <div><span class="cmt"># Linux / macOS</span></div>
+        <div><span class="p">$ </span><span class="cmd">curl -fsSL https://hanimo.dev/install.sh | sh</span></div>
+        <br>
+        <div><span class="cmt"># Verify</span></div>
+        <div><span class="p">$ </span><span class="cmd">hanimo --version</span></div>
+        <div style="color: var(--fg-faint)">hanimo v0.9.4 (darwin/arm64)</div>
+      </div>
+    </div>
+    <div class="install-panel-a">
+      <div class="ip-label">╔═ GO BUILD ═╗</div>
+      <div class="ip-code">
+        <div><span class="cmt"># From source</span></div>
+        <div><span class="p">$ </span><span class="cmd">git clone github.com/flykimjiwon/hanimo</span></div>
+        <div><span class="p">$ </span><span class="cmd">cd hanimo && go build -o hanimo ./cmd/hanimo</span></div>
+        <div><span class="p">$ </span><span class="cmd">./hanimo --help</span></div>
+      </div>
+    </div>
+    <div class="install-panel-a">
+      <div class="ip-label">╔═ PROVIDERS ═╗</div>
+      <div class="ip-code">
+        <div><span class="cmt"># Anthropic (claude-sonnet-4)</span></div>
+        <div><span class="p">$ </span><span class="cmd">ANTHROPIC_API_KEY=sk-... hanimo</span></div>
+        <br>
+        <div><span class="cmt"># Local (qwen3:8b via Ollama)</span></div>
+        <div><span class="p">$ </span><span class="cmd">hanimo --provider ollama --model qwen3:8b</span></div>
+        <br>
+        <div><span class="cmt"># OpenAI (gpt-4o)</span></div>
+        <div><span class="p">$ </span><span class="cmd">OPENAI_API_KEY=sk-... hanimo --provider openai --model gpt-4o</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">HANIMO</div>
+  <div style="display: flex; gap: 24px;">
+    <a href="https://github.com/flykimjiwon/hanimo">github.com/flykimjiwon/hanimo</a>
+    <a href="https://hanimo.dev">hanimo.dev</a>
+  </div>
+  <div style="font-size: 10px; letter-spacing: 0.12em;">
+    APACHE-2.0 &nbsp;·&nbsp; OPEN SOURCE
+  </div>
+</footer>
+
+<script>
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  localStorage.setItem('hanimo-lang', lang);
+  document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+}
+(function init() {
+  const theme = localStorage.getItem('hanimo-theme') || 'dark';
+  const lang = localStorage.getItem('hanimo-lang') || 'ko';
+  setTheme(theme);
+  setLang(lang);
+})();
+</script>
+</body>
+</html>

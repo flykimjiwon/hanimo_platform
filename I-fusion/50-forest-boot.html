@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — Forest × ASCII Boot Sequence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --green: #22c55e;
+    --green-bright: #4ade80;
+    --green-dim: #16a34a;
+    --green-dark: #14532d;
+    --lime: #84cc16;
+    --bg: #030a05;
+    --bg2: #071209;
+    --surface: #0f2414;
+    --surface2: #1a3a1f;
+    --t-bg: #030a05;
+    --t-surface: #071209;
+    --t-border: #0f2414;
+    --t-text: #22c55e;
+    --t-muted: #1a3a1f;
+    --t-accent: #22c55e;
+  }
+  [data-theme="light"] {
+    --t-bg: #f0fdf4;
+    --t-surface: #dcfce7;
+    --t-border: #16a34a;
+    --t-text: #14532d;
+    --t-muted: #166534;
+    --t-accent: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: 'IBM Plex Mono', monospace;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Phosphor glow */
+  .glow {
+    color: var(--green);
+    text-shadow: 0 0 6px var(--green), 0 0 14px rgba(34,197,94,0.5), 0 0 28px rgba(34,197,94,0.2);
+  }
+  .glow-bright {
+    color: var(--green-bright);
+    text-shadow: 0 0 8px var(--green-bright), 0 0 18px rgba(74,222,128,0.6);
+  }
+  .glow-lime {
+    color: var(--lime);
+    text-shadow: 0 0 6px var(--lime), 0 0 12px rgba(132,204,22,0.4);
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.15),
+      rgba(0,0,0,0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Vignette */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* ASCII Logo */
+  .ascii-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(0.38rem, 1.1vw, 0.65rem);
+    line-height: 1.15;
+    white-space: pre;
+    display: inline-block;
+    letter-spacing: 0.02em;
+  }
+
+  /* Boot sequence lines */
+  @keyframes bootIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .boot-line {
+    display: block;
+    opacity: 0;
+    animation: bootIn 0.2s forwards;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+  .boot-line:nth-child(1)  { animation-delay: 0.3s; }
+  .boot-line:nth-child(2)  { animation-delay: 0.6s; }
+  .boot-line:nth-child(3)  { animation-delay: 0.9s; }
+  .boot-line:nth-child(4)  { animation-delay: 1.2s; }
+  .boot-line:nth-child(5)  { animation-delay: 1.5s; }
+  .boot-line:nth-child(6)  { animation-delay: 1.8s; }
+  .boot-line:nth-child(7)  { animation-delay: 2.1s; }
+  .boot-line:nth-child(8)  { animation-delay: 2.4s; }
+  .boot-line:nth-child(9)  { animation-delay: 2.7s; }
+  .boot-line:nth-child(10) { animation-delay: 3.0s; }
+  .boot-line:nth-child(11) { animation-delay: 3.3s; }
+  .boot-line:nth-child(12) { animation-delay: 3.6s; }
+  .boot-line:nth-child(13) { animation-delay: 3.9s; }
+  .boot-line:nth-child(14) { animation-delay: 4.2s; }
+
+  .ok   { color: var(--green-bright); }
+  .warn { color: var(--lime); }
+  .info { color: var(--green-dim); }
+  .dim  { color: var(--surface2); }
+
+  /* Box dividers with ASCII drawing */
+  .section-divider {
+    color: var(--green-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin: 3rem 0 1.5rem;
+    font-weight: 300;
+  }
+
+  /* Controls row */
+  .ctrl-row {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10000;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  /* Lang toggle */
+  #lang-toggle {
+    background: var(--t-surface);
+    border: 1px solid var(--green-dim);
+    color: var(--t-text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    font-weight: 300;
+  }
+  #lang-toggle:hover { background: var(--green-dim); color: var(--t-bg); }
+  .theme-ctrl {
+    display: flex;
+    background: var(--t-surface);
+    border: 1px solid var(--green-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    overflow: hidden;
+  }
+  .theme-btn {
+    padding: 0.3rem 0.5rem;
+    background: none;
+    border: none;
+    color: var(--t-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    font-weight: 300;
+    transition: all 0.15s;
+  }
+  .theme-btn.active { background: var(--green-dim); color: var(--t-bg); }
+  .theme-btn:not(.active):hover { color: var(--t-text); }
+
+  /* Terminal */
+  .terminal {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    padding: 1.25rem 1.5rem;
+    font-size: 0.78rem;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+  .terminal .prompt { color: var(--t-text); }
+  .terminal .comment { color: var(--t-muted); }
+  .terminal .out { color: var(--t-muted); }
+
+  /* Feature rows */
+  .feat-row {
+    display: grid;
+    grid-template-columns: 50px 220px 1fr;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--t-border);
+    font-size: 0.78rem;
+    font-weight: 300;
+    align-items: baseline;
+  }
+  .feat-row:last-child { border-bottom: none; }
+  .feat-row .num { color: var(--t-muted); }
+  .feat-row .name { color: var(--t-text); }
+  .feat-row .desc { color: var(--t-muted); }
+
+  /* Comparison table */
+  table { border-collapse: collapse; width: 100%; font-size: 0.75rem; font-weight: 300; }
+  th { background: var(--t-surface); color: var(--t-text); padding: 0.5rem 0.75rem; text-align: left; border: 1px solid var(--t-border); }
+  td { border: 1px solid var(--t-border); padding: 0.5rem 0.75rem; color: var(--t-muted); }
+  td.yes { color: var(--green-bright); }
+  tr:hover td { background: rgba(34,197,94,0.03); }
+
+  /* Install lines */
+  .install-row {
+    display: flex;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--t-border);
+    font-size: 0.78rem;
+    font-weight: 300;
+  }
+  .install-row .method { color: var(--t-muted); min-width: 80px; }
+  .install-row .cmd { color: var(--t-text); }
+
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+  .cursor::after { content:'█'; animation: blink 1s infinite; color: var(--green); font-size: 0.9em; }
+
+  @media (max-width: 640px) {
+    .feat-row { grid-template-columns: 1fr; gap: 0.2rem; }
+    .ascii-logo { font-size: 0.28rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .boot-line { animation: none; opacity: 1; }
+    .cursor::after { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ctrl-row">
+  <div class="theme-ctrl">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <button id="lang-toggle" onclick="toggleLang()">KO/EN</button>
+</div>
+
+<!-- HERO: ASCII logo + boot sequence -->
+<section style="max-width:860px;margin:0 auto;padding:4rem 2rem 2rem;min-height:100vh;display:flex;flex-direction:column;justify-content:center;">
+
+  <!-- ASCII block-letter HANIMO in forest green -->
+  <div class="mb-6 overflow-x-auto">
+    <pre class="ascii-logo glow">
+ ██╗  ██╗ █████╗ ███╗   ██╗██╗███╗   ███╗ ██████╗
+ ██║  ██║██╔══██╗████╗  ██║██║████╗ ████║██╔═══██╗
+ ███████║███████║██╔██╗ ██║██║██╔████╔██║██║   ██║
+ ██╔══██║██╔══██║██║╚██╗██║██║██║╚██╔╝██║██║   ██║
+ ██║  ██║██║  ██║██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝
+ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝</pre>
+  </div>
+
+  <!-- Boot sequence -->
+  <div style="margin-bottom:2rem;">
+    <span class="boot-line dim">hanimo v0.1.0 · forest theme · Go 1.23</span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">loading kernel modules...</span></span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">mounting SQLite session store</span></span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">loading providers... 14 active</span></span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">hash-anchor engine initialized</span></span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">smart compaction daemon ready</span></span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">MCP bridge listening on :7070</span></span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">session manager online</span></span>
+    <span class="boot-line"><span class="warn">[ WARN ]</span> <span style="color:var(--lime)">14 tools initialized · review limits</span></span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">auto-mode ready · /auto to activate</span></span>
+    <span class="boot-line"><span class="ok">[  OK  ]</span> <span class="info">forest theme loaded · phosphor green</span></span>
+    <span class="boot-line dim">─────────────────────────────────────────</span>
+    <span class="boot-line glow-bright">SYSTEM READY · hanimo v0.1.0 [forest]<span class="cursor"></span></span>
+  </div>
+
+  <!-- Tagline + CTA -->
+  <p class="mb-2" style="color:var(--green-dim);font-size:0.78rem;font-weight:300;">
+    <span data-ko="오픈소스 Go AI 코딩 에이전트 · Apache-2.0 · 14개 프로바이더" data-en="Open-source Go AI coding agent · Apache-2.0 · 14 providers">오픈소스 Go AI 코딩 에이전트 · Apache-2.0 · 14개 프로바이더</span>
+  </p>
+
+  <div class="terminal mb-6" style="max-width:480px;">
+    <span class="prompt">$ curl -sSL hanimo.dev/install | bash</span>
+  </div>
+
+  <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;">
+    <a href="https://github.com/flykimjiwon/hanimo"
+      style="border:1px solid var(--green-dim);color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:300;padding:0.4rem 1.2rem;text-decoration:none;"
+      onmouseover="this.style.background='rgba(34,197,94,0.07)'"
+      onmouseout="this.style.background=''">
+      <span data-ko="→ GitHub" data-en="→ GitHub">→ GitHub</span>
+    </a>
+    <a href="#install"
+      style="background:var(--green-dim);color:var(--bg);font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:700;padding:0.4rem 1.2rem;text-decoration:none;">
+      <span data-ko="설치하기" data-en="INSTALL">설치하기</span>
+    </a>
+  </div>
+</section>
+
+<div style="max-width:860px;margin:0 auto;padding:0 2rem;">
+
+  <!-- TERMINAL PREVIEW -->
+  <div class="section-divider">
+    ┌─────────────────────────────────────────┐<br>
+    │ <span data-ko="터미널 세션" data-en="TERMINAL SESSION">터미널 세션</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    └─────────────────────────────────────────┘
+  </div>
+  <div class="terminal">
+    <span class="comment"># forest theme · super mode · anthropic</span><br>
+    <span class="prompt">$ hanimo --theme forest --mode super</span><br>
+    <span class="out">hanimo v0.1.0 [forest] · session: boot-seq-050</span><br>
+    <span class="out">&nbsp;</span><br>
+    <span class="prompt">&gt; /auto add distributed tracing with OpenTelemetry</span><br>
+    <span class="ok">[  OK  ] READING: 7 files · hash-indexed</span><br>
+    <span class="out">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PLAN: tracer init, span middleware, exporters</span><br>
+    <span class="ok">[  OK  ] WRITE: telemetry/tracer.go [MD5:d4f1c9] anchored</span><br>
+    <span class="ok">[  OK  ] WRITE: middleware/tracing.go [MD5:a2e8b3] anchored</span><br>
+    <span class="ok">[  OK  ] PATCH: main.go:22 · 0 conflicts</span><br>
+    <span class="warn">[ WARN ] remember to set OTEL_EXPORTER_OTLP_ENDPOINT</span><br>
+    <span class="ok">[  OK  ] DONE: 2.8s · 3 files · 0 stale edits</span>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="section-divider">
+    ┌─────────────────────────────────────────┐<br>
+    │ <span data-ko="핵심 기능" data-en="CORE FEATURES">핵심 기능</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    └─────────────────────────────────────────┘
+  </div>
+  <div>
+    <div class="feat-row">
+      <span class="num">01</span>
+      <span class="name">hash-anchored editing</span>
+      <span class="desc"><span data-ko="라인별 MD5. 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 충돌 없음.</span></span>
+    </div>
+    <div class="feat-row">
+      <span class="num">02</span>
+      <span class="name">14+ providers</span>
+      <span class="desc"><span data-ko="Ollama·OpenAI·Anthropic 외 다수." data-en="Ollama to OpenRouter. Any model.">Ollama·OpenAI·Anthropic 외 다수.</span></span>
+    </div>
+    <div class="feat-row">
+      <span class="num">03</span>
+      <span class="name">smart compaction</span>
+      <span class="desc"><span data-ko="자동 압축. 비용 절감." data-en="Auto-compress. Cut costs.">자동 압축. 비용 절감.</span></span>
+    </div>
+    <div class="feat-row">
+      <span class="num">04</span>
+      <span class="name">/auto mode</span>
+      <span class="desc"><span data-ko="자율 루프. 목표까지 실행." data-en="Autonomous loop. Runs to goal.">자율 루프. 목표까지 실행.</span></span>
+    </div>
+    <div class="feat-row">
+      <span class="num">05</span>
+      <span class="name">sqlite sessions</span>
+      <span class="desc"><span data-ko="세션 영구 저장. 언제든 재개." data-en="Persist sessions. Resume anytime.">세션 영구 저장. 언제든 재개.</span></span>
+    </div>
+    <div class="feat-row">
+      <span class="num">06</span>
+      <span class="name">mcp support</span>
+      <span class="desc"><span data-ko="MCP 도구 연동. 확장 무제한." data-en="MCP tools. Unlimited extension.">MCP 도구 연동. 확장 무제한.</span></span>
+    </div>
+  </div>
+
+  <!-- COMPARISON -->
+  <div class="section-divider">
+    ┌─────────────────────────────────────────┐<br>
+    │ <span data-ko="비교" data-en="COMPARISON">비교</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    └─────────────────────────────────────────┘
+  </div>
+  <div class="overflow-x-auto">
+    <table>
+      <thead>
+        <tr>
+          <th data-ko="항목" data-en="Feature">항목</th>
+          <th class="glow">hanimo</th>
+          <th>Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-ko="해시 앵커" data-en="Hash anchor">해시 앵커</td>
+          <td class="yes">✓ native</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+        </tr>
+        <tr>
+          <td data-ko="로컬 모델" data-en="Local models">로컬 모델</td>
+          <td class="yes">✓ Ollama</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="제한적" data-en="Limited">제한적</td>
+          <td class="yes">✓</td>
+        </tr>
+        <tr>
+          <td data-ko="비용" data-en="Cost">비용</td>
+          <td class="yes" data-ko="무료" data-en="Free">무료</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="무료" data-en="Free">무료</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- INSTALL -->
+  <div id="install" class="section-divider">
+    ┌─────────────────────────────────────────┐<br>
+    │ <span data-ko="설치" data-en="INSTALL">설치</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    └─────────────────────────────────────────┘
+  </div>
+  <div>
+    <div class="install-row"><span class="method">curl</span><span class="cmd">$ curl -sSL hanimo.dev/install | bash</span></div>
+    <div class="install-row"><span class="method">homebrew</span><span class="cmd">$ brew install flykimjiwon/tap/hanimo</span></div>
+    <div class="install-row" style="border-bottom:none;"><span class="method">go</span><span class="cmd">$ go install github.com/flykimjiwon/hanimo@latest</span></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer style="margin:4rem 0 2rem;padding-top:1.5rem;border-top:1px solid var(--surface);display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;font-size:0.72rem;font-weight:300;color:var(--green-dim);">
+    <span>hanimo · flykimjiwon/hanimo · hanimo.dev</span>
+    <span>Apache-2.0 · <span data-ko="오픈소스" data-en="Open Source">오픈소스</span></span>
+  </footer>
+
+</div>
+
+<script>
+  let lang = 'ko';
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+
+  function toggleLang() {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+  }
+
+  (function() {
+    const saved = localStorage.getItem('hanimo-theme') || 'dark';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — zen matrix</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Noto+Serif+KR:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:    #0c0a09;
+    --bg2:   #111009;
+    --sage:  #84cc16;
+    --sage2: #65a30d;
+    --sage3: #3f6212;
+    --dim:   #2a2a1f;
+    --text:  #d4c9a8;
+    --muted: #6b6450;
+    --faint: #1a1a12;
+  }
+  [data-theme="light"] {
+    --bg:    #f4f7ee;
+    --bg2:   #e8eedd;
+    --sage3: #4a7520;
+    --dim:   #c5d4b0;
+    --text:  #2a3318;
+    --muted: #5a6b40;
+    --faint: #dce8cc;
+  }
+
+  html, body {
+    background: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  /* falling matrix canvas — sits behind everything */
+  #matrix-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  /* everything else above canvas */
+  .above { position: relative; z-index: 1; }
+
+  /* i18n + theme */
+  .ctrl-bar {
+    position: fixed; top: 14px; right: 16px; z-index: 999;
+    display: flex; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+  .lang-toggle, .theme-toggle { display: flex; }
+  .lang-btn, .theme-btn { padding: 3px 10px; border: 1px solid var(--sage3); background: var(--bg2); color: var(--muted); cursor: pointer; user-select: none; }
+  .lang-btn.active { background: var(--sage3); color: var(--sage); border-color: var(--sage3); }
+  .theme-btn.active { background: var(--sage3); color: var(--sage); border-color: var(--sage3); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    text-align: center;
+  }
+
+  .zen-label {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .hero-title {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--sage);
+    text-shadow: 0 0 30px rgba(132,204,22,0.25);
+    margin-bottom: 20px;
+    line-height: 1;
+  }
+
+  .hero-en {
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .hero-kr {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 0.95rem;
+    font-weight: 300;
+    color: var(--sage3);
+    margin-bottom: 48px;
+  }
+
+  /* install line */
+  .install-line {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--faint);
+    border: 1px solid var(--dim);
+    padding: 12px 24px;
+    font-size: 0.9rem;
+    margin-bottom: 40px;
+    max-width: 520px;
+  }
+  .install-line .prompt { color: var(--sage3); margin-right: 10px; }
+  .install-line .cmd   { color: var(--sage); }
+
+  /* breath divider */
+  .breath { width: 40px; height: 1px; background: var(--dim); margin: 0 auto 40px; }
+
+  /* feat pills */
+  .feat-row {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  }
+  .feat-pill {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--sage3);
+    border: 1px solid var(--dim);
+    padding: 4px 12px;
+    text-transform: uppercase;
+  }
+
+  /* SECTIONS */
+  .wrap { max-width: 780px; margin: 0 auto; padding: 72px 24px; }
+
+  .sec-label {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  /* terminal — minimal, understated */
+  .term-block {
+    background: var(--faint);
+    border: 1px solid var(--dim);
+    padding: 24px 28px;
+    font-size: 12px;
+    line-height: 1.9;
+  }
+  .tl { margin-bottom: 0; }
+  .t-sage  { color: var(--sage); }
+  .t-sage2 { color: var(--sage2); }
+  .t-sage3 { color: var(--sage3); }
+  .t-muted { color: var(--muted); }
+  .t-text  { color: var(--text); }
+  .t-faint { color: var(--dim); }
+
+  /* features — two columns, sparse */
+  .feat-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .feat-item {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--dim);
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .feat-item:nth-child(odd)  { padding-right: 24px; border-right: 1px solid var(--dim); }
+  .feat-item:nth-child(even) { padding-left: 24px; }
+  .feat-item:nth-last-child(-n+2) { border-bottom: none; }
+  .fi-dot { color: var(--sage3); flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+  .fi-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sage2);
+    margin-bottom: 3px;
+    letter-spacing: 0.03em;
+  }
+  .fi-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* compare — minimal table */
+  .cmp { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .cmp th {
+    text-align: left; padding: 8px 12px;
+    border-bottom: 1px solid var(--dim);
+    color: var(--muted); font-weight: 400; letter-spacing: 0.05em;
+  }
+  .cmp th.hl { color: var(--sage); border-bottom-color: var(--sage3); }
+  .cmp td { padding: 7px 12px; border-bottom: 1px solid var(--faint); color: var(--muted); }
+  .cmp td.hl { color: var(--sage2); }
+  .yes { color: var(--sage2); } .no { color: #4a3428; } .par { color: #7a6a3a; }
+
+  /* install */
+  .inst-group { margin-bottom: 32px; }
+  .inst-lbl {
+    font-size: 10px; letter-spacing: 0.2em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 10px;
+    font-family: 'Noto Serif KR', serif;
+  }
+  .inst-code {
+    background: var(--faint); border: 1px solid var(--dim);
+    padding: 12px 18px; font-size: 12px; line-height: 1.9;
+  }
+  .inst-code .cm { color: var(--dim); }
+
+  /* horizontal rule */
+  .hr { border: none; border-top: 1px solid var(--dim); margin: 0; }
+
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--dim);
+  }
+  footer a { color: var(--sage3); text-decoration: none; }
+  .footer-title {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--sage3);
+    letter-spacing: 0.2em;
+    margin-bottom: 14px;
+  }
+
+  @media (max-width: 560px) {
+    .feat-list { grid-template-columns: 1fr; }
+    .feat-item:nth-child(odd) { border-right: none; padding-right: 0; }
+    .feat-item:nth-child(even) { padding-left: 0; }
+    .feat-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--dim); }
+    .feat-item:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<div class="ctrl-bar">
+  <div class="theme-toggle">
+    <div class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</div>
+    <div class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</div>
+  </div>
+  <div class="lang-toggle">
+    <div class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</div>
+    <div class="lang-btn" id="btn-en" onclick="setLang('en')">EN</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero above">
+  <div class="zen-label" data-ko="오픈소스 · 터미널 · AI" data-en="open-source · terminal · AI">오픈소스 · 터미널 · AI</div>
+  <div class="hero-title">hanimo</div>
+  <div class="hero-en" data-ko="오픈소스 AI 코딩 플랫폼" data-en="The open-source AI coding platform">오픈소스 AI 코딩 플랫폼</div>
+  <div class="hero-kr" data-ko="터미널에서 바로. 조용하게. 확실하게." data-en="In your terminal. Quiet. Reliable.">터미널에서 바로. 조용하게. 확실하게.</div>
+  <div class="install-line">
+    <span class="prompt">$</span>
+    <span class="cmd">curl -fsSL https://hanimo.dev/install.sh | sh</span>
+  </div>
+  <div class="breath"></div>
+  <div class="feat-row">
+    <div class="feat-pill" data-ko="해시 앵커 편집" data-en="Hash-Anchored Edits">해시 앵커 편집</div>
+    <div class="feat-pill" data-ko="14+ LLM" data-en="14+ LLMs">14+ LLM</div>
+    <div class="feat-pill" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</div>
+    <div class="feat-pill" data-ko="/auto 20회" data-en="/auto 20 iters">/auto 20회</div>
+    <div class="feat-pill" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+    <div class="feat-pill" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+  </div>
+</div>
+
+<hr class="hr above">
+
+<!-- TERMINAL PREVIEW -->
+<div class="above">
+  <div class="wrap">
+    <div class="sec-label" data-ko="미리보기" data-en="Preview">미리보기</div>
+    <div class="term-block">
+      <div class="tl"><span class="t-sage">hanimo</span> <span class="t-muted">v0.9.2</span> <span class="t-faint">·</span> <span class="t-sage3">claude-3-7-sonnet</span></div>
+      <div class="tl t-muted">SQLite: ~/.hanimo/sessions.db</div>
+      <div class="tl">&nbsp;</div>
+      <div class="tl"><span class="t-sage3">›</span> <span class="t-text">HTTP 클라이언트 재시도 로직 추가해줘</span></div>
+      <div class="tl t-muted">&nbsp; planning...</div>
+      <div class="tl"><span class="t-sage2">&nbsp; ✎ client/retry.go</span></div>
+      <div class="tl"><span class="t-sage2">&nbsp; ✎ client/retry_test.go</span></div>
+      <div class="tl"><span class="t-sage">&nbsp; ✓ go test → pass</span></div>
+      <div class="tl">&nbsp;</div>
+      <div class="tl"><span class="t-sage3">›</span> <span class="t-text">/auto 지수 백오프 추가 후 벤치마크</span></div>
+      <div class="tl t-muted">&nbsp; [iter 1/20] backoff strategy...</div>
+      <div class="tl t-muted">&nbsp; [iter 2/20] bench_test.go...</div>
+      <div class="tl"><span class="t-sage">&nbsp; ✓ 2 iters · coverage 91%</span></div>
+    </div>
+  </div>
+</div>
+
+<hr class="hr above">
+
+<!-- FEATURES -->
+<div class="above">
+  <div class="wrap">
+    <div class="sec-label" data-ko="기능" data-en="Features">기능</div>
+    <div class="feat-list">
+      <div class="feat-item">
+        <div class="fi-dot">·</div>
+        <div>
+          <div class="fi-name" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</div>
+          <div class="fi-desc" data-ko="라인별 MD5. 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 충돌 없음.</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="fi-dot">·</div>
+        <div>
+          <div class="fi-name" data-ko="14+ LLM 제공자" data-en="14+ LLM Providers">14+ LLM 제공자</div>
+          <div class="fi-desc" data-ko="Claude, GPT-4o, Gemini, Ollama 등." data-en="Claude, GPT-4o, Gemini, Ollama, more.">Claude, GPT-4o, Gemini, Ollama 등.</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="fi-dot">·</div>
+        <div>
+          <div class="fi-name" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</div>
+          <div class="fi-desc" data-ko="대화 요약. 토큰 절반 절감." data-en="Summarizes turns. Halves token use.">대화 요약. 토큰 절반 절감.</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="fi-dot">·</div>
+        <div>
+          <div class="fi-name" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</div>
+          <div class="fi-desc" data-ko="최대 20회. 개입 불필요." data-en="Up to 20 iters. No hand-holding.">최대 20회. 개입 불필요.</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="fi-dot">·</div>
+        <div>
+          <div class="fi-name" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+          <div class="fi-desc" data-ko="로컬 저장. 이어서 작업, 검색." data-en="Local persist. Resume and search.">로컬 저장. 이어서 작업, 검색.</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="fi-dot">·</div>
+        <div>
+          <div class="fi-name" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+          <div class="fi-desc" data-ko="파일·git·DB 연결. 확장 가능." data-en="Filesystem, git, DB. Extensible.">파일·git·DB 연결. 확장 가능.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="hr above">
+
+<!-- COMPARE -->
+<div class="above">
+  <div class="wrap">
+    <div class="sec-label" data-ko="비교" data-en="Comparison">비교</div>
+    <table class="cmp">
+      <thead>
+        <tr>
+          <th data-ko="기능" data-en="Feature">기능</th>
+          <th class="hl">hanimo</th>
+          <th>Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td data-ko="오픈소스" data-en="Open Source">오픈소스</td><td class="hl yes">✓ Apache-2.0</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+        <tr><td data-ko="14+ LLM" data-en="14+ LLMs">14+ LLM</td><td class="hl yes">✓</td><td class="no">✗</td><td class="par">~</td><td class="yes">✓</td></tr>
+        <tr><td data-ko="해시 앵커" data-en="Hash-Anchored">해시 앵커</td><td class="hl yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>SQLite</td><td class="hl yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>/auto</td><td class="hl yes">✓ 20회</td><td class="yes">✓</td><td class="par">~</td><td class="par">~</td></tr>
+        <tr><td>MCP</td><td class="hl yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td data-ko="비용" data-en="Cost">비용</td><td class="hl yes" data-ko="무료 + API" data-en="Free + API">무료 + API</td><td class="no">$20/mo+</td><td class="no">$20/mo+</td><td class="yes" data-ko="무료 + API" data-en="Free + API">무료 + API</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<hr class="hr above">
+
+<!-- INSTALL -->
+<div class="above">
+  <div class="wrap">
+    <div class="sec-label" data-ko="설치" data-en="Installation">설치</div>
+    <div class="inst-group">
+      <div class="inst-lbl" data-ko="curl · 권장" data-en="curl · recommended">curl · 권장</div>
+      <div class="inst-code">
+        <span class="t-sage3">$</span> <span class="t-sage">curl -fsSL https://hanimo.dev/install.sh | sh</span>
+      </div>
+    </div>
+    <div class="inst-group">
+      <div class="inst-lbl">Homebrew</div>
+      <div class="inst-code">
+        <span class="t-sage3">$</span> <span class="t-sage2">brew tap flykimjiwon/hanimo</span><br>
+        <span class="t-sage3">$</span> <span class="t-sage2">brew install hanimo</span>
+      </div>
+    </div>
+    <div class="inst-group">
+      <div class="inst-lbl" data-ko="소스 빌드 · Go 1.22+" data-en="Build from source · Go 1.22+">소스 빌드 · Go 1.22+</div>
+      <div class="inst-code">
+        <span class="cm"># Go 1.22+</span><br>
+        <span class="t-sage3">$</span> <span class="t-sage3">git clone https://github.com/flykimjiwon/hanimo</span><br>
+        <span class="t-sage3">$</span> <span class="t-sage3">cd hanimo &amp;&amp; go build -o hanimo ./cmd/hanimo</span><br>
+        <span class="t-sage3">$</span> <span class="t-sage3">./hanimo</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="above">
+  <div class="footer-title">hanimo</div>
+  <div style="margin-bottom:6px;">
+    <a href="https://github.com/flykimjiwon/hanimo">flykimjiwon/hanimo</a> &nbsp;·&nbsp;
+    <a href="https://hanimo.dev">hanimo.dev</a> &nbsp;·&nbsp; Apache-2.0
+  </div>
+  <div data-ko="오픈소스를 위한 AI 코딩 에이전트 · © 2024 kimjiwon" data-en="AI coding agent for open-source · © 2024 kimjiwon">오픈소스를 위한 AI 코딩 에이전트 · © 2024 kimjiwon</div>
+</footer>
+
+<script>
+  /* matrix rain — very slow, very faint */
+  (function() {
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    const CHARS = 'ハニモあいうえおアイウエオabcdefghijklmnopqrstuvwxyz0123456789';
+    let cols, drops;
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      cols  = Math.floor(canvas.width / 22);
+      drops = Array.from({ length: cols }, () => Math.random() * -100);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    function draw() {
+      ctx.fillStyle = 'rgba(12,10,9,0.06)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = '14px JetBrains Mono, monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const char = CHARS[Math.floor(Math.random() * CHARS.length)];
+        const x = i * 22;
+        const y = drops[i] * 22;
+
+        /* leading char slightly brighter */
+        ctx.fillStyle = '#84cc16';
+        ctx.fillText(char, x, y);
+
+        /* trail */
+        if (Math.random() > 0.97) {
+          ctx.fillStyle = '#3f6212';
+          ctx.fillText(CHARS[Math.floor(Math.random() * CHARS.length)], x, y - 22);
+        }
+
+        /* very slow drop speed */
+        if (y > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i] += 0.25; /* slow */
+      }
+    }
+
+    /* ~20fps — meditative pace */
+    setInterval(draw, 50);
+  })();
+
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('hanimo-theme', t);
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+  }
+  function setLang(lang) {
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      el.textContent = el.getAttribute('data-' + lang);
+    });
+    document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.documentElement.lang = lang;
+  }
+  (function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+</script>
+</body>
+</html>

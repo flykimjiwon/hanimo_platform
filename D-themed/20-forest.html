@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Forest Theme</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0d1117',
+            surface: '#161b22',
+            surfaceHigh: '#21262d',
+            green: '#22c55e',
+            greenDark: '#16a34a',
+            lime: '#84cc16',
+            greenDim: '#166534',
+            text: '#d1d5db',
+            subtext: '#9ca3af',
+            muted: '#4b5563',
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'monospace'],
+            display: ['Share Tech Mono', 'monospace'],
+            sans: ['IBM Plex Sans', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background-color: #0d1117; color: #d1d5db; font-family: 'IBM Plex Sans', sans-serif; overflow-x: hidden; }
+
+    /* Phosphor scanlines */
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(34,197,94,0.015) 2px,
+        rgba(34,197,94,0.015) 4px
+      );
+    }
+
+    /* CRT glow */
+    .phosphor-glow {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 900px; height: 600px;
+      background: radial-gradient(ellipse, rgba(34,197,94,0.04) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .edge-glow {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
+    }
+
+    /* Matrix rain effect chars in bg */
+    .matrix-chars {
+      position: fixed; top: 0; right: 0; width: 200px; height: 100vh;
+      overflow: hidden; pointer-events: none; z-index: 0; opacity: 0.04;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #22c55e;
+      line-height: 1.4;
+    }
+
+    /* Theme switcher */
+    .theme-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      padding: 3px 10px; border-radius: 0; border: 1px solid #21262d;
+      color: #4b5563; cursor: pointer; transition: all 0.15s; text-decoration: none;
+    }
+    .theme-pill.active { background: #22c55e; color: #0d1117; border-color: #22c55e; font-weight: 700; }
+    .theme-pill:hover:not(.active) { border-color: #4b5563; color: #9ca3af; }
+
+    /* Terminal */
+    .terminal {
+      background: #060b0e; border: 1px solid #22c55e;
+      border-radius: 2px; overflow: hidden;
+      box-shadow: 0 0 30px rgba(34,197,94,0.15), 0 0 80px rgba(34,197,94,0.05), inset 0 0 30px rgba(0,0,0,0.5);
+    }
+    .terminal-titlebar {
+      background: #0d1117; padding: 8px 16px; display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid #22c55e; border-bottom-opacity: 0.3;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .terminal-body { padding: 20px 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.75; }
+
+    .c-green { color: #22c55e; }
+    .c-lime { color: #84cc16; }
+    .c-green-dark { color: #16a34a; }
+    .c-green-bright { color: #4ade80; }
+    .c-text { color: #d1d5db; }
+    .c-sub { color: #9ca3af; }
+    .c-muted { color: #4b5563; }
+    .c-dim { color: #1f6629; }
+
+    /* Feature card — terminal window style */
+    .feature-card {
+      background: #0a0f12; border: 1px solid #21262d; border-radius: 2px;
+      padding: 24px; transition: all 0.2s; position: relative;
+    }
+    .feature-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(34,197,94,0.4), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover {
+      border-color: rgba(34,197,94,0.4);
+      box-shadow: 0 0 20px rgba(34,197,94,0.08);
+    }
+
+    .provider-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      background: #0a0f12; border: 1px solid #21262d;
+      padding: 5px 12px; border-radius: 0; color: #9ca3af;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .provider-pill:hover { border-color: #22c55e; color: #22c55e; text-shadow: 0 0 8px rgba(34,197,94,0.5); }
+
+    /* Block cursor */
+    .cursor {
+      display: inline-block; width: 8px; height: 14px;
+      background: #22c55e; animation: blink 1s step-end infinite;
+      vertical-align: middle; box-shadow: 0 0 8px rgba(34,197,94,0.8);
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes scanIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: scanIn 0.5s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    /* Glitch effect on logo */
+    @keyframes glitch {
+      0%, 90%, 100% { text-shadow: 0 0 10px rgba(34,197,94,0.5); transform: none; }
+      92% { transform: translateX(-2px); text-shadow: 2px 0 rgba(132,204,22,0.6), -2px 0 rgba(34,197,94,0.6); }
+      94% { transform: translateX(2px); text-shadow: -2px 0 rgba(132,204,22,0.6), 2px 0 rgba(34,197,94,0.6); }
+      96% { transform: none; }
+    }
+    .glitch { animation: glitch 5s infinite; }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #22c55e 0%, #84cc16 70%, #4ade80 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .theme-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3);
+      color: #22c55e; padding: 3px 10px; border-radius: 0; letter-spacing: 0.05em;
+      text-shadow: 0 0 8px rgba(34,197,94,0.4);
+    }
+
+    .forest-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(34,197,94,0.3), transparent); }
+
+    .btn-primary {
+      background: transparent; border: 1px solid #22c55e;
+      color: #22c55e; font-weight: 600; padding: 12px 28px; border-radius: 0;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px;
+      text-shadow: 0 0 8px rgba(34,197,94,0.4);
+      box-shadow: 0 0 15px rgba(34,197,94,0.1), inset 0 0 15px rgba(34,197,94,0.03);
+    }
+    .btn-primary:hover {
+      background: rgba(34,197,94,0.12);
+      box-shadow: 0 0 25px rgba(34,197,94,0.2), inset 0 0 15px rgba(34,197,94,0.05);
+    }
+
+    .btn-secondary {
+      background: transparent; border: 1px solid #21262d;
+      color: #9ca3af; padding: 12px 28px; border-radius: 0;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: #4b5563; color: #d1d5db; }
+
+    /* Section marker */
+    .section-marker { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #4b5563; margin-bottom: 4px; }
+
+    .section { position: relative; z-index: 2; }
+    nav { position: relative; z-index: 10; }
+
+    /* Retro corner brackets */
+    .bracket-box {
+      position: relative; padding: 24px;
+    }
+    .bracket-box::before, .bracket-box::after,
+    .bracket-box .br1, .bracket-box .br2 {
+      content: ''; position: absolute; width: 12px; height: 12px;
+    }
+    .bracket-box::before { top: 0; left: 0; border-top: 1px solid #22c55e; border-left: 1px solid #22c55e; }
+    .bracket-box::after { top: 0; right: 0; border-top: 1px solid #22c55e; border-right: 1px solid #22c55e; }
+
+    /* Why card */
+    .why-card {
+      background: #0a0f12; border: 1px solid #21262d; border-radius: 2px;
+      padding: 32px 24px; text-align: center; transition: all 0.2s;
+    }
+    .why-card:hover { border-color: rgba(34,197,94,0.3); box-shadow: 0 0 20px rgba(34,197,94,0.06); }
+
+    /* Inline code */
+    code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: #22c55e; }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 12px; right: 16px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  }
+  .ctl-row { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: rgba(30,30,46,0.85); backdrop-filter: blur(10px); }
+  .ctl-btn {
+    background: transparent; border: none; color: rgba(205,214,244,0.5);
+    padding: 5px 12px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.08em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 1px solid rgba(255,255,255,0.1); }
+  .ctl-btn.active { background: rgba(205,214,244,0.15); color: #cdd6f4; }
+  [data-theme="light"] .ctl-row { background: rgba(239,241,245,0.9); border-color: rgba(76,79,105,0.2); }
+  [data-theme="light"] .ctl-btn { color: rgba(76,79,105,0.5); }
+  [data-theme="light"] .ctl-btn.active { background: rgba(76,79,105,0.12); color: #4c4f69; }
+
+  [data-theme="light"] body { background-color: #eff1f5 !important; color: #4c4f69 !important; }
+  [data-theme="light"] nav { background: rgba(239,241,245,0.95) !important; border-color: #ccd0da !important; }
+  [data-theme="light"] .bg-surface { background: #e6e9ef !important; }
+  [data-theme="light"] .bg-surface { background: #e6e9ef !important; }
+  [data-theme="light"] .border-surface { border-color: #ccd0da !important; }
+  [data-theme="light"] .border-surfaceHigh { border-color: #bcc0cc !important; }
+  [data-theme="light"] .text-text { color: #4c4f69 !important; }
+  [data-theme="light"] .text-subtext { color: #5c5f77 !important; }
+  [data-theme="light"] .text-muted { color: #7c7f93 !important; }
+  [data-theme="light"] footer { background: rgba(230,233,239,0.5) !important; border-color: #ccd0da !important; }
+
+  [data-theme="light"] .gradient-text { background: none !important; color: #16a34a !important; text-shadow: none !important; }
+  [data-theme="light"] .c-green { color: #16a34a !important; }
+  [data-theme="light"] .c-lime { color: #65a30d !important; }
+  </style>
+</head>
+<body>
+
+<!-- Toggle controls -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+  <div class="phosphor-glow"></div>
+  <div class="edge-glow"></div>
+
+  <!-- Nav -->
+  <nav class="border-b border-surfaceHigh">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <span class="font-display text-2xl font-normal text-green glitch tracking-tight" style="text-shadow: 0 0 12px rgba(34,197,94,0.5)">hanimo</span>
+        <span class="theme-badge">theme: forest</span>
+      </div>
+      <div class="hidden md:flex gap-2">
+        <a href="16-honey.html" class="theme-pill">honey</a>
+        <a href="17-ocean.html" class="theme-pill">ocean</a>
+        <a href="18-dracula.html" class="theme-pill">dracula</a>
+        <a href="19-nord.html" class="theme-pill">nord</a>
+        <a href="20-forest.html" class="theme-pill active">forest</a>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="#features" class="text-sm c-muted hover:text-green transition-colors font-mono" data-ko="[기능]" data-en="[features]">[기능]</a>
+        <a href="#providers" class="text-sm c-muted hover:text-green transition-colors font-mono" data-ko="[프로바이더]" data-en="[providers]">[프로바이더]</a>
+        <a href="#docs" class="text-sm c-muted hover:text-green transition-colors font-mono" data-ko="[문서]" data-en="[docs]">[문서]</a>
+        <a href="https://github.com/flykimjiwon/hanimo" class="text-sm font-mono c-green hover:text-lime transition-colors" style="text-shadow:0 0 6px rgba(34,197,94,0.4)">~/github →</a>
+      </div>
+    </div>
+    <div class="md:hidden px-6 pb-3 flex gap-2 overflow-x-auto">
+      <a href="16-honey.html" class="theme-pill">honey</a>
+      <a href="17-ocean.html" class="theme-pill">ocean</a>
+      <a href="18-dracula.html" class="theme-pill">dracula</a>
+      <a href="19-nord.html" class="theme-pill">nord</a>
+      <a href="20-forest.html" class="theme-pill active">forest</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="section max-w-6xl mx-auto px-6 pt-20 pb-16">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <div class="fade-up mb-4">
+          <div class="font-mono text-xs c-muted">
+            <span class="c-green">root@hanimo</span><span class="c-muted">:</span><span class="c-lime">~</span><span class="c-muted">$ cat README.md</span>
+          </div>
+        </div>
+        <h1 class="fade-up delay-1 font-display text-5xl lg:text-6xl font-normal leading-tight mb-3" style="text-shadow: 0 0 40px rgba(34,197,94,0.1)">
+          <span data-ko="오픈소스" data-en="The open-source">오픈소스</span><br /><span class="gradient-text" data-ko="AI 코딩" data-en="AI coding">AI 코딩</span><br /><span data-ko="플랫폼" data-en="platform">플랫폼</span>
+        </h1>
+        <p class="fade-up delay-2 font-mono text-xs c-green mb-2" style="text-shadow: 0 0 6px rgba(34,197,94,0.4)" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="AI coding agent for open-source">오픈소스를 위한 AI 코딩 에이전트</p>
+        <p class="fade-up delay-2 font-sans text-subtext text-base mb-8 max-w-md leading-relaxed" data-ko="Go로 만든 터미널 네이티브 AI 코딩 에이전트. 포스포 그린 포커스. 14개 이상의 LLM 프로바이더, 해시 앵커 편집, /auto 자율 모드, SQLite 세션." data-en="Terminal-native AI coding agent in Go. Phosphor-green focus. 14+ LLM providers, hash-anchored edits, /auto autonomous mode, SQLite sessions.">
+          Go로 만든 터미널 네이티브 AI 코딩 에이전트. 포스포 그린 포커스. 14개 이상의 LLM 프로바이더, 해시 앵커 편집, /auto 자율 모드, SQLite 세션.
+        </p>
+
+        <div class="fade-up delay-3 mb-8">
+          <div class="terminal inline-block">
+            <div class="px-4 py-3 font-mono text-sm flex items-center gap-3">
+              <span class="c-green">$</span>
+              <span class="text-text">curl -fsSL https://hanimo.dev/install.sh | sh</span>
+              <button class="c-muted hover:text-green transition-colors text-xs">⎘</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fade-up delay-4 flex items-center gap-4 flex-wrap">
+          <a href="#" class="btn-primary">./install →</a>
+          <a href="https://github.com/flykimjiwon/hanimo" class="btn-secondary">⭐ GitHub</a>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="fade-up delay-3">
+        <div class="terminal">
+          <div class="terminal-titlebar">
+            <div class="dot" style="background:#ff5f57"></div>
+            <div class="dot" style="background:#febc2e"></div>
+            <div class="dot" style="background:#28c840"></div>
+            <span class="ml-3 font-mono text-xs c-muted">hanimo — /auto mode — forest theme</span>
+          </div>
+          <div class="terminal-body">
+            <div class="mb-2">
+              <span class="c-green">root@dev</span><span class="c-muted">:</span><span class="c-lime">~/project</span><span class="c-muted">$ </span>
+              <span class="c-text">hanimo</span>
+              <span class="c-muted"> --provider deepseek --model deepseek-coder</span>
+            </div>
+            <div class="c-green mb-3 text-xs" style="text-shadow:0 0 6px rgba(34,197,94,0.4)">
+              █ hanimo v0.4.1 · forest theme · Super mode
+            </div>
+
+            <div class="mb-1 text-xs c-muted">&#9474; session: backend-perf-opt (SQLite)</div>
+            <div class="mb-3 text-xs c-muted">&#9474; 15 messages · 18.4k tokens · ctx 61%</div>
+
+            <div class="mb-1 text-xs"><span class="c-green">you@dev</span> <span class="c-muted">&gt;</span> <span class="c-text">/auto optimize the database query bottlenecks</span></div>
+            <div class="mb-2 ml-4 text-xs">
+              <span class="c-lime">⌁ autonomous mode · crunching data</span>
+            </div>
+
+            <div class="c-green text-xs mb-1">[ READ ] db/queries.go <span class="c-muted">[#7c3aed]</span></div>
+            <div class="c-green text-xs mb-1">[ ANAL ] N+1 query detected at line 142</div>
+            <div class="c-lime text-xs mb-1">[ EDIT ] db/queries.go:138-156 (batch load)</div>
+            <div class="c-lime text-xs mb-1">[ EDIT ] db/cache.go (Redis layer added)</div>
+            <div class="c-green text-xs mb-3">[ TEST ] go test ./db/... → 22/22 PASS</div>
+
+            <div class="mb-1 c-green-bright text-xs">&#9654; Query time: 1,240ms → 43ms (-96.5%)</div>
+            <div class="mb-1 c-green text-xs">&#9654; All optimizations applied successfully</div>
+
+            <div class="mt-3">
+              <span class="c-green">root@dev</span><span class="c-muted">:</span><span class="c-lime">~/project</span><span class="c-muted">$ </span>
+              <span class="cursor"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section class="section max-w-6xl mx-auto px-6 py-12">
+    <div class="forest-divider mb-12"></div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="why-card">
+        <div class="font-mono text-xs c-muted mb-3">[01]</div>
+        <div class="c-green text-xl font-display mb-2">Open Source</div>
+        <p class="text-subtext text-sm">Apache-2.0. Zero telemetry. Own the binary. Fork the future.</p>
+      </div>
+      <div class="why-card">
+        <div class="font-mono text-xs c-muted mb-3">[02]</div>
+        <div class="c-lime text-xl font-display mb-2">Local First</div>
+        <p class="text-subtext text-sm">Ollama, LM Studio, vLLM. Air-gapped if needed. Your machine, your data.</p>
+      </div>
+      <div class="why-card">
+        <div class="font-mono text-xs c-muted mb-3">[03]</div>
+        <div class="c-green text-xl font-display mb-2">Model Agnostic</div>
+        <p class="text-subtext text-sm">14+ providers. Switch with a flag. No lock-in. No vendor games.</p>
+      </div>
+    </div>
+    <div class="forest-divider mt-12"></div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="mb-12">
+      <div class="section-marker">// features.go</div>
+      <h2 class="font-display text-4xl font-normal mt-2 c-green" style="text-shadow: 0 0 30px rgba(34,197,94,0.15)">
+        Built for<br /><span class="gradient-text">power users.</span>
+      </h2>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">// hash-edit</div>
+        <div class="c-green font-display text-xl mb-2">Hash-Anchored Editing</div>
+        <p class="text-subtext text-sm leading-relaxed">Content hashes anchor every edit. Zero stale writes. Your codebase stays exactly as you last saw it.</p>
+        <div class="mt-4 font-mono text-xs c-muted">db/queries.go <span class="c-green">[#7c3aed]</span></div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">// providers</div>
+        <div class="c-lime font-display text-xl mb-2">14+ LLM Providers</div>
+        <p class="text-subtext text-sm leading-relaxed">DeepSeek, Ollama, OpenAI, Anthropic, Groq, Mistral, Google, vLLM and more. One binary to rule them all.</p>
+        <div class="mt-4 font-mono text-xs c-muted"><span class="c-green">--provider deepseek</span> <span class="c-muted">--model deepseek-coder</span></div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">// compaction</div>
+        <div class="c-green font-display text-xl mb-2">Smart Compaction</div>
+        <p class="text-subtext text-sm leading-relaxed">Automatic context window management. Keeps coding sessions alive indefinitely without hitting limits.</p>
+        <div class="mt-4 font-mono text-xs c-muted">ctx: <span class="c-lime">61%</span> used · auto-compact at 85%</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">// /auto</div>
+        <div class="c-green font-display text-xl mb-2">/auto Autonomous Mode</div>
+        <p class="text-subtext text-sm leading-relaxed">Plan → analyze → edit → test → iterate. Autonomous execution, step by step, no manual driving.</p>
+        <div class="mt-4 font-mono text-xs c-muted"><span class="c-green">/auto</span> optimize the database queries</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">// sessions</div>
+        <div class="c-lime font-display text-xl mb-2">SQLite Sessions</div>
+        <p class="text-subtext text-sm leading-relaxed">Every session written to local SQLite. Resume any past conversation. Full context restored instantly.</p>
+        <div class="mt-4 font-mono text-xs c-muted"><span class="c-lime">/save</span> perf-opt · <span class="c-lime">/remember</span> redis-plan</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">// mcp</div>
+        <div class="c-green font-display text-xl mb-2">MCP Support</div>
+        <p class="text-subtext text-sm leading-relaxed">Model Context Protocol. Attach any tool: databases, APIs, terminal, browsers, custom integrations.</p>
+        <div class="mt-4 font-mono text-xs c-muted">MCP: <span class="c-green">redis</span> · <span class="c-green">postgres</span> · <span class="c-lime">k8s</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Providers -->
+  <section id="providers" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="forest-divider mb-12"></div>
+    <div class="mb-8">
+      <div class="section-marker">// providers.go</div>
+      <h2 class="font-display text-3xl font-normal mt-2 c-text">Every model. One agent.</h2>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <span class="provider-pill">Ollama</span>
+      <span class="provider-pill">OpenAI</span>
+      <span class="provider-pill">Anthropic</span>
+      <span class="provider-pill">Google</span>
+      <span class="provider-pill">DeepSeek</span>
+      <span class="provider-pill">Groq</span>
+      <span class="provider-pill">Mistral</span>
+      <span class="provider-pill">Novita</span>
+      <span class="provider-pill">OpenRouter</span>
+      <span class="provider-pill">vLLM</span>
+      <span class="provider-pill">LM Studio</span>
+      <span class="provider-pill">Together</span>
+      <span class="provider-pill">Fireworks</span>
+      <span class="provider-pill">Custom OpenAI</span>
+    </div>
+    <div class="forest-divider mt-12"></div>
+  </section>
+
+  <!-- Install -->
+  <section id="docs" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="mb-8">
+      <div class="section-marker">// install.sh</div>
+      <h2 class="font-display text-3xl font-normal mt-2 c-text">Boot up in seconds.</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5 mb-10">
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div><span class="ml-2 font-mono text-xs c-muted">curl</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># Linux / macOS</div>
+          <div><span class="c-green">$</span> <span class="c-text">curl -fsSL</span> <span class="c-lime">https://hanimo.dev/install.sh</span> <span class="c-text">| sh</span></div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div><span class="ml-2 font-mono text-xs c-muted">homebrew</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># macOS</div>
+          <div><span class="c-green">$</span> <span class="c-text">brew tap</span> <span class="c-lime">flykimjiwon/tap</span></div>
+          <div class="mt-1"><span class="c-green">$</span> <span class="c-text">brew install hanimo</span></div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div><span class="ml-2 font-mono text-xs c-muted">go build</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># From source</div>
+          <div><span class="c-green">$</span> <span class="c-text">git clone</span> <span class="c-lime">github.com/flykimjiwon/hanimo</span></div>
+          <div class="mt-1"><span class="c-green">$</span> <span class="c-text">go build ./...</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="why-card">
+        <div class="font-mono text-xs c-green mb-2">Super mode</div>
+        <div class="text-subtext text-sm">Full access. Read, write, exec. Max capability.</div>
+      </div>
+      <div class="why-card">
+        <div class="font-mono text-xs c-lime mb-2">Dev mode</div>
+        <div class="text-subtext text-sm">Code edit + diagnostics. No shell execution.</div>
+      </div>
+      <div class="why-card">
+        <div class="font-mono text-xs c-green mb-2">Plan mode</div>
+        <div class="text-subtext text-sm">Read-only. Proposes before touching anything.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="section border-t border-surfaceHigh">
+    <div class="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between items-start gap-6">
+      <div>
+        <div class="font-display text-xl c-green mb-1" style="text-shadow:0 0 10px rgba(34,197,94,0.4)">hanimo</div>
+        <div class="font-mono text-xs c-muted">Apache-2.0 · Built with Go</div>
+        <div class="font-mono text-xs c-muted mt-1">theme: <span class="c-green">forest</span></div>
+      </div>
+      <div class="flex gap-8 text-sm text-subtext">
+        <div>
+          <div class="font-mono text-xs c-muted mb-2">// links</div>
+          <div class="space-y-1 font-mono text-xs">
+            <div><a href="https://github.com/flykimjiwon/hanimo" class="c-muted hover:text-green transition-colors">github.com/flykimjiwon/hanimo</a></div>
+            <div><a href="https://hanimo.dev" class="c-muted hover:text-green transition-colors">hanimo.dev</a></div>
+          </div>
+        </div>
+        <div>
+          <div class="font-mono text-xs c-muted mb-2">// commands</div>
+          <div class="space-y-1 font-mono text-xs c-muted">
+            <div><span class="c-green">/auto</span> · /save · /remember</div>
+            <div><span class="c-lime">/diagnostics</span> · /theme</div>
+            <div><span class="c-green">/theme forest</span> ← you are here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('hanimo-theme', t);
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+  }
+  (function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+
+  function setLang(lang) {
+    document.documentElement.lang = lang;
+    localStorage.setItem('hanimo-lang', lang);
+    document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+    document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  }
+  (function init() {
+    const theme = localStorage.getItem('hanimo-theme') || 'dark';
+    const lang = localStorage.getItem('hanimo-lang') || 'ko';
+    setTheme(theme);
+    setLang(lang);
+  })();
+</script>
+
+</body>
+</html>

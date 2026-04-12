@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — sticker scrapbook</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'light';document.documentElement.dataset.theme=t;})();</script>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Kalam:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5f0e8; --cream2: #ede8df; --cream3: #ddd5c5;
+    --ink: #2d2416; --ink-light: #6b5c42; --ink-faint: #b0a090;
+    --hl-yellow: #ffe066; --hl-pink: #ffb3c6; --hl-blue: #b3d9ff; --hl-green: #b3f0d0;
+    --washi-r: #e85d5d; --washi-b: #5d7ee8; --washi-m: #5de8b8; --washi-p: #b85de8;
+    --stk-green: #2ecc71; --stk-orange: #ff6b35; --stk-star: #f0c000;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: var(--cream);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeBlend in='SourceGraphic' mode='multiply'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+    color: var(--ink); overflow-x: hidden;
+  }
+
+  /* dark theme */
+  [data-theme="dark"] body { background: #1a1510; color: #e8dcc8; background-image: none; }
+  [data-theme="dark"] nav { background: rgba(26,21,16,0.94); border-bottom-color: #3a3020; }
+  [data-theme="dark"] .nav-logo { color: #e8dcc8; }
+  [data-theme="dark"] .nav-gh { background: #e8dcc8 !important; color: #1a1510 !important; }
+  /* Lang + theme toggle */
+  .ctrl-bar {
+    position: fixed; top: 16px; right: 10px; z-index: 200;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .lang-toggle {
+    display: flex; border-radius: 6px; overflow: hidden;
+    border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink-faint);
+  }
+  .theme-toggle {
+    display: flex; border-radius: 6px; overflow: hidden;
+    border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink-faint);
+  }
+  .lang-btn, .theme-btn {
+    font-family: 'Kalam', cursive; font-size: 0.85rem; font-weight: 700;
+    padding: 5px 12px; border: none; cursor: pointer; transition: all 0.15s;
+  }
+  .lang-btn.active, .theme-btn.active { background: var(--ink); color: var(--cream); }
+  .lang-btn:not(.active), .theme-btn:not(.active) { background: var(--cream2); color: var(--ink-light); }
+  .lang-btn:hover:not(.active), .theme-btn:hover:not(.active) { background: var(--hl-yellow); color: var(--ink); }
+  [data-theme="dark"] .lang-btn:not(.active), [data-theme="dark"] .theme-btn:not(.active) { background: #2a2218; color: #c8b89a; }
+  [data-theme="dark"] .lang-btn.active, [data-theme="dark"] .theme-btn.active { background: #c8b89a; color: #1a1510; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(245,240,232,0.92); backdrop-filter: blur(8px);
+    padding: 13px 28px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid var(--cream3);
+  }
+  .nav-logo {
+    font-family: 'Caveat', cursive; font-size: 1.8rem; font-weight: 700;
+    color: var(--ink); text-decoration: none; transform: rotate(-1deg); display: inline-block;
+  }
+  .nav-logo::after { content: ' ♥'; color: var(--washi-r); }
+  .nav-links { display: flex; gap: 14px; align-items: center; }
+  .nav-links a { font-family: 'Caveat', cursive; font-size: 1.15rem; color: var(--ink-light); text-decoration: none; transition: color 0.15s; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-gh { background: var(--ink) !important; color: var(--cream) !important; padding: 5px 16px; border-radius: 4px; transform: rotate(0.5deg); font-weight: 700; }
+  .nav-gh:hover { transform: rotate(-0.5deg) scale(1.03) !important; }
+
+  main { padding-top: 78px; }
+
+  /* Hero */
+  .hero {
+    min-height: 92vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 60px 24px 40px; position: relative; overflow: hidden;
+  }
+  .deco { position: absolute; pointer-events: none; user-select: none; }
+
+  .hero h1 {
+    font-family: 'Caveat', cursive; font-size: clamp(4rem, 10vw, 8rem);
+    font-weight: 700; line-height: 1; color: var(--ink);
+    position: relative; display: inline-block; margin-bottom: 10px;
+  }
+  .hero h1::after {
+    content: ''; position: absolute; bottom: -6px; left: -6px; right: -6px; height: 6px;
+    background: var(--hl-yellow); transform: rotate(-0.5deg) skewX(-2deg); z-index: -1;
+  }
+  .hero-tagline { font-family: 'Kalam', cursive; font-size: 1.35rem; color: var(--ink-light); margin-bottom: 4px; }
+  .hero-kr { font-family: 'Caveat', cursive; font-size: 1.45rem; color: var(--washi-b); margin-bottom: 28px; display: inline-block; transform: rotate(0.4deg); }
+
+  /* Install box */
+  .install-journal {
+    background: white; border: 2px solid var(--cream3); border-radius: 4px;
+    padding: 22px 28px; max-width: 520px; width: 100%; margin: 0 auto 24px;
+    box-shadow: 4px 4px 0 var(--cream3), 3px 3px 12px rgba(45,36,22,0.1);
+    position: relative; transform: rotate(-0.3deg);
+  }
+  .install-journal::before {
+    content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    width: 72px; height: 20px; background: var(--washi-r); opacity: 0.65; border-radius: 2px;
+  }
+  .install-label { font-family: 'Kalam', cursive; font-size: 0.82rem; color: var(--ink-faint); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .install-line {
+    font-family: 'Kalam', cursive; font-size: 0.9rem; color: var(--ink);
+    background: var(--cream); padding: 9px 12px; border-radius: 4px; margin-bottom: 6px;
+    border-left: 3px solid var(--washi-r); display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .install-line span { word-break: break-all; }
+  .copy-sticker {
+    font-family: 'Caveat', cursive; font-size: 0.88rem; background: var(--hl-yellow);
+    border: none; border-radius: 4px; padding: 3px 9px; cursor: pointer;
+    color: var(--ink); font-weight: 700; flex-shrink: 0; transition: transform 0.1s;
+  }
+  .copy-sticker:hover { transform: scale(1.1) rotate(2deg); }
+
+  .cta-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-main {
+    font-family: 'Caveat', cursive; font-size: 1.35rem; font-weight: 700;
+    background: var(--ink); color: var(--cream); border: none; padding: 13px 32px;
+    border-radius: 4px; cursor: pointer; box-shadow: 4px 4px 0 var(--ink-light);
+    transform: rotate(-0.5deg); display: inline-block; text-decoration: none; transition: all 0.15s;
+  }
+  .btn-main:hover { transform: rotate(0.5deg) translateY(-2px); }
+  .btn-outline {
+    font-family: 'Caveat', cursive; font-size: 1.35rem; font-weight: 700;
+    background: transparent; color: var(--ink); border: 2.5px solid var(--ink);
+    padding: 11px 28px; border-radius: 4px; cursor: pointer;
+    transform: rotate(0.5deg); display: inline-block; text-decoration: none; transition: all 0.15s;
+  }
+  .btn-outline:hover { background: var(--cream2); transform: rotate(-0.5deg); }
+
+  /* Stickers */
+  .sticker { display: inline-block; font-family: 'Caveat', cursive; font-weight: 700; padding: 5px 12px; border-radius: 999px; font-size: 0.9rem; position: absolute; }
+  .stk-new { background: var(--stk-orange); color: white; transform: rotate(-8deg); }
+  .stk-open { background: var(--stk-green); color: white; transform: rotate(5deg); }
+  .stk-free { background: var(--stk-star); color: var(--ink); transform: rotate(-3deg); }
+
+  /* Sections */
+  section { padding: 52px 24px; }
+  .sec-wrap { text-align: center; margin-bottom: 40px; }
+  .sec-title {
+    font-family: 'Caveat', cursive; font-size: 2.3rem; font-weight: 700;
+    position: relative; display: inline-block;
+  }
+  .sec-title::before {
+    content: ''; position: absolute; inset: -6px -14px;
+    border: 2.5px solid var(--ink); border-radius: 50%; transform: rotate(-2deg); opacity: 0.25;
+  }
+
+  /* Polaroid cards */
+  .polaroid-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 28px; max-width: 980px; margin: 0 auto; align-items: start; }
+  .polaroid {
+    background: white; padding: 18px 18px 28px;
+    box-shadow: 2px 2px 12px rgba(45,36,22,0.13), 3px 3px 0 var(--cream3);
+    position: relative; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .polaroid:nth-child(1){transform:rotate(-2deg)} .polaroid:nth-child(2){transform:rotate(1.5deg)}
+  .polaroid:nth-child(3){transform:rotate(-1deg)} .polaroid:nth-child(4){transform:rotate(2deg)}
+  .polaroid:nth-child(5){transform:rotate(-1.5deg)} .polaroid:nth-child(6){transform:rotate(0.8deg)}
+  .polaroid:hover { transform: rotate(0deg) translateY(-5px) scale(1.02); box-shadow: 4px 7px 22px rgba(45,36,22,0.18); z-index: 10; }
+  .polaroid::before {
+    content: ''; position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+    width: 56px; height: 17px; opacity: 0.6; border-radius: 2px;
+  }
+  .polaroid:nth-child(odd)::before { background: var(--washi-b); }
+  .polaroid:nth-child(even)::before { background: var(--washi-m); }
+  .polaroid-img { width: 100%; aspect-ratio: 1/1; background: var(--cream2); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 12px; border: 1px solid var(--cream3); }
+  .polaroid-title { font-family: 'Kalam', cursive; font-size: 1.05rem; font-weight: 700; margin-bottom: 5px; }
+  .polaroid-desc { font-family: 'Caveat', cursive; font-size: 1rem; color: var(--ink-light); line-height: 1.55; }
+
+  /* Stamps */
+  .prov-bg { background: var(--cream2); }
+  .stamp-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 820px; margin: 0 auto; }
+  .stamp {
+    background: white; border: 2px solid var(--cream3); padding: 9px 14px;
+    font-family: 'Caveat', cursive; font-size: 1.05rem; font-weight: 700; color: var(--ink);
+    box-shadow: 0 0 0 3px white, 0 0 0 5px var(--cream3);
+    transition: transform 0.15s; cursor: default; text-align: center;
+  }
+  .stamp:hover { transform: rotate(-3deg) scale(1.08); }
+  .stamp-emoji { font-size: 1.3rem; display: block; margin-bottom: 3px; }
+
+  /* Terminal */
+  .notebook-term { max-width: 660px; margin: 0 auto; background: white; box-shadow: 3px 3px 14px rgba(45,36,22,0.13); overflow: hidden; transform: rotate(-0.3deg); }
+  .nb-hdr { background: var(--hl-blue); padding: 12px 18px; display: flex; gap: 8px; align-items: center; border-bottom: 2px solid rgba(45,36,22,0.1); position: relative; }
+  .nb-hdr::after { content: 'hanimo ♥ terminal'; font-family: 'Caveat', cursive; font-size: 1rem; color: var(--ink-light); position: absolute; left: 50%; transform: translateX(-50%); }
+  .tl { width: 13px; height: 13px; border-radius: 50%; }
+  .tl-r{background:#ff6b6b} .tl-y{background:#ffd93d} .tl-g{background:#6bcb77}
+  .nb-body {
+    padding: 22px 26px; font-family: 'Kalam', cursive; font-size: 0.97rem; line-height: 2.05;
+    background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(180,170,155,0.28) 31px, rgba(180,170,155,0.28) 32px);
+    min-height: 260px;
+  }
+  .nb-prompt{color:var(--washi-r)} .nb-cmd{color:var(--ink)} .nb-out{color:var(--washi-b);padding-left:22px} .nb-cmt{color:var(--ink-faint);padding-left:22px;font-style:italic}
+  .nb-cursor { display: inline-block; width: 2px; height: 17px; background: var(--ink); vertical-align: middle; animation: blink 1s step-end infinite; }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+  /* Comparison */
+  .journal-table { max-width: 800px; margin: 0 auto; background: white; box-shadow: 4px 4px 14px rgba(45,36,22,0.1); overflow: hidden; transform: rotate(-0.2deg); }
+  .jt-hdr { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; background: var(--hl-yellow); padding: 14px 22px; gap: 6px; font-family: 'Caveat', cursive; font-size: 1.05rem; font-weight: 700; }
+  .jt-hdr span:not(:first-child){text-align:center}
+  .jt-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 11px 22px; gap: 6px; border-top: 1px solid var(--cream3); font-family: 'Kalam', cursive; font-size: 0.92rem; }
+  .jt-row:nth-child(even){background:var(--cream)}
+  .jt-row span:not(:first-child){text-align:center;font-size:1.05rem}
+  .yes{color:var(--stk-green)} .no{color:var(--ink-faint)}
+
+  /* Install */
+  .install-bg { background: var(--cream2); }
+  .install-spread { display: grid; grid-template-columns: repeat(auto-fit, minmax(235px, 1fr)); gap: 20px; max-width: 820px; margin: 0 auto; }
+  .install-card { background: white; padding: 22px; box-shadow: 3px 3px 0 var(--cream3); border-left: 5px solid var(--washi-m); transition: transform 0.15s; }
+  .install-card:nth-child(2){border-left-color:var(--washi-r);transform:rotate(-0.4deg)}
+  .install-card:nth-child(3){border-left-color:var(--washi-p);transform:rotate(0.7deg)}
+  .install-card:hover{transform:rotate(0deg)!important}
+  .install-card h3 { font-family: 'Caveat', cursive; font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; }
+  .code-snippet { font-family: 'Kalam', cursive; font-size: 0.85rem; color: var(--ink); background: var(--cream); padding: 9px 12px; border-radius: 3px; border-left: 3px solid var(--cream3); word-break: break-all; line-height: 1.8; }
+
+  footer { background: var(--cream3); padding: 44px 24px; text-align: center; border-top: 2px solid var(--cream2); }
+  .ft-logo { font-family: 'Caveat', cursive; font-size: 2.2rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; transform: rotate(-0.5deg); display: inline-block; }
+  .ft-note { font-family: 'Kalam', cursive; font-size: 0.95rem; color: var(--ink-light); margin-bottom: 18px; }
+  .ft-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .ft-links a { font-family: 'Caveat', cursive; font-size: 1.05rem; color: var(--ink-light); text-decoration: none; border-bottom: 1.5px solid var(--ink-faint); transition: color 0.15s; }
+  .ft-links a:hover { color: var(--ink); }
+  .ft-copy { font-family: 'Caveat', cursive; font-size: 0.95rem; color: var(--ink-faint); }
+
+  @media(max-width:640px){
+    .jt-hdr,.jt-row{grid-template-columns:2fr 1fr 1fr}
+    .jt-hdr span:nth-child(4),.jt-hdr span:nth-child(5),
+    .jt-row span:nth-child(4),.jt-row span:nth-child(5){display:none}
+    .nav-links a:not(.nav-gh){display:none}
+    .lang-toggle{right:12px}
+  }
+</style>
+</head>
+<body>
+
+<div class="ctrl-bar">
+  <div class="theme-toggle">
+    <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<nav>
+  <a href="#" class="nav-logo">hanimo</a>
+  <div class="nav-links">
+    <a href="#features" data-ko="기능" data-en="Features">기능</a>
+    <a href="#install" data-ko="설치" data-en="Install">설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo" class="nav-gh">★ GitHub</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="deco sticker stk-new" style="top:104px;right:9%">✨ NEW!</div>
+    <div class="deco sticker stk-open" style="top:158px;left:7%" data-ko="오픈소스!" data-en="OPEN SOURCE!">오픈소스!</div>
+    <div class="deco sticker stk-free" style="bottom:28%;right:5%" data-ko="무료! ★" data-en="FREE! ★">무료! ★</div>
+    <div class="deco" style="top:100px;left:11%;font-size:2.2rem;transform:rotate(-10deg);opacity:0.45">🌸</div>
+    <div class="deco" style="bottom:24%;left:5%;font-size:1.8rem;transform:rotate(-5deg);opacity:0.4">🎀</div>
+
+    <h1>hanimo</h1>
+    <p class="hero-tagline" data-ko="오픈소스 AI 코딩 에이전트" data-en="the open-source AI coding agent">오픈소스 AI 코딩 에이전트</p>
+    <p class="hero-kr" data-ko="터미널에서 바로 시작 · 무료 · Apache-2.0 🌸" data-en="run anywhere · free · Apache-2.0 🌸">터미널에서 바로 시작 · 무료 · Apache-2.0 🌸</p>
+
+    <div class="install-journal">
+      <div class="install-label" data-ko="✏️ 터미널에 붙여넣기:" data-en="✏️ paste in your terminal:">✏️ 터미널에 붙여넣기:</div>
+      <div class="install-line">
+        <span>curl -fsSL https://hanimo.dev/install.sh | sh</span>
+        <button class="copy-sticker" onclick="navigator.clipboard.writeText('curl -fsSL https://hanimo.dev/install.sh | sh')">copy</button>
+      </div>
+      <div class="install-line">
+        <span>brew install hanimo</span>
+        <button class="copy-sticker" onclick="navigator.clipboard.writeText('brew install hanimo')">copy</button>
+      </div>
+    </div>
+    <div class="cta-row">
+      <a href="#install" class="btn-main" data-ko="📦 설치하기 →" data-en="📦 Get hanimo →">📦 설치하기 →</a>
+      <a href="https://github.com/flykimjiwon/hanimo" class="btn-outline">★ GitHub</a>
+    </div>
+  </section>
+
+  <section style="padding:32px 24px 52px">
+    <div class="sec-wrap"><span class="sec-title" data-ko="실행 화면" data-en="see it in action">실행 화면</span></div>
+    <div class="notebook-term">
+      <div class="nb-hdr"><div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div></div>
+      <div class="nb-body">
+        <div><span class="nb-prompt">hanimo ♥ ~ $</span> <span class="nb-cmd">hanimo --provider claude</span></div>
+        <div class="nb-out">✿ v1.0.0 · 14K/200K · hash-anchor: on</div>
+        <br>
+        <div class="nb-cmt">&gt; auth.go 버그 고쳐줘</div>
+        <div class="nb-out">🔍 #a3f92b 앵커 → 패치 완료 ✅</div>
+        <br>
+        <div><span class="nb-prompt">hanimo ♥ ~ $</span> <span class="nb-cursor"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="sec-wrap"><span class="sec-title" data-ko="무엇이 들어있나" data-en="what's inside">무엇이 들어있나</span></div>
+    <div class="polaroid-grid">
+      <div class="polaroid">
+        <div class="polaroid-img">⚓</div>
+        <div class="polaroid-title" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</div>
+        <div class="polaroid-desc" data-ko="라인별 MD5. 수정 충돌 방지." data-en="MD5 per line. No stale edits.">라인별 MD5. 수정 충돌 방지.</div>
+      </div>
+      <div class="polaroid">
+        <div class="polaroid-img">🤖</div>
+        <div class="polaroid-title" data-ko="14+ LLM 제공자" data-en="14+ LLM Providers">14+ LLM 제공자</div>
+        <div class="polaroid-desc" data-ko="Claude, GPT, Gemini, Ollama 등 선택." data-en="Claude, GPT, Gemini, Ollama & more.">Claude, GPT, Gemini, Ollama 등 선택.</div>
+      </div>
+      <div class="polaroid">
+        <div class="polaroid-img">🪄</div>
+        <div class="polaroid-title" data-ko="스마트 컴팩션" data-en="Smart Compaction">스마트 컴팩션</div>
+        <div class="polaroid-desc" data-ko="컨텍스트 자동 요약. 토큰 한계 없이." data-en="Auto-summarize context. No token walls.">컨텍스트 자동 요약. 토큰 한계 없이.</div>
+      </div>
+      <div class="polaroid">
+        <div class="polaroid-img">🚀</div>
+        <div class="polaroid-title" data-ko="/auto 자율 모드" data-en="/auto Autonomous">/auto 자율 모드</div>
+        <div class="polaroid-desc" data-ko="계획→코딩→테스트 자동 실행." data-en="Plan, code, test — fully automatic.">계획→코딩→테스트 자동 실행.</div>
+      </div>
+      <div class="polaroid">
+        <div class="polaroid-img">💾</div>
+        <div class="polaroid-title" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+        <div class="polaroid-desc" data-ko="로컬 저장. 언제든 재개 가능." data-en="Local storage. Resume anytime.">로컬 저장. 언제든 재개 가능.</div>
+      </div>
+      <div class="polaroid">
+        <div class="polaroid-img">🔌</div>
+        <div class="polaroid-title" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+        <div class="polaroid-desc" data-ko="외부 도구·서버 자유롭게 연결." data-en="Connect any tool or server freely.">외부 도구·서버 자유롭게 연결.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="prov-bg">
+    <div class="sec-wrap"><span class="sec-title" data-ko="14개 제공자" data-en="all 14 providers">14개 제공자</span></div>
+    <div class="stamp-grid">
+      <div class="stamp"><span class="stamp-emoji">🧠</span>Claude</div>
+      <div class="stamp"><span class="stamp-emoji">✨</span>OpenAI</div>
+      <div class="stamp"><span class="stamp-emoji">💎</span>Gemini</div>
+      <div class="stamp"><span class="stamp-emoji">🦙</span>Ollama</div>
+      <div class="stamp"><span class="stamp-emoji">🔥</span>Groq</div>
+      <div class="stamp"><span class="stamp-emoji">🌊</span>DeepSeek</div>
+      <div class="stamp"><span class="stamp-emoji">🦊</span>Mistral</div>
+      <div class="stamp"><span class="stamp-emoji">☁️</span>Azure OAI</div>
+      <div class="stamp"><span class="stamp-emoji">⚡</span>Cohere</div>
+      <div class="stamp"><span class="stamp-emoji">🤗</span>HuggingFace</div>
+      <div class="stamp"><span class="stamp-emoji">🐋</span>Together AI</div>
+      <div class="stamp"><span class="stamp-emoji">🌟</span>Perplexity</div>
+      <div class="stamp"><span class="stamp-emoji">🎯</span>Replicate</div>
+      <div class="stamp"><span class="stamp-emoji">🏠</span>Local LLMs</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-wrap"><span class="sec-title" data-ko="비교" data-en="how it stacks up">비교</span></div>
+    <div class="journal-table">
+      <div class="jt-hdr">
+        <span data-ko="✏️ 기능" data-en="✏️ Feature">✏️ 기능</span>
+        <span>hanimo</span><span>Cl.Code</span><span>Cursor</span><span>Aider</span>
+      </div>
+      <div class="jt-row"><span data-ko="무료 오픈소스" data-en="Free & Open Source">무료 오픈소스</span><span class="yes">✔</span><span class="no">✗</span><span class="no">✗</span><span class="yes">✔</span></div>
+      <div class="jt-row"><span data-ko="14+ LLM" data-en="14+ LLM">14+ LLM</span><span class="yes">✔</span><span class="no">✗</span><span class="no">✗</span><span class="yes">✔</span></div>
+      <div class="jt-row"><span data-ko="해시 앵커 편집" data-en="Hash-Anchor Edits">해시 앵커 편집</span><span class="yes">✔</span><span class="no">✗</span><span class="no">✗</span><span class="no">✗</span></div>
+      <div class="jt-row"><span>SQLite</span><span class="yes">✔</span><span class="no">✗</span><span class="no">✗</span><span class="no">✗</span></div>
+      <div class="jt-row"><span data-ko="스마트 컴팩션" data-en="Smart Compaction">스마트 컴팩션</span><span class="yes">✔</span><span class="yes">✔</span><span class="no">✗</span><span class="no">✗</span></div>
+      <div class="jt-row"><span>MCP</span><span class="yes">✔</span><span class="yes">✔</span><span class="no">✗</span><span class="no">✗</span></div>
+    </div>
+  </section>
+
+  <section class="install-bg" id="install">
+    <div class="sec-wrap"><span class="sec-title" data-ko="설치하기 📦" data-en="get started 📦">설치하기 📦</span></div>
+    <div class="install-spread">
+      <div class="install-card">
+        <h3>🌊 curl</h3>
+        <div class="code-snippet">curl -fsSL https://hanimo.dev/install.sh | sh</div>
+      </div>
+      <div class="install-card">
+        <h3>🍺 homebrew</h3>
+        <div class="code-snippet">brew tap flykimjiwon/hanimo<br>brew install hanimo</div>
+      </div>
+      <div class="install-card">
+        <h3 data-ko="🔨 소스 빌드" data-en="🔨 build from source">🔨 소스 빌드</h3>
+        <div class="code-snippet">git clone github.com/flykimjiwon/hanimo<br>cd hanimo && go build .</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="ft-logo">hanimo ♥</div>
+  <p class="ft-note" data-ko="♥ 로 만드는 오픈소스 · 영원히 무료" data-en="made with ♥ · open source forever · always free">♥ 로 만드는 오픈소스 · 영원히 무료</p>
+  <div class="ft-links">
+    <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+    <a href="https://hanimo.dev">hanimo.dev</a>
+    <a href="#">Apache-2.0</a>
+  </div>
+  <p class="ft-copy">flykimjiwon/hanimo · Apache-2.0 · hanimo.dev</p>
+</footer>
+
+<script>
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.documentElement.lang = lang;
+}
+(function(){ setTheme(document.documentElement.dataset.theme || 'light'); })();
+</script>
+</body>
+</html>

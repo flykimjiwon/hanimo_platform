@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — Nord × ASCII Art</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --frost1: #88c0d0;
+    --frost2: #81a1c1;
+    --frost3: #5e81ac;
+    --aurora-green: #a3be8c;
+    --aurora-red: #bf616a;
+    --aurora-yellow: #ebcb8b;
+    --bg: #2e3440;
+    --bg2: #3b4252;
+    --surface: #434c5e;
+    --surface2: #4c566a;
+    --snow: #d8dee9;
+    --snow2: #e5e9f0;
+    --t-bg: #2e3440;
+    --t-surface: #3b4252;
+    --t-border: #81a1c1;
+    --t-text: #d8dee9;
+    --t-muted: #4c566a;
+    --t-accent: #88c0d0;
+  }
+  [data-theme="light"] {
+    --t-bg: #f0f4f8;
+    --t-surface: #dde5ee;
+    --t-border: #5e81ac;
+    --t-text: #2e3440;
+    --t-muted: #4c566a;
+    --t-accent: #5e81ac;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: 'IBM Plex Mono', monospace;
+    overflow-x: hidden;
+  }
+
+  /* Frost glow — subtle, not overdone */
+  .frost-glow {
+    color: var(--frost1);
+    text-shadow: 0 0 6px rgba(136,192,208,0.4), 0 0 12px rgba(136,192,208,0.2);
+  }
+  .frost2-glow {
+    color: var(--frost2);
+    text-shadow: 0 0 4px rgba(129,161,193,0.3);
+  }
+
+  /* Double-line box borders */
+  .box-double {
+    border: 2px solid var(--frost2);
+    box-shadow: 0 0 0 1px var(--bg), 0 0 0 2px var(--frost3);
+    padding: 1.5rem;
+  }
+  .box-single {
+    border: 1px solid var(--surface);
+    padding: 1.5rem;
+  }
+
+  /* ASCII logo — preformatted */
+  .ascii-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(0.45rem, 1.2vw, 0.72rem);
+    line-height: 1.2;
+    color: var(--frost1);
+    text-shadow: 0 0 8px rgba(136,192,208,0.35), 0 0 18px rgba(136,192,208,0.15);
+    white-space: pre;
+    letter-spacing: 0.05em;
+    display: inline-block;
+  }
+
+  /* Controls row */
+  .ctrl-row {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10000;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  /* Lang toggle */
+  #lang-toggle {
+    background: var(--t-surface);
+    border: 1px solid var(--frost2);
+    color: var(--t-accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+  }
+  #lang-toggle:hover { background: var(--frost3); color: var(--snow2); }
+  .theme-ctrl {
+    display: flex;
+    background: var(--t-surface);
+    border: 1px solid var(--frost2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    overflow: hidden;
+  }
+  .theme-btn {
+    padding: 0.3rem 0.55rem;
+    background: none;
+    border: none;
+    color: var(--t-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    transition: all 0.15s;
+  }
+  .theme-btn.active { background: var(--frost3); color: var(--snow2); }
+  .theme-btn:not(.active):hover { color: var(--t-text); }
+
+  /* Terminal block */
+  .terminal {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    padding: 1.25rem;
+    font-size: 0.82rem;
+    line-height: 1.8;
+  }
+  .prompt { color: var(--t-accent); }
+  .comment { color: var(--t-muted); }
+  .out { color: var(--t-text); }
+  .ok { color: var(--aurora-green); }
+  .warn { color: var(--aurora-yellow); }
+
+  /* Feature card — double-line top border in ASCII style */
+  .feat-card {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    border-top: 2px solid var(--frost2);
+    padding: 1.25rem;
+    transition: border-top-color 0.2s;
+  }
+  .feat-card:hover { border-top-color: var(--frost1); }
+
+  /* Table */
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--t-border); padding: 0.6rem 1rem; font-size: 0.8rem; }
+  th { color: var(--t-accent); background: var(--t-surface); }
+  td { color: var(--t-muted); }
+  tr:hover td { background: rgba(136,192,208,0.04); }
+
+  /* Checkmarks in aurora green */
+  .check { color: var(--aurora-green); }
+
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+  .cursor::after { content:'_'; animation: blink 1.2s infinite; color: var(--frost1); }
+</style>
+</head>
+<body>
+
+<div class="ctrl-row">
+  <div class="theme-ctrl">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <button id="lang-toggle" onclick="toggleLang()">KO/EN</button>
+</div>
+
+<!-- HERO -->
+<section class="min-h-screen flex flex-col items-center justify-center px-4 py-24 text-center">
+
+  <!-- Giant ASCII block-letter logo -->
+  <div class="mb-8 overflow-x-auto w-full flex justify-center">
+    <pre class="ascii-logo">
+ ██╗  ██╗ █████╗ ███╗   ██╗██╗███╗   ███╗ ██████╗
+ ██║  ██║██╔══██╗████╗  ██║██║████╗ ████║██╔═══██╗
+ ███████║███████║██╔██╗ ██║██║██╔████╔██║██║   ██║
+ ██╔══██║██╔══██║██║╚██╗██║██║██║╚██╔╝██║██║   ██║
+ ██║  ██║██║  ██║██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝
+ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝
+    </pre>
+  </div>
+
+  <!-- Double-line ASCII border around tagline -->
+  <div class="box-double mb-8 max-w-xl w-full text-left">
+    <div class="text-xs mb-1" style="color:var(--surface2)">╔══════════════════════════════════════╗</div>
+    <p class="frost-glow text-sm mb-1">
+      <span data-ko="║  터미널에서 실행되는 Go AI 코딩 에이전트  ║" data-en="║  Go AI coding agent for your terminal   ║">║  터미널에서 실행되는 Go AI 코딩 에이전트  ║</span>
+    </p>
+    <div class="text-xs" style="color:var(--surface2)">╚══════════════════════════════════════╝</div>
+  </div>
+
+  <p class="text-xs mb-8" style="color:var(--surface2)">
+    <span data-ko="오픈소스 · Apache-2.0 · 14개 프로바이더" data-en="Open-source · Apache-2.0 · 14 providers">오픈소스 · Apache-2.0 · 14개 프로바이더</span>
+  </p>
+
+  <div class="terminal mb-8" style="max-width:460px;width:100%;text-align:left;">
+    <div class="prompt">$ curl -sSL hanimo.dev/install | bash<span class="cursor"></span></div>
+  </div>
+
+  <div class="flex gap-4 flex-wrap justify-center">
+    <a href="https://github.com/flykimjiwon/hanimo"
+      style="border:1px solid var(--frost2);color:var(--frost1);padding:0.5rem 1.5rem;font-size:0.8rem;"
+      onmouseover="this.style.background='rgba(136,192,208,0.08)'"
+      onmouseout="this.style.background=''">
+      <span data-ko="→ GitHub" data-en="→ GitHub">→ GitHub</span>
+    </a>
+    <a href="#install" style="background:var(--frost3);color:var(--snow2);padding:0.5rem 1.5rem;font-size:0.8rem;font-weight:bold;">
+      <span data-ko="설치하기" data-en="INSTALL">설치하기</span>
+    </a>
+  </div>
+</section>
+
+<!-- TERMINAL PREVIEW -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <div class="text-sm frost2-glow mb-6">
+    <span data-ko="╔═ TERMINAL PREVIEW ══════════════════╗" data-en="╔═ TERMINAL PREVIEW ══════════════════╗">╔═ TERMINAL PREVIEW ══════════════════╗</span>
+  </div>
+  <div class="terminal">
+    <div class="comment"># nord theme · IBM Plex Mono · provider: anthropic</div>
+    <div class="prompt">$ hanimo --theme nord</div>
+    <div class="out">hanimo v0.1.0 [nord] | session: nordic-001</div>
+    <div class="prompt">&gt; /auto add rate limiting middleware</div>
+    <div class="ok">  <span class="check">✓</span> READING: middleware/auth.go [MD5:a9f2...]</div>
+    <div class="out">  PLAN: token bucket, 100 req/min per IP</div>
+    <div class="ok">  <span class="check">✓</span> WRITE: middleware/ratelimit.go anchored</div>
+    <div class="ok">  <span class="check">✓</span> PATCH: router.go:34 · no conflicts</div>
+    <div class="warn">  WARN: remember to tune burst in production</div>
+    <div class="ok">  <span class="check">✓</span> DONE 1.8s · 2 files · 0 stale</div>
+  </div>
+  <div class="text-sm frost2-glow mt-2" style="text-align:right;">╚══════════════════════════════════════╝</div>
+</section>
+
+<!-- FEATURES -->
+<section class="max-w-6xl mx-auto px-6 py-16">
+  <div class="text-sm frost2-glow mb-8">
+    <span data-ko="╔═ CORE FEATURES ═════════════════════╗" data-en="╔═ CORE FEATURES ═════════════════════╗">╔═ CORE FEATURES ═════════════════════╗</span>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+    <div class="feat-card">
+      <div class="text-xs mb-2 frost-glow">HASH-ANCHORED EDITING</div>
+      <p class="text-xs" style="color:var(--surface2)">
+        <span data-ko="라인별 MD5. 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 충돌 없음.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2 frost-glow">14+ PROVIDERS</div>
+      <p class="text-xs" style="color:var(--surface2)">
+        <span data-ko="Ollama·OpenAI·Anthropic 등." data-en="Ollama to OpenRouter. Any model.">Ollama·OpenAI·Anthropic 등.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2 frost-glow">SMART COMPACTION</div>
+      <p class="text-xs" style="color:var(--surface2)">
+        <span data-ko="자동 압축. 비용 절감." data-en="Auto-compress. Cut costs.">자동 압축. 비용 절감.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2 frost-glow">/AUTO MODE</div>
+      <p class="text-xs" style="color:var(--surface2)">
+        <span data-ko="자율 루프. 목표까지 실행." data-en="Autonomous loop. Runs to goal.">자율 루프. 목표까지 실행.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2 frost-glow">SQLITE SESSIONS</div>
+      <p class="text-xs" style="color:var(--surface2)">
+        <span data-ko="세션 영구 저장. 언제든 재개." data-en="Persist sessions. Resume anytime.">세션 영구 저장. 언제든 재개.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2 frost-glow">MCP SUPPORT</div>
+      <p class="text-xs" style="color:var(--surface2)">
+        <span data-ko="MCP 도구 연동. 확장 무제한." data-en="MCP tools. Unlimited extension.">MCP 도구 연동. 확장 무제한.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <div class="text-sm frost2-glow mb-6">
+    <span data-ko="╔═ COMPARISON ════════════════════════╗" data-en="╔═ COMPARISON ════════════════════════╗">╔═ COMPARISON ════════════════════════╗</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table>
+      <thead>
+        <tr>
+          <th data-ko="항목" data-en="Feature">항목</th>
+          <th class="frost-glow">hanimo</th>
+          <th>Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-ko="해시 앵커" data-en="Hash anchor">해시 앵커</td>
+          <td class="check">✓ native</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+        </tr>
+        <tr>
+          <td data-ko="로컬 모델" data-en="Local models">로컬 모델</td>
+          <td class="check">✓ Ollama</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="제한적" data-en="Limited">제한적</td>
+          <td class="check">✓</td>
+        </tr>
+        <tr>
+          <td data-ko="비용" data-en="Cost">비용</td>
+          <td class="check" data-ko="무료" data-en="Free">무료</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="무료" data-en="Free">무료</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install" class="max-w-4xl mx-auto px-6 py-16">
+  <div class="text-sm frost2-glow mb-6">
+    <span data-ko="╔═ INSTALL ═══════════════════════════╗" data-en="╔═ INSTALL ═══════════════════════════╗">╔═ INSTALL ═══════════════════════════╗</span>
+  </div>
+  <div class="space-y-4">
+    <div class="terminal">
+      <div class="comment"># curl</div>
+      <div class="prompt">$ curl -sSL hanimo.dev/install | bash</div>
+    </div>
+    <div class="terminal">
+      <div class="comment"># homebrew</div>
+      <div class="prompt">$ brew install flykimjiwon/tap/hanimo</div>
+    </div>
+    <div class="terminal">
+      <div class="comment"># go</div>
+      <div class="prompt">$ go install github.com/flykimjiwon/hanimo@latest</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t px-6 py-10 text-center" style="border-color:var(--surface)">
+  <p class="text-sm mb-1 frost-glow">hanimo · flykimjiwon/hanimo · hanimo.dev</p>
+  <p class="text-xs" style="color:var(--surface2)">Apache-2.0 · <span data-ko="오픈소스" data-en="Open Source">오픈소스</span></p>
+</footer>
+
+<script>
+  let lang = 'ko';
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+
+  function toggleLang() {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+  }
+
+  (function() {
+    const saved = localStorage.getItem('hanimo-theme') || 'dark';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

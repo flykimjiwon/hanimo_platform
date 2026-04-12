@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Open-Source AI Coding Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+      --gold: #F9E2AF;
+      --bg: #0a0a0b;
+      --text: #fafafa;
+      --slate: #64748b;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --muted: #64748b;
+      --accent: #8b5cf6;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8f7ff;
+      --text: #0f0f1a;
+      --slate: #6d28d9;
+      --surface: rgba(139,92,246,0.05);
+      --border: rgba(139,92,246,0.15);
+      --muted: #6d28d9;
+    }
+    [data-theme="light"] body { background: #f8f7ff; color: #0f0f1a; }
+    [data-theme="light"] .gradient-mesh::before { background: radial-gradient(ellipse at center, rgba(139,92,246,0.15) 0%, transparent 70%); }
+    [data-theme="light"] .gradient-mesh::after { background: radial-gradient(ellipse at center, rgba(16,185,129,0.1) 0%, transparent 70%); }
+    [data-theme="light"] nav { background: rgba(248,247,255,0.85); }
+    [data-theme="light"] .nav-glass { background: rgba(248,247,255,0.9); border-color: rgba(139,92,246,0.15); }
+    [data-theme="light"] .glass { background: rgba(255,255,255,0.7); border-color: rgba(139,92,246,0.12); }
+    [data-theme="light"] .terminal-window { background: rgba(255,255,255,0.9); border-color: rgba(139,92,246,0.2); }
+    [data-theme="light"] .t-comment { color: #94a3b8; }
+    [data-theme="light"] .t-cmd { color: #0f0f1a; }
+
+    /* ── TOGGLE CONTROLS ── */
+    .ctl-group {
+      position: fixed; top: 12px; right: 16px; z-index: 10000;
+      display: flex; flex-direction: column; gap: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    }
+    .ctl-row { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid rgba(139,92,246,0.3); background: rgba(10,10,11,0.8); backdrop-filter: blur(10px); }
+    .ctl-btn {
+      background: transparent; border: none; color: #64748b;
+      padding: 5px 12px; cursor: pointer; font-family: inherit;
+      font-size: 10px; letter-spacing: 0.08em; transition: all 0.15s;
+    }
+    .ctl-btn + .ctl-btn { border-left: 1px solid rgba(139,92,246,0.2); }
+    .ctl-btn.active { background: rgba(139,92,246,0.2); color: #a78bfa; }
+    [data-theme="light"] .ctl-row { background: rgba(248,247,255,0.9); border-color: rgba(139,92,246,0.3); }
+    [data-theme="light"] .ctl-btn { color: #6d28d9; }
+    [data-theme="light"] .ctl-btn.active { background: rgba(139,92,246,0.15); color: #5b21b6; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.5;
+    }
+
+    /* Gradient mesh background */
+    .gradient-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .gradient-mesh::before {
+      content: '';
+      position: absolute;
+      width: 900px;
+      height: 900px;
+      top: -200px;
+      left: -200px;
+      background: radial-gradient(ellipse at center, rgba(139,92,246,0.25) 0%, transparent 70%);
+      animation: drift1 18s ease-in-out infinite alternate;
+    }
+    .gradient-mesh::after {
+      content: '';
+      position: absolute;
+      width: 700px;
+      height: 700px;
+      bottom: -100px;
+      right: -100px;
+      background: radial-gradient(ellipse at center, rgba(16,185,129,0.2) 0%, transparent 70%);
+      animation: drift2 22s ease-in-out infinite alternate;
+    }
+    .gradient-mesh-mid {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(ellipse at center, rgba(249,226,175,0.06) 0%, transparent 70%);
+      animation: drift3 15s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(80px,60px) scale(1.15); } }
+    @keyframes drift2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-60px,-80px) scale(1.2); } }
+    @keyframes drift3 { 0% { transform: translate(-50%,-50%) scale(1); } 100% { transform: translate(-50%,-50%) scale(1.3); } }
+
+    /* Glass card base */
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+    }
+
+    /* Typography */
+    .syne { font-family: 'Syne', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-glass {
+      background: rgba(10,10,11,0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 10px 20px;
+    }
+
+    /* Animated gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #8b5cf6, #10b981, #F9E2AF, #8b5cf6);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 6s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* CTA buttons */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      border: 1px solid rgba(139,92,246,0.4);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 30px rgba(139,92,246,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+      text-decoration: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(139,92,246,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.85);
+      font-family: 'Syne', sans-serif;
+      font-weight: 500;
+      font-size: 15px;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      text-decoration: none;
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.09);
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Terminal card */
+    .terminal-window {
+      border-radius: 20px;
+      overflow: hidden;
+      background: rgba(10,10,11,0.85);
+      border: 1px solid rgba(139,92,246,0.2);
+      box-shadow: 0 0 80px rgba(139,92,246,0.15), 0 40px 80px rgba(0,0,0,0.5);
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+    .terminal-body { padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; line-height: 1.7; }
+    .t-prompt { color: #8b5cf6; }
+    .t-cmd { color: #fafafa; }
+    .t-comment { color: #64748b; }
+    .t-success { color: #10b981; }
+    .t-gold { color: #F9E2AF; }
+    .t-violet { color: #a78bfa; }
+    .t-cursor { display: inline-block; width: 8px; height: 16px; background: #8b5cf6; animation: blink 1.2s step-end infinite; vertical-align: middle; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Feature cards */
+    .feature-card {
+      padding: 28px;
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      background: rgba(255,255,255,0.06);
+      transform: translateY(-4px);
+      border-color: rgba(139,92,246,0.25);
+    }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    /* Comparison table */
+    .compare-table th { font-family: 'Syne', sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); padding: 16px 20px; text-align: left; }
+    .compare-table td { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+    .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .check-yes { color: #10b981; font-size: 18px; }
+    .check-no { color: #374151; font-size: 18px; }
+    .check-partial { color: #F9E2AF; font-size: 14px; }
+
+    /* Install tabs */
+    .tab-btn { padding: 8px 18px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--slate); }
+    .tab-btn.active { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); color: var(--violet); }
+
+    /* Provider pills */
+    .provider-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s;
+    }
+    .provider-pill:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.15);
+      transform: scale(1.02);
+    }
+
+    /* Section spacing */
+    .section { position: relative; z-index: 10; padding: 100px 24px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* Fade in animations */
+    .fade-up { opacity: 0; transform: translateY(30px); animation: fadeUp 0.8s forwards; }
+    .fade-up-delay-1 { animation-delay: 0.1s; }
+    .fade-up-delay-2 { animation-delay: 0.2s; }
+    .fade-up-delay-3 { animation-delay: 0.3s; }
+    .fade-up-delay-4 { animation-delay: 0.4s; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    /* Glow line */
+    .glow-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(139,92,246,0.5), rgba(16,185,129,0.5), transparent);
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 100px;
+      background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.25);
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #a78bfa;
+      letter-spacing: 0.04em;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+
+<!-- TOGGLE CONTROLS -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+  <!-- Gradient mesh background -->
+  <div class="gradient-mesh">
+    <div class="gradient-mesh-mid"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-glass flex items-center gap-3">
+        <span class="syne font-bold text-lg gradient-text">hanimo</span>
+        <span class="mono text-xs text-slate-500 border-l border-white/10 pl-3">v0.1</span>
+      </div>
+      <div class="nav-glass hidden md:flex items-center gap-6 text-sm text-slate-400">
+        <a href="#features" class="hover:text-white transition-colors" data-ko="기능" data-en="Features">기능</a>
+        <a href="#compare" class="hover:text-white transition-colors" data-ko="비교" data-en="Compare">비교</a>
+        <a href="#install" class="hover:text-white transition-colors" data-ko="설치" data-en="Install">설치</a>
+        <a href="https://github.com/flykimjiwon/hanimo" class="hover:text-white transition-colors">GitHub</a>
+      </div>
+      <a href="https://github.com/flykimjiwon/hanimo" class="btn-primary py-2 px-5 text-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="section" style="padding-top: 160px; padding-bottom: 80px;">
+    <div class="container text-center">
+      <div class="fade-up" style="margin-bottom: 24px;">
+        <span class="badge">
+          <span class="badge-dot"></span>
+          Open Source · Apache-2.0 · Go
+        </span>
+      </div>
+      <h1 class="syne fade-up fade-up-delay-1" style="font-size: clamp(42px, 7vw, 88px); font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 24px;" data-ko="오픈소스 AI<br/><span class=&quot;gradient-text&quot;>코딩 플랫폼.</span>" data-en="The open-source AI<br/><span class=&quot;gradient-text&quot;>coding platform.</span>">
+        오픈소스 AI<br/>
+        <span class="gradient-text">코딩 플랫폼.</span>
+      </h1>
+      <p class="fade-up fade-up-delay-2" style="font-size: 17px; color: rgba(255,255,255,0.5); margin-bottom: 8px; max-width: 520px; margin-left: auto; margin-right: auto;" data-ko="개발자를 위한 완전한 제어권." data-en="Built for developers who demand full control.">개발자를 위한 완전한 제어권.</p>
+      <p class="mono fade-up fade-up-delay-2" style="font-size: 14px; color: #8b5cf6; margin-bottom: 48px; letter-spacing: 0.02em;" data-ko="오픈소스 AI 코딩 에이전트" data-en="Open-source AI coding agent">오픈소스 AI 코딩 에이전트</p>
+      <div class="fade-up fade-up-delay-3 flex flex-wrap gap-4 justify-center" style="margin-bottom: 80px;">
+        <a href="#install" class="btn-primary" data-ko="hanimo 설치" data-en="Install hanimo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          hanimo 설치
+        </a>
+        <a href="#features" class="btn-secondary" data-ko="기능 살펴보기 →" data-en="Explore features →">기능 살펴보기 →</a>
+      </div>
+
+      <!-- Terminal preview -->
+      <div class="fade-up fade-up-delay-4" style="max-width: 780px; margin: 0 auto;">
+        <div class="glass" style="padding: 3px; border-radius: 24px; background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(16,185,129,0.1)); border: none;">
+          <div class="terminal-window" style="border-radius: 22px;">
+            <div class="terminal-header">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+              <span class="mono text-xs text-slate-500 ml-3">~/project — hanimo</span>
+            </div>
+            <div class="terminal-body">
+              <div><span class="t-prompt">~/project</span> <span class="t-comment">$</span> <span class="t-cmd">hanimo</span></div>
+              <div style="margin: 4px 0;"><span class="t-success">✓</span> <span class="t-gold">hanimo</span> <span class="t-violet">v0.1.0</span> <span class="t-comment">— AI coding agent initialized</span></div>
+              <div style="margin: 4px 0;"><span class="t-comment">  Provider: ollama (mistral) · Session: sess_7f3a2b · Compaction: smart</span></div>
+              <div style="height: 10px;"></div>
+              <div><span class="t-prompt">hanimo</span><span class="t-comment"> &gt; </span><span class="t-cmd">/auto refactor the auth module to use JWT refresh tokens</span></div>
+              <div style="margin: 4px 0;"><span class="t-success">◆</span> <span class="t-comment">Autonomous mode engaged — max 20 iterations</span></div>
+              <div style="margin: 4px 0;"><span class="t-success">  [1/20]</span> <span class="t-violet">Reading</span> <span class="t-cmd">src/auth/handler.go</span> <span class="t-comment">(hash: a3f7d2)</span></div>
+              <div style="margin: 4px 0;"><span class="t-success">  [2/20]</span> <span class="t-violet">Analyzing</span> <span class="t-comment">token flow → 3 anchor points identified</span></div>
+              <div style="margin: 4px 0;"><span class="t-success">  [3/20]</span> <span class="t-violet">Editing</span> <span class="t-cmd">src/auth/jwt.go</span> <span class="t-comment">↔ hash-anchored (safe)</span></div>
+              <div style="margin: 4px 0;"><span class="t-gold">  ✦ /diagnostics</span> <span class="t-comment">→ 0 errors · 0 warnings</span></div>
+              <div style="margin: 4px 0;"><span class="t-success">✓</span> <span class="t-cmd">Refactor complete.</span> <span class="t-comment">3 files modified, 0 regressions.</span></div>
+              <div><span class="t-prompt">hanimo</span><span class="t-comment"> &gt; </span><span class="t-cursor"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Providers strip -->
+  <section class="section" style="padding-top: 0; padding-bottom: 60px;">
+    <div class="container">
+      <div class="glow-line" style="margin-bottom: 40px;"></div>
+      <p class="text-center mono text-xs text-slate-500 uppercase tracking-widest mb-8">14+ LLM Providers · Run anything</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <span class="provider-pill"><span style="color:#10b981">●</span> Ollama</span>
+        <span class="provider-pill"><span style="color:#74aa9c">●</span> OpenAI</span>
+        <span class="provider-pill"><span style="color:#d97706">●</span> Anthropic</span>
+        <span class="provider-pill"><span style="color:#4285f4">●</span> Google</span>
+        <span class="provider-pill"><span style="color:#a78bfa">●</span> DeepSeek</span>
+        <span class="provider-pill"><span style="color:#f97316">●</span> Groq</span>
+        <span class="provider-pill"><span style="color:#ec4899">●</span> Mistral</span>
+        <span class="provider-pill"><span style="color:#64748b">●</span> +7 more</span>
+      </div>
+      <div class="glow-line" style="margin-top: 40px;"></div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <div class="container">
+      <div class="text-center mb-16">
+        <p class="mono text-xs text-emerald-400 uppercase tracking-widest mb-4">Capabilities</p>
+        <h2 class="syne" style="font-size: clamp(32px, 5vw, 56px); font-weight: 800; letter-spacing: -0.02em;" data-ko="다르게 설계됐습니다." data-en="Built different.">다르게 설계됐습니다.</h2>
+        <p style="color: rgba(255,255,255,0.4); margin-top: 12px; max-width: 400px; margin-left: auto; margin-right: auto;" data-ko="완전한 제어권. 잠금 없음." data-en="Maximum control with zero lock-in.">완전한 제어권. 잠금 없음.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Hash-Anchored -->
+        <div class="glass feature-card lg:col-span-2" style="background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.2);">
+          <div class="feature-icon" style="background: rgba(139,92,246,0.15);">🔐</div>
+          <h3 class="syne font-bold text-lg mb-2" data-ko="해시 기반 편집" data-en="Hash-Anchored Editing">해시 기반 편집</h3>
+          <p style="color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6;">
+            Every file edit is anchored to a content hash. The AI verifies the exact file state before modifying — zero stale-state edits, zero silent corruption. Your codebase integrity is mathematically guaranteed.
+          </p>
+          <div class="mono text-xs mt-4 p-3 rounded-xl" style="background: rgba(0,0,0,0.4); color: #a78bfa;">
+            hash: a3f7d2b1 → edit → verify → commit
+          </div>
+        </div>
+        <!-- /auto mode -->
+        <div class="glass feature-card" style="background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.15);">
+          <div class="feature-icon" style="background: rgba(16,185,129,0.15);">⚡</div>
+          <h3 class="syne font-bold mb-2">/auto Mode</h3>
+          <p style="color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6;">Fully autonomous execution. Up to 20 iterations. Reads, writes, runs diagnostics, self-corrects.</p>
+        </div>
+        <!-- 3-Stage Compaction -->
+        <div class="glass feature-card">
+          <div class="feature-icon" style="background: rgba(249,226,175,0.1);">🧠</div>
+          <h3 class="syne font-bold mb-2">Smart Compaction</h3>
+          <p style="color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6;">3-stage context compaction keeps long sessions sharp. Never lose context, never waste tokens.</p>
+        </div>
+        <!-- 3 Modes -->
+        <div class="glass feature-card">
+          <div class="feature-icon" style="background: rgba(139,92,246,0.1);">🎯</div>
+          <h3 class="syne font-bold mb-2">3 Modes</h3>
+          <p style="color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6;">
+            <span style="color: #a78bfa;">Super</span> — full autonomy<br/>
+            <span style="color: #10b981;">Dev</span> — interactive pair<br/>
+            <span style="color: #F9E2AF;">Plan</span> — think before act
+          </p>
+        </div>
+        <!-- SQLite -->
+        <div class="glass feature-card">
+          <div class="feature-icon" style="background: rgba(16,185,129,0.1);">💾</div>
+          <h3 class="syne font-bold mb-2">SQLite Sessions</h3>
+          <p style="color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6;">Persistent local sessions. Resume any conversation, search history, export logs. Your data stays yours.</p>
+        </div>
+        <!-- MCP -->
+        <div class="glass feature-card">
+          <div class="feature-icon" style="background: rgba(249,226,175,0.1);">🔌</div>
+          <h3 class="syne font-bold mb-2">MCP Support</h3>
+          <p style="color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6;">Full Model Context Protocol support. Connect to any MCP server, expand capabilities infinitely.</p>
+        </div>
+        <!-- Single Binary -->
+        <div class="glass feature-card lg:col-span-2" style="background: rgba(249,226,175,0.03); border-color: rgba(249,226,175,0.1);">
+          <div class="feature-icon" style="background: rgba(249,226,175,0.1);">📦</div>
+          <h3 class="syne font-bold text-lg mb-2">Single Binary</h3>
+          <p style="color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6;">
+            Built in Go. One binary, zero runtime dependencies. Works everywhere Go compiles — Linux, macOS, Windows. No Node, no Python, no Docker required.
+          </p>
+          <div class="mono text-xs mt-4 p-3 rounded-xl flex items-center gap-3" style="background: rgba(0,0,0,0.4); color: #F9E2AF;">
+            <span style="color: #10b981;">$</span> curl -fsSL hanimo.dev/install | sh
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section id="compare" class="section" style="padding-top: 60px;">
+    <div class="container">
+      <div class="text-center mb-16">
+        <p class="mono text-xs text-violet-400 uppercase tracking-widest mb-4">Comparison</p>
+        <h2 class="syne" style="font-size: clamp(32px, 5vw, 56px); font-weight: 800; letter-spacing: -0.02em;" data-ko="왜 hanimo인가." data-en="Why hanimo wins.">왜 hanimo인가.</h2>
+      </div>
+      <div class="glass-strong overflow-hidden">
+        <table class="compare-table w-full">
+          <thead>
+            <tr style="background: rgba(255,255,255,0.02);">
+              <th>Feature</th>
+              <th style="color: #a78bfa;">hanimo</th>
+              <th>Claude Code</th>
+              <th>Cursor</th>
+              <th>Aider</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color: rgba(255,255,255,0.7);">Open Source</td>
+              <td><span class="check-yes">✓</span> Apache-2.0</td>
+              <td><span class="check-no">✗</span></td>
+              <td><span class="check-no">✗</span></td>
+              <td><span class="check-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td style="color: rgba(255,255,255,0.7);">Local-First / No Cloud</td>
+              <td><span class="check-yes">✓</span> Fully offline</td>
+              <td><span class="check-no">✗</span> Requires Anthropic</td>
+              <td><span class="check-partial">Partial</span></td>
+              <td><span class="check-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td style="color: rgba(255,255,255,0.7);">Model-Agnostic (14+ LLMs)</td>
+              <td><span class="check-yes">✓</span> Any provider</td>
+              <td><span class="check-no">✗</span> Claude only</td>
+              <td><span class="check-partial">Partial</span></td>
+              <td><span class="check-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td style="color: rgba(255,255,255,0.7);">Hash-Anchored Safety</td>
+              <td><span class="check-yes">✓</span> Unique</td>
+              <td><span class="check-no">✗</span></td>
+              <td><span class="check-no">✗</span></td>
+              <td><span class="check-no">✗</span></td>
+            </tr>
+            <tr>
+              <td style="color: rgba(255,255,255,0.7);">Autonomous /auto Mode</td>
+              <td><span class="check-yes">✓</span> 20 iterations</td>
+              <td><span class="check-yes">✓</span></td>
+              <td><span class="check-partial">Partial</span></td>
+              <td><span class="check-partial">Partial</span></td>
+            </tr>
+            <tr>
+              <td style="color: rgba(255,255,255,0.7);">SQLite Session Persistence</td>
+              <td><span class="check-yes">✓</span> Local</td>
+              <td><span class="check-no">✗</span></td>
+              <td><span class="check-no">✗</span></td>
+              <td><span class="check-no">✗</span></td>
+            </tr>
+            <tr>
+              <td style="color: rgba(255,255,255,0.7);">MCP Protocol</td>
+              <td><span class="check-yes">✓</span></td>
+              <td><span class="check-yes">✓</span></td>
+              <td><span class="check-no">✗</span></td>
+              <td><span class="check-no">✗</span></td>
+            </tr>
+            <tr>
+              <td style="color: rgba(255,255,255,0.7);">Single Binary (Go)</td>
+              <td><span class="check-yes">✓</span></td>
+              <td><span class="check-no">✗</span> Node.js</td>
+              <td><span class="check-no">✗</span> Electron</td>
+              <td><span class="check-no">✗</span> Python</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section id="install" class="section">
+    <div class="container" style="max-width: 800px;">
+      <div class="text-center mb-12">
+        <p class="mono text-xs text-emerald-400 uppercase tracking-widest mb-4">Get Started</p>
+        <h2 class="syne" style="font-size: clamp(32px, 5vw, 56px); font-weight: 800; letter-spacing: -0.02em;">Install in seconds.</h2>
+      </div>
+      <div class="glass-strong" style="padding: 32px;">
+        <div class="flex gap-3 mb-8">
+          <button class="tab-btn active" onclick="showTab('curl', this)">curl</button>
+          <button class="tab-btn" onclick="showTab('brew', this)">homebrew</button>
+          <button class="tab-btn" onclick="showTab('go', this)">go build</button>
+        </div>
+        <div id="tab-curl" class="tab-content">
+          <div class="terminal-window" style="box-shadow: none; border-color: rgba(255,255,255,0.06);">
+            <div class="terminal-body" style="padding: 20px;">
+              <div><span style="color:#10b981;">$</span> <span class="t-cmd">curl -fsSL https://hanimo.dev/install | sh</span></div>
+              <div style="margin-top: 8px; color: #64748b;"># Downloads and installs the latest hanimo binary</div>
+              <div style="margin-top: 4px; color: #64748b;"># Supports Linux, macOS (arm64 + amd64)</div>
+            </div>
+          </div>
+        </div>
+        <div id="tab-brew" class="tab-content" style="display:none;">
+          <div class="terminal-window" style="box-shadow: none; border-color: rgba(255,255,255,0.06);">
+            <div class="terminal-body" style="padding: 20px;">
+              <div><span style="color:#10b981;">$</span> <span class="t-cmd">brew install flykimjiwon/tap/hanimo</span></div>
+              <div style="margin-top: 8px; color: #64748b;"># Homebrew tap for macOS and Linux</div>
+            </div>
+          </div>
+        </div>
+        <div id="tab-go" class="tab-content" style="display:none;">
+          <div class="terminal-window" style="box-shadow: none; border-color: rgba(255,255,255,0.06);">
+            <div class="terminal-body" style="padding: 20px;">
+              <div><span style="color:#10b981;">$</span> <span class="t-cmd">go install github.com/flykimjiwon/hanimo@latest</span></div>
+              <div style="margin-top: 8px; color: #64748b;"># Requires Go 1.21+</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 20px; padding: 16px; border-radius: 14px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.15);">
+          <p class="mono text-xs" style="color: #10b981;">Then run: <span style="color:#fafafa;">hanimo</span> <span style="color:#64748b;">in any project directory</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="position: relative; z-index: 10; padding: 48px 24px; border-top: 1px solid rgba(255,255,255,0.06);">
+    <div class="container" style="max-width: 1200px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;">
+      <div>
+        <span class="syne font-bold text-xl gradient-text">hanimo</span>
+        <p class="text-sm mt-1" style="color: var(--slate);" data-ko="오픈소스 AI 코딩 에이전트" data-en="Open-source AI coding agent">오픈소스 AI 코딩 에이전트</p>
+      </div>
+      <div class="flex flex-wrap gap-6 text-sm" style="color: var(--slate);">
+        <a href="https://github.com/flykimjiwon/hanimo" class="hover:text-white transition-colors">GitHub</a>
+        <a href="https://hanimo.dev" class="hover:text-white transition-colors">hanimo.dev</a>
+        <span class="mono text-xs" style="color: #374151;">Apache-2.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function showTab(name, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).style.display = 'block';
+      el.classList.add('active');
+    }
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      localStorage.setItem('hanimo-theme', t);
+      document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+      document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    }
+    function setLang(lang) {
+      document.documentElement.lang = lang;
+      localStorage.setItem('hanimo-lang', lang);
+      document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+        el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+      });
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+    (function init() {
+      const theme = localStorage.getItem('hanimo-theme') || 'dark';
+      const lang = localStorage.getItem('hanimo-lang') || 'ko';
+      setTheme(theme);
+      setLang(lang);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Editorial</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'light';document.documentElement.dataset.theme=t;})();</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600;1,700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4f0e8;
+      --bg-dark: #0a0a09;
+      --ink: #1a1a18;
+      --ink-light: #4a4a46;
+      --ink-faint: #9a9a94;
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+      --gold: #c9860a;
+      --gold-light: #F9E2AF;
+      --rule: #d4cfc4;
+      --rule-dark: rgba(255,255,255,0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Courier Prime', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .serif { font-family: 'Cormorant Garamond', serif; }
+    .mono { font-family: 'Courier Prime', monospace; }
+    .jb { font-family: 'JetBrains Mono', monospace; }
+
+    /* ───── MASTHEAD ───── */
+    .masthead {
+      border-bottom: 3px double var(--rule);
+      padding: 0 60px;
+    }
+    .masthead-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--rule);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--ink-faint);
+    }
+    .masthead-main {
+      text-align: center;
+      padding: 28px 0 20px;
+    }
+    .pub-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(56px, 10vw, 120px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+      color: var(--ink);
+    }
+    .pub-sub {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-top: 10px;
+    }
+    .masthead-nav {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      padding: 12px 0;
+      border-top: 1px solid var(--rule);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .masthead-nav a { color: var(--ink); text-decoration: none; transition: color 0.2s; }
+    .masthead-nav a:hover { color: var(--gold); }
+
+    /* ───── SECTION RULE ───── */
+    .section-rule {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .section-rule::before, .section-rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rule);
+    }
+    .section-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 72px;
+      font-weight: 300;
+      line-height: 1;
+      color: var(--rule);
+      font-style: italic;
+      user-select: none;
+    }
+    .section-title-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      text-align: center;
+    }
+
+    /* ───── HERO ───── */
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 1fr 2px 1fr;
+      gap: 0;
+      min-height: 80vh;
+      padding: 0 60px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .col-divider { background: var(--rule); }
+    .hero-left {
+      padding: 60px 60px 60px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .hero-right {
+      padding: 60px 0 60px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .hero-kicker {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .hero-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(44px, 6vw, 80px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.0;
+      color: var(--ink);
+      margin-bottom: 24px;
+    }
+    .hero-headline em { font-style: italic; color: var(--gold); }
+    .hero-deck {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--ink-light);
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+    .hero-korean {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--violet);
+      letter-spacing: 0.04em;
+      margin-bottom: 36px;
+    }
+
+    /* CTA buttons editorial style */
+    .btn-primary {
+      display: inline-block;
+      padding: 12px 28px;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: 'Courier Prime', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 2px solid var(--ink);
+    }
+    .btn-primary:hover { background: var(--gold); border-color: var(--gold); color: white; }
+    .btn-secondary {
+      display: inline-block;
+      padding: 12px 28px;
+      background: transparent;
+      color: var(--ink);
+      font-family: 'Courier Prime', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 2px solid var(--rule);
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--ink); }
+
+    /* ───── TERMINAL (editorial style) ───── */
+    .editorial-terminal {
+      background: var(--bg-dark);
+      border: 2px solid var(--ink);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.75;
+      overflow: hidden;
+    }
+    .et-header {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 8px 16px;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .et-body { padding: 20px; color: #d4d0c8; }
+    .et-prompt { color: #8b5cf6; }
+    .et-success { color: #10b981; }
+    .et-gold { color: #F9E2AF; }
+    .et-muted { color: #52525b; }
+    .et-cursor { display: inline-block; width: 7px; height: 13px; background: #8b5cf6; animation: blink 1.2s step-end infinite; vertical-align: middle; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ───── SECTION CONTAINER ───── */
+    .section {
+      padding: 80px 60px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .section-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-sidebar {
+      padding-top: 4px;
+    }
+    .section-num-large {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 96px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--rule);
+      line-height: 1;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .section-label-side {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      margin-top: 16px;
+    }
+
+    /* ───── FEATURES ───── */
+    .feat-entry {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 20px;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .feat-entry:last-child { border-bottom: none; }
+    .feat-num-small {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-style: italic;
+      color: var(--rule);
+      line-height: 1;
+      text-align: right;
+    }
+    .feat-content h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .feat-tag {
+      font-family: 'Courier Prime', monospace;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      padding: 2px 6px;
+      vertical-align: middle;
+    }
+    .feat-content p { font-size: 13px; color: var(--ink-light); line-height: 1.7; }
+    .feat-code {
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.05);
+      border-left: 3px solid var(--gold);
+      color: var(--ink);
+    }
+
+    /* ───── PROVIDERS ───── */
+    .provider-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .provider-table th {
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .provider-table td {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: middle;
+    }
+    .provider-table tr:last-child td { border-bottom: none; }
+    .p-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; }
+    .p-type { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+    .p-local { color: var(--emerald); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+    .p-cloud { color: var(--violet); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+
+    /* ───── COMPARISON ───── */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .compare-table th {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+      border: 1px solid var(--rule);
+      background: rgba(0,0,0,0.03);
+    }
+    .compare-table th.hanimo-col {
+      background: var(--ink);
+      color: var(--bg);
+    }
+    .compare-table td {
+      padding: 12px 16px;
+      border: 1px solid var(--rule);
+      font-size: 13px;
+      color: var(--ink-light);
+    }
+    .compare-table td.hanimo-col {
+      background: rgba(0,0,0,0.02);
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .win-mark { color: var(--gold); font-weight: 700; }
+    .lose-mark { color: var(--rule); }
+
+    /* ───── INSTALL ───── */
+    .install-tab-row { display: flex; border-bottom: 2px solid var(--ink); margin-bottom: 0; }
+    .install-tab {
+      padding: 8px 20px;
+      font-family: 'Courier Prime', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      color: var(--ink-faint);
+      transition: all 0.2s;
+    }
+    .install-tab.active { border-bottom-color: var(--gold); color: var(--ink); }
+    .install-content {
+      background: var(--bg-dark);
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #d4d0c8;
+      border: 2px solid var(--ink);
+      border-top: none;
+    }
+    .i-prompt { color: #10b981; margin-right: 10px; }
+    .i-cmd { color: #F9E2AF; }
+    .i-comment { color: #52525b; font-size: 12px; margin-top: 6px; display: block; }
+
+    /* ───── DARK SECTION ───── */
+    .dark-section {
+      background: var(--bg-dark);
+      color: #f4f0e8;
+      padding: 80px 60px;
+      border-bottom: 1px solid var(--rule-dark);
+    }
+    .dark-section .section-num-large { color: rgba(255,255,255,0.06); }
+    .dark-section .section-label-side { color: rgba(255,255,255,0.25); }
+    .dark-section .feat-content h3 { color: #f4f0e8; }
+    .dark-section .feat-content p { color: rgba(244,240,232,0.55); }
+    .dark-section .feat-entry { border-bottom-color: rgba(255,255,255,0.07); }
+    .dark-section .feat-num-small { color: rgba(255,255,255,0.1); }
+    .dark-section .feat-code { background: rgba(255,255,255,0.04); color: rgba(244,240,232,0.8); border-left-color: var(--gold-light); }
+
+    /* ───── FOOTER ───── */
+    .footer {
+      border-top: 3px double var(--rule);
+      padding: 40px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .footer-meta {
+      font-size: 11px;
+      color: var(--ink-faint);
+      letter-spacing: 0.08em;
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .footer-links a { color: var(--ink-faint); text-decoration: none; }
+    .footer-links a:hover { color: var(--ink); }
+
+    @media (max-width: 768px) {
+      .masthead, .section, .dark-section, .footer { padding-left: 24px; padding-right: 24px; }
+      .hero-layout { grid-template-columns: 1fr; padding: 24px; }
+      .col-divider { display: none; }
+      .hero-left { padding: 40px 0 0; }
+      .hero-right { padding: 40px 0 0; }
+      .section-grid { grid-template-columns: 1fr; gap: 24px; }
+      .section-num-large { font-size: 60px; }
+    }
+    /* ── DARK MODE ── */
+    [data-theme="dark"] {
+      --bg: #0d0c09;
+      --bg-dark: #050503;
+      --ink: #e8e4d8;
+      --ink-light: #a09a8e;
+      --ink-faint: #4a4640;
+      --gold: #c9860a;
+      --rule: rgba(255,255,255,0.1);
+      --rule-dark: rgba(255,255,255,0.1);
+    }
+    [data-theme="dark"] body { background: #0d0c09; color: #e8e4d8; }
+    [data-theme="dark"] .masthead { border-color: rgba(255,255,255,0.15); }
+    [data-theme="dark"] .masthead-top { border-color: rgba(255,255,255,0.08); }
+    [data-theme="dark"] .masthead-nav { border-color: rgba(255,255,255,0.08); }
+    [data-theme="dark"] .masthead-nav a { color: #e8e4d8; }
+    [data-theme="dark"] .pub-name { color: #e8e4d8; }
+    [data-theme="dark"] .btn-primary { background: #e8e4d8; color: #0d0c09; border-color: #e8e4d8; }
+    [data-theme="dark"] .btn-secondary { color: #e8e4d8; border-color: rgba(255,255,255,0.2); }
+    [data-theme="dark"] .editorial-terminal { border-color: rgba(255,255,255,0.15); }
+    [data-theme="dark"] .et-header { background: rgba(255,255,255,0.08); color: #e8e4d8; }
+    [data-theme="dark"] .feat-entry { border-color: rgba(255,255,255,0.08); }
+
+    /* ── TOGGLE CONTROLS ── */
+    .ctl-group {
+      position: fixed; top: 12px; right: 16px; z-index: 10000;
+      display: flex; flex-direction: column; gap: 6px;
+      font-family: 'Courier Prime', monospace; font-size: 10px;
+    }
+    .ctl-row { display: flex; border: 1px solid var(--rule); background: var(--bg); }
+    .ctl-btn {
+      background: transparent; border: none; color: var(--ink-faint);
+      padding: 4px 10px; cursor: pointer; font-family: inherit;
+      font-size: 10px; letter-spacing: 0.1em; transition: all 0.15s;
+    }
+    .ctl-btn + .ctl-btn { border-left: 1px solid var(--rule); }
+    .ctl-btn.active { background: var(--ink); color: var(--bg); }
+  </style>
+</head>
+<body>
+
+  <!-- Toggle controls -->
+  <div class="ctl-group">
+    <div class="ctl-row">
+      <button class="ctl-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+      <button class="ctl-btn active" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+    </div>
+    <div class="ctl-row">
+      <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+      <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+
+  <!-- Masthead -->
+  <header class="masthead">
+    <div class="masthead-top">
+      <span data-ko="Apache-2.0 · 오픈소스" data-en="Apache-2.0 · Open Source">Apache-2.0 · 오픈소스</span>
+      <span>github.com/flykimjiwon/hanimo</span>
+      <span>hanimo.dev</span>
+    </div>
+    <div class="masthead-main">
+      <div class="pub-name">hanimo</div>
+      <div class="pub-sub" data-ko="오픈소스 AI 코딩 플랫폼 · Modol의 후계자" data-en="The Open-Source AI Coding Platform · Successor to Modol">오픈소스 AI 코딩 플랫폼 · Modol의 후계자</div>
+    </div>
+    <nav class="masthead-nav">
+      <a href="#features" data-ko="기능" data-en="Features">기능</a>
+      <a href="#providers" data-ko="프로바이더" data-en="Providers">프로바이더</a>
+      <a href="#compare" data-ko="비교" data-en="Comparison">비교</a>
+      <a href="#install" data-ko="설치" data-en="Install">설치</a>
+      <a href="https://github.com/flykimjiwon/hanimo" data-ko="GitHub ↗" data-en="GitHub ↗">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section style="border-bottom: 1px solid var(--rule);">
+    <div class="hero-layout">
+      <!-- Left column -->
+      <div class="hero-left">
+        <div>
+          <p class="hero-kicker" data-ko="소개 · Vol. I · 2025" data-en="Introducing · Vol. I · 2025">소개 · Vol. I · 2025</p>
+          <h1 class="hero-headline">
+            <span data-ko="오픈소스" data-en="The open-source">오픈소스</span><br/>
+            <span data-ko="AI 코딩" data-en="AI coding">AI 코딩</span><br/>
+            <em data-ko="플랫폼." data-en="platform.">플랫폼.</em>
+          </h1>
+          <p class="hero-deck" data-ko="Modol의 후계자. Go로 빌드. 해시 앵커 편집으로 AI 손상 방지. 14개 이상의 LLM 프로바이더. 완전 자율 /auto 모드. 클라우드 의존성 제로. 내 머신에서, 내 규칙대로." data-en="Successor to Modol. Built in Go. Hash-anchored editing prevents AI corruption. 14+ LLM providers. Fully autonomous /auto mode. Zero cloud dependency. Runs on your machine, your rules.">
+            Modol의 후계자. Go로 빌드. 해시 앵커 편집으로 AI 손상 방지. 14개 이상의 LLM 프로바이더. 완전 자율 /auto 모드. 클라우드 의존성 제로. 내 머신에서, 내 규칙대로.
+          </p>
+          <p class="hero-korean" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="AI coding agent for open-source">오픈소스를 위한 AI 코딩 에이전트</p>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <a href="#install" class="btn-primary" data-ko="지금 설치" data-en="Install Now">지금 설치</a>
+            <a href="https://github.com/flykimjiwon/hanimo" class="btn-secondary" data-ko="소스 보기" data-en="View Source">소스 보기</a>
+          </div>
+        </div>
+        <div style="padding-top:40px;">
+          <p class="mono" style="font-size:11px;color:var(--ink-faint);letter-spacing:0.06em;">Single binary · No runtime deps · Linux, macOS, Windows</p>
+        </div>
+      </div>
+
+      <div class="col-divider"></div>
+
+      <!-- Right column — terminal -->
+      <div class="hero-right">
+        <div style="margin-bottom:20px;">
+          <p style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;">Live Session Preview</p>
+          <div style="height:2px;background:var(--ink);"></div>
+        </div>
+        <div class="editorial-terminal">
+          <div class="et-header">
+            <span>hanimo · terminal session</span>
+            <span>sess_7f3a2b</span>
+          </div>
+          <div class="et-body">
+            <div><span class="et-prompt">~/project $</span> <span style="color:#d4d0c8;">hanimo</span></div>
+            <div><span class="et-success">✓</span> <span class="et-gold">hanimo v0.1.0</span> <span class="et-muted">initialized</span></div>
+            <div><span class="et-muted">  provider: ollama/mistral · session: sess_7f3a2b</span></div>
+            <div style="height:10px;"></div>
+            <div><span class="et-prompt">hanimo &gt;</span> <span class="et-gold">/auto</span> <span style="color:#d4d0c8;">refactor auth → JWT refresh tokens</span></div>
+            <div><span class="et-success">◆</span> <span class="et-muted">Autonomous mode · max 20 iterations</span></div>
+            <div><span class="et-success">  [1/20]</span> <span style="color:#a78bfa;">Reading</span> <span class="et-muted">src/auth/handler.go (hash: a3f7d2) ✓</span></div>
+            <div><span class="et-success">  [2/20]</span> <span style="color:#a78bfa;">Analyzing</span> <span class="et-muted">3 anchor points identified</span></div>
+            <div><span class="et-success">  [3/20]</span> <span style="color:#a78bfa;">Editing</span> <span class="et-muted">src/auth/jwt.go ↔ hash-anchored</span></div>
+            <div><span class="et-gold">  ✦ /diagnostics</span> <span class="et-muted">→ 0 errors · 0 warnings</span></div>
+            <div><span class="et-success">✓</span> <span style="color:#d4d0c8;">Complete.</span> <span class="et-muted">3 files · 0 regressions</span></div>
+            <div><span class="et-prompt">hanimo &gt;</span> <span class="et-cursor"></span></div>
+          </div>
+        </div>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,0.1);">
+          <p class="mono" style="font-size:11px;color:var(--ink-faint);">
+            <span style="color:var(--gold);font-weight:700;">/auto</span> · <span style="color:var(--violet);">/save</span> · /remember · /diagnostics · /plan · /compaction
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 01 — Features -->
+  <section class="section" id="features">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div class="section-rule" style="margin-bottom:60px;">
+        <div>
+          <div class="section-num">01</div>
+          <div class="section-title-label">Capabilities</div>
+        </div>
+      </div>
+      <div class="section-grid">
+        <div class="section-sidebar">
+          <span class="section-num-large">01</span>
+          <p class="mono" style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-faint);margin-top:8px;">Core<br/>Features</p>
+        </div>
+        <div>
+          <div class="feat-entry">
+            <div class="feat-num-small">i</div>
+            <div class="feat-content">
+              <h3>Hash-Anchored Editing <span class="feat-tag">Unique</span></h3>
+              <p>Every file modification is cryptographically anchored to a content hash. The AI reads the hash, verifies the exact state of your file, then edits. Stale-state corruption is mathematically impossible. No other AI coding agent does this.</p>
+              <div class="feat-code">verify(hash: a3f7d2b1) → edit → re-verify → commit ✓</div>
+            </div>
+          </div>
+          <div class="feat-entry">
+            <div class="feat-num-small">ii</div>
+            <div class="feat-content">
+              <h3>/auto Autonomous Mode</h3>
+              <p>Fully autonomous execution up to 20 self-directed iterations. hanimo reads, writes, runs diagnostics, self-corrects, and repeats — all without human intervention. Invoke with <span class="jb" style="font-size:12px;color:var(--violet);">/auto [task description]</span>.</p>
+            </div>
+          </div>
+          <div class="feat-entry">
+            <div class="feat-num-small">iii</div>
+            <div class="feat-content">
+              <h3>Smart 3-Stage Compaction</h3>
+              <p>Intelligent three-stage context compaction keeps long sessions sharp. Critical context is preserved; verbose history is compressed. Never lose the thread across multi-hour coding sessions.</p>
+            </div>
+          </div>
+          <div class="feat-entry">
+            <div class="feat-num-small">iv</div>
+            <div class="feat-content">
+              <h3>Three Execution Modes</h3>
+              <p><span style="color:var(--violet);font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;">Super</span> — full autonomy with minimal confirmation. <span style="color:var(--emerald);font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;">Dev</span> — interactive pair programming mode. <span style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;">Plan</span> — think and outline before acting.</p>
+            </div>
+          </div>
+          <div class="feat-entry">
+            <div class="feat-num-small">v</div>
+            <div class="feat-content">
+              <h3>SQLite Session Persistence</h3>
+              <p>Every conversation is stored locally in SQLite. Resume any session, search full history, export logs, replay decisions. Your data never leaves your machine. Use <span class="jb" style="font-size:12px;color:var(--violet);">/save</span> and <span class="jb" style="font-size:12px;color:var(--violet);">/remember</span> to annotate sessions.</p>
+            </div>
+          </div>
+          <div class="feat-entry">
+            <div class="feat-num-small">vi</div>
+            <div class="feat-content">
+              <h3>MCP Protocol Support</h3>
+              <p>Full Model Context Protocol integration. Connect hanimo to any MCP server — databases, APIs, custom tools, external knowledge sources. Extend capabilities without forking.</p>
+            </div>
+          </div>
+          <div class="feat-entry">
+            <div class="feat-num-small">vii</div>
+            <div class="feat-content">
+              <h3>Single Go Binary</h3>
+              <p>Zero runtime dependencies. No Node.js, no Python, no Docker daemon. One binary. Works on Linux (amd64, arm64), macOS (arm64, amd64), and Windows. Distribute, containerize, embed — trivially.</p>
+            </div>
+          </div>
+          <div class="feat-entry">
+            <div class="feat-num-small">viii</div>
+            <div class="feat-content">
+              <h3>14+ LLM Providers</h3>
+              <p>Truly model-agnostic. Ollama for local inference, OpenAI, Anthropic, Google Gemini, DeepSeek, Groq, Mistral, and seven more. Switch providers mid-session. No rewrite required.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 02 — Providers (dark) -->
+  <div class="dark-section" id="providers">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:60px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:16px;">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:72px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.08);line-height:1;">02</span>
+        <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);">LLM Providers</span>
+      </div>
+      <div class="section-grid">
+        <div class="section-sidebar">
+          <span class="section-num-large">02</span>
+          <p class="mono" style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:8px;">Supported<br/>Models</p>
+        </div>
+        <div>
+          <p style="font-family:'Cormorant Garamond',serif;font-size:22px;color:rgba(244,240,232,0.7);line-height:1.5;margin-bottom:36px;max-width:560px;">
+            Fourteen providers and counting. Run fully offline with Ollama, or connect to any cloud. Switch at any time — no configuration rewrite.
+          </p>
+          <table class="provider-table" style="color:#f4f0e8;">
+            <thead>
+              <tr>
+                <th style="color:rgba(255,255,255,0.3);border-bottom-color:rgba(255,255,255,0.1);">Provider</th>
+                <th style="color:rgba(255,255,255,0.3);border-bottom-color:rgba(255,255,255,0.1);">Type</th>
+                <th style="color:rgba(255,255,255,0.3);border-bottom-color:rgba(255,255,255,0.1);">Offline</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="p-name" style="color:#f4f0e8;">Ollama</span></td>
+                <td><span class="p-type">Local runtime</span></td>
+                <td><span class="p-local">✓ LOCAL</span></td>
+              </tr>
+              <tr>
+                <td><span class="p-name" style="color:#f4f0e8;">OpenAI</span></td>
+                <td><span class="p-type">Cloud API</span></td>
+                <td><span class="p-cloud">CLOUD</span></td>
+              </tr>
+              <tr>
+                <td><span class="p-name" style="color:#f4f0e8;">Anthropic</span></td>
+                <td><span class="p-type">Cloud API</span></td>
+                <td><span class="p-cloud">CLOUD</span></td>
+              </tr>
+              <tr>
+                <td><span class="p-name" style="color:#f4f0e8;">Google Gemini</span></td>
+                <td><span class="p-type">Cloud API</span></td>
+                <td><span class="p-cloud">CLOUD</span></td>
+              </tr>
+              <tr>
+                <td><span class="p-name" style="color:#f4f0e8;">DeepSeek</span></td>
+                <td><span class="p-type">Cloud / Local</span></td>
+                <td><span class="p-local">✓ LOCAL</span></td>
+              </tr>
+              <tr>
+                <td><span class="p-name" style="color:#f4f0e8;">Groq</span></td>
+                <td><span class="p-type">Inference API</span></td>
+                <td><span class="p-cloud">CLOUD</span></td>
+              </tr>
+              <tr>
+                <td><span class="p-name" style="color:#f4f0e8;">Mistral</span></td>
+                <td><span class="p-type">Cloud / Local</span></td>
+                <td><span class="p-local">✓ LOCAL</span></td>
+              </tr>
+              <tr>
+                <td><span class="p-name" style="color:rgba(244,240,232,0.4);">+ 7 more</span></td>
+                <td><span class="p-type">Various</span></td>
+                <td><span class="p-type">Various</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 03 — Comparison -->
+  <section class="section" id="compare">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div class="section-rule" style="margin-bottom:60px;">
+        <div>
+          <div class="section-num">03</div>
+          <div class="section-title-label">Comparison</div>
+        </div>
+      </div>
+      <div class="section-grid">
+        <div class="section-sidebar">
+          <span class="section-num-large">03</span>
+          <p class="mono" style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-faint);margin-top:8px;">vs.<br/>Others</p>
+        </div>
+        <div>
+          <p style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink-light);line-height:1.5;margin-bottom:36px;max-width:560px;">
+            Where every other tool compromises on openness, safety, or freedom — hanimo does not.
+          </p>
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>Criterion</th>
+                <th class="hanimo-col">hanimo</th>
+                <th>Claude Code</th>
+                <th>Cursor</th>
+                <th>Aider</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Open Source</td>
+                <td class="hanimo-col"><span class="win-mark">✓ Apache-2.0</span></td>
+                <td><span class="lose-mark">✗ Closed</span></td>
+                <td><span class="lose-mark">✗ Closed</span></td>
+                <td><span class="win-mark">✓ MIT</span></td>
+              </tr>
+              <tr>
+                <td>Local-First</td>
+                <td class="hanimo-col"><span class="win-mark">✓ Fully offline</span></td>
+                <td><span class="lose-mark">✗ Cloud required</span></td>
+                <td>Partial</td>
+                <td><span class="win-mark">✓</span></td>
+              </tr>
+              <tr>
+                <td>Model-Agnostic</td>
+                <td class="hanimo-col"><span class="win-mark">✓ 14+ providers</span></td>
+                <td><span class="lose-mark">✗ Claude only</span></td>
+                <td>Limited</td>
+                <td><span class="win-mark">✓</span></td>
+              </tr>
+              <tr>
+                <td>Hash-Anchored Safety</td>
+                <td class="hanimo-col"><span class="win-mark">✓ Unique</span></td>
+                <td><span class="lose-mark">✗ None</span></td>
+                <td><span class="lose-mark">✗ None</span></td>
+                <td><span class="lose-mark">✗ None</span></td>
+              </tr>
+              <tr>
+                <td>Session Persistence</td>
+                <td class="hanimo-col"><span class="win-mark">✓ SQLite (local)</span></td>
+                <td><span class="lose-mark">✗</span></td>
+                <td><span class="lose-mark">✗</span></td>
+                <td><span class="lose-mark">✗</span></td>
+              </tr>
+              <tr>
+                <td>Single Binary</td>
+                <td class="hanimo-col"><span class="win-mark">✓ Go binary</span></td>
+                <td>Node.js</td>
+                <td>Electron</td>
+                <td>Python</td>
+              </tr>
+              <tr>
+                <td>MCP Protocol</td>
+                <td class="hanimo-col"><span class="win-mark">✓</span></td>
+                <td><span class="win-mark">✓</span></td>
+                <td><span class="lose-mark">✗</span></td>
+                <td><span class="lose-mark">✗</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 04 — Install -->
+  <section class="section" id="install" style="background:rgba(0,0,0,0.02);">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div class="section-rule" style="margin-bottom:60px;">
+        <div>
+          <div class="section-num">04</div>
+          <div class="section-title-label">Installation</div>
+        </div>
+      </div>
+      <div class="section-grid">
+        <div class="section-sidebar">
+          <span class="section-num-large">04</span>
+          <p class="mono" style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-faint);margin-top:8px;">Get<br/>Started</p>
+        </div>
+        <div>
+          <p style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink-light);line-height:1.5;margin-bottom:36px;max-width:480px;">
+            Three ways to install. All result in a single binary with zero runtime dependencies.
+          </p>
+          <div class="install-tab-row">
+            <button class="install-tab active" onclick="selTab('curl',this)">curl</button>
+            <button class="install-tab" onclick="selTab('brew',this)">homebrew</button>
+            <button class="install-tab" onclick="selTab('go',this)">go build</button>
+          </div>
+          <div id="t-curl" class="install-content">
+            <div class="install-line">
+              <span class="i-prompt">$</span>
+              <span class="i-cmd">curl -fsSL https://hanimo.dev/install | sh</span>
+            </div>
+            <span class="i-comment"># Installs the latest binary — Linux &amp; macOS · arm64 &amp; amd64</span>
+          </div>
+          <div id="t-brew" class="install-content" style="display:none;">
+            <div class="install-line">
+              <span class="i-prompt">$</span>
+              <span class="i-cmd">brew install flykimjiwon/tap/hanimo</span>
+            </div>
+            <span class="i-comment"># Tap-based install · auto-updates with brew upgrade</span>
+          </div>
+          <div id="t-go" class="install-content" style="display:none;">
+            <div class="install-line">
+              <span class="i-prompt">$</span>
+              <span class="i-cmd">go install github.com/flykimjiwon/hanimo@latest</span>
+            </div>
+            <span class="i-comment"># Build from source · requires Go 1.21+</span>
+          </div>
+          <div style="margin-top:24px;display:flex;gap:16px;">
+            <a href="https://github.com/flykimjiwon/hanimo" class="btn-primary">View on GitHub</a>
+            <a href="https://hanimo.dev" class="btn-secondary">Documentation</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div>
+      <div class="footer-logo">hanimo</div>
+      <p class="jb" style="font-size:11px;color:var(--ink-faint);letter-spacing:0.04em;margin-top:4px;">오픈소스를 위한 AI 코딩 에이전트</p>
+    </div>
+    <div>
+      <div class="footer-links">
+        <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+        <a href="https://hanimo.dev">hanimo.dev</a>
+      </div>
+      <p class="footer-meta" style="margin-top:8px;text-align:right;">© 2025 · Apache-2.0 License</p>
+    </div>
+  </footer>
+
+  <script>
+    function selTab(name, el) {
+      ['curl','brew','go'].forEach(n => {
+        document.getElementById('t-'+n).style.display = 'none';
+      });
+      document.querySelectorAll('.install-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById('t-'+name).style.display = 'block';
+      el.classList.add('active');
+    }
+  </script>
+  <script>
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      localStorage.setItem('hanimo-theme', t);
+      document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+      document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    }
+    function setLang(lang) {
+      document.documentElement.lang = lang;
+      localStorage.setItem('hanimo-lang', lang);
+      document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+        el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+      });
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+    (function init() {
+      const theme = localStorage.getItem('hanimo-theme') || 'light';
+      const lang = localStorage.getItem('hanimo-lang') || 'ko';
+      setTheme(theme);
+      setLang(lang);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — AI Coding Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --violet: #8b5cf6;
+    --violet-bright: #a78bfa;
+    --violet-dim: #4c1d95;
+    --cyan: #06b6d4;
+    --cyan-bright: #67e8f9;
+    --pink: #ec4899;
+    --bg: #000000;
+    --bg-panel: #050010;
+    --bg-card: #0a0020;
+    --grid-color: rgba(139, 92, 246, 0.12);
+    --text-dim: #4a3a6e;
+    /* theme tokens */
+    --surface: #050010;
+    --border: rgba(139,92,246,0.3);
+    --text: #a78bfa;
+    --muted: #4a3a6e;
+    --accent: #8b5cf6;
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f0ff;
+    --bg-panel: #ede5ff;
+    --bg-card: #e8deff;
+    --surface: #ede5ff;
+    --border: rgba(139,92,246,0.4);
+    --text: #3b0764;
+    --muted: #6d28d9;
+    --accent: #7c3aed;
+    --violet: #7c3aed;
+    --violet-bright: #5b21b6;
+    --violet-dim: #7c3aed;
+    --text-dim: #6d28d9;
+    --cyan: #0891b2;
+    --cyan-bright: #0e7490;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--violet-bright);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Grid floor background */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 40%, transparent 100%);
+  }
+
+  /* Scanlines */
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9997;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.08),
+      rgba(0, 0, 0, 0.08) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+
+  /* Chromatic aberration on hero */
+  @keyframes glitch1 {
+    0%, 90%, 100% { clip-path: inset(0 0 100% 0); transform: translateX(0); }
+    91% { clip-path: inset(10% 0 65% 0); transform: translateX(-4px); }
+    93% { clip-path: inset(40% 0 30% 0); transform: translateX(4px); }
+    95% { clip-path: inset(70% 0 5% 0); transform: translateX(-2px); }
+  }
+
+  @keyframes glitch2 {
+    0%, 88%, 100% { clip-path: inset(0 0 100% 0); transform: translateX(0); }
+    89% { clip-path: inset(20% 0 55% 0); transform: translateX(3px); }
+    91% { clip-path: inset(60% 0 10% 0); transform: translateX(-3px); }
+    93% { clip-path: inset(80% 0 2% 0); transform: translateX(2px); }
+  }
+
+  @keyframes flicker {
+    0%, 97%, 100% { opacity: 1; }
+    98% { opacity: 0.85; }
+    99% { opacity: 1; }
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: var(--violet-bright);
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+    box-shadow: 0 0 6px var(--violet), 0 0 12px var(--violet);
+  }
+
+  /* NAV */
+  nav {
+    position: relative;
+    z-index: 100;
+    padding: 16px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+  }
+
+  .nav-logo {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--violet-bright);
+    text-shadow:
+      0 0 10px var(--violet),
+      0 0 30px var(--violet),
+      0 0 60px rgba(139, 92, 246, 0.5);
+  }
+
+  .nav-links { display: flex; gap: 36px; }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover {
+    color: var(--violet-bright);
+    text-shadow: 0 0 10px var(--violet);
+  }
+
+  .nav-badge {
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-size: 9px;
+    padding: 2px 8px;
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 8px var(--cyan);
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.2);
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 10;
+    min-height: 92vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 48px;
+    overflow: hidden;
+    animation: flicker 12s infinite;
+  }
+
+  /* Radial glow behind hero */
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 700px; height: 400px;
+    background: radial-gradient(ellipse,
+      rgba(139, 92, 246, 0.12) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  .hero-content {
+    max-width: 860px;
+    width: 100%;
+    position: relative;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 0.3em;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px var(--cyan);
+  }
+
+  .hero-title-wrap { position: relative; margin-bottom: 24px; }
+
+  .hero-title {
+    font-size: clamp(48px, 9vw, 96px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--violet-bright);
+    text-shadow:
+      0 0 10px var(--violet),
+      0 0 30px var(--violet),
+      0 0 60px rgba(139, 92, 246, 0.4);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Chromatic aberration layers */
+  .hero-title-r {
+    position: absolute;
+    top: 0; left: 0;
+    font-size: clamp(48px, 9vw, 96px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(236, 72, 153, 0.6);
+    transform: translateX(3px);
+    animation: glitch1 7s infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-title-b {
+    position: absolute;
+    top: 0; left: 0;
+    font-size: clamp(48px, 9vw, 96px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(6, 182, 212, 0.6);
+    transform: translateX(-3px);
+    animation: glitch2 7s infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-tagline {
+    font-size: clamp(15px, 2vw, 20px);
+    color: #c4b5fd;
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .hero-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 48px;
+    letter-spacing: 0.12em;
+  }
+
+  .install-strip {
+    background: var(--bg-panel);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-left: 3px solid var(--violet);
+    padding: 16px 24px;
+    margin-bottom: 32px;
+    max-width: 540px;
+    box-shadow:
+      0 0 20px rgba(139, 92, 246, 0.1),
+      inset 0 0 20px rgba(139, 92, 246, 0.03);
+  }
+
+  .install-strip code {
+    color: var(--cyan-bright);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    text-shadow: 0 0 8px var(--cyan);
+  }
+
+  .install-strip .prompt { color: var(--text-dim); }
+
+  .cta-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  .btn-neon {
+    background: transparent;
+    border: 1px solid var(--violet);
+    color: var(--violet-bright);
+    padding: 12px 32px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+    text-shadow: 0 0 8px var(--violet);
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.2), inset 0 0 16px rgba(139, 92, 246, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-neon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn-neon:hover {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.5), inset 0 0 20px rgba(139, 92, 246, 0.1);
+    border-color: var(--violet-bright);
+  }
+
+  .btn-neon:hover::before { opacity: 1; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: var(--text-dim);
+    padding: 12px 32px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+  }
+
+  .btn-ghost:hover { color: var(--violet-bright); border-color: var(--violet); }
+
+  /* SECTIONS */
+  .section-wrap {
+    position: relative;
+    z-index: 10;
+    padding: 80px 48px;
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--cyan);
+    text-shadow: 0 0 8px var(--cyan);
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: clamp(20px, 3vw, 32px);
+    font-weight: 700;
+    color: var(--violet-bright);
+    text-shadow: 0 0 16px var(--violet);
+    margin-bottom: 48px;
+    letter-spacing: 0.05em;
+  }
+
+  .neon-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(139, 92, 246, 0.6) 30%,
+      rgba(6, 182, 212, 0.4) 60%,
+      transparent
+    );
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.3);
+    margin: 0;
+  }
+
+  /* TERMINAL PREVIEW */
+  .terminal-wrap {
+    background: var(--bg-panel);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow:
+      0 0 40px rgba(139, 92, 246, 0.12),
+      0 0 80px rgba(139, 92, 246, 0.06),
+      inset 0 0 40px rgba(139, 92, 246, 0.03);
+    max-width: 740px;
+  }
+
+  .t-bar {
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(139, 92, 246, 0.05);
+  }
+
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .t-dot-r { background: rgba(236, 72, 153, 0.5); box-shadow: 0 0 4px rgba(236, 72, 153, 0.4); }
+  .t-dot-y { background: rgba(249, 226, 175, 0.5); box-shadow: 0 0 4px rgba(249, 226, 175, 0.3); }
+  .t-dot-g { background: rgba(139, 92, 246, 0.5); box-shadow: 0 0 4px rgba(139, 92, 246, 0.4); }
+
+  .t-bar-title {
+    flex: 1;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .t-body { padding: 24px 28px; }
+
+  .t-row { margin-bottom: 5px; font-size: 12px; }
+  .t-prompt-v { color: var(--text-dim); }
+  .t-cmd-v { color: var(--cyan-bright); text-shadow: 0 0 8px var(--cyan); }
+  .t-out-v { color: rgba(139, 92, 246, 0.6); }
+  .t-ok-v { color: var(--violet-bright); text-shadow: 0 0 6px var(--violet); }
+  .t-info-v { color: rgba(6, 182, 212, 0.5); }
+  .t-sp { margin-bottom: 12px; }
+
+  .theme-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(139, 92, 246, 0.15);
+  }
+
+  .theme-pill {
+    padding: 4px 12px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .theme-pill.on {
+    border-color: var(--violet);
+    color: var(--violet-bright);
+    text-shadow: 0 0 6px var(--violet);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.2);
+  }
+
+  /* FEATURES */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .feat-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    padding: 28px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feat-card::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center,
+      rgba(139, 92, 246, 0.04) 0%,
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .feat-card:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.08);
+  }
+
+  .feat-card:hover::after { opacity: 1; }
+
+  .feat-num {
+    font-size: 10px;
+    color: var(--cyan);
+    letter-spacing: 0.2em;
+    margin-bottom: 12px;
+    text-shadow: 0 0 6px var(--cyan);
+  }
+
+  .feat-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--violet-bright);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+  }
+
+  .feat-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  /* COMPARISON */
+  .comp-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+
+  .comp-cell {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+    border-right: 1px solid rgba(139, 92, 246, 0.1);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .comp-cell:last-child { border-right: none; }
+
+  .comp-header {
+    background: rgba(139, 92, 246, 0.08);
+    color: var(--violet-bright);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+  }
+
+  .comp-header.highlight {
+    background: rgba(139, 92, 246, 0.18);
+    color: var(--violet-bright);
+    text-shadow: 0 0 8px var(--violet);
+  }
+
+  .comp-label { color: #c4b5fd; }
+  .comp-yes { color: var(--violet-bright); text-shadow: 0 0 6px var(--violet); }
+  .comp-no { color: var(--text-dim); }
+  .comp-partial { color: var(--cyan); }
+
+  /* INSTALL */
+  .install-panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .install-panel {
+    background: var(--bg-card);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    padding: 24px;
+  }
+
+  .install-panel-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--cyan);
+    text-shadow: 0 0 6px var(--cyan);
+    margin-bottom: 16px;
+  }
+
+  .install-code {
+    font-size: 11px;
+    line-height: 2;
+    color: var(--violet-bright);
+  }
+
+  .install-code .p { color: var(--text-dim); }
+  .install-code .c { color: var(--text-dim); opacity: 0.5; font-style: italic; }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 10;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    padding: 32px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  footer a {
+    color: var(--text-dim);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--violet-bright); text-shadow: 0 0 8px var(--violet); }
+
+  .footer-logo {
+    color: var(--violet-bright);
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 10px var(--violet);
+  }
+
+  @media (max-width: 640px) {
+    nav { padding: 12px 20px; }
+    .nav-links { display: none; }
+    .section-wrap { padding: 60px 20px; }
+    .hero { padding: 40px 20px; }
+    footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+    .comp-grid { grid-template-columns: 1.5fr 1fr 1fr; }
+    .comp-cell:nth-child(n+4):nth-child(-n+5) { display: none; }
+  }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 12px; right: 16px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: 'Space Mono', monospace; font-size: 10px;
+  }
+  .ctl-row { display: flex; border: 1px solid rgba(139,92,246,0.4); background: var(--bg-panel); }
+  .ctl-btn {
+    background: transparent; border: none; color: var(--text-dim);
+    padding: 4px 10px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.1em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 1px solid rgba(139,92,246,0.3); }
+  .ctl-btn.active { background: rgba(139,92,246,0.15); color: var(--violet-bright); text-shadow: 0 0 6px var(--violet); }
+</style>
+</head>
+<body>
+
+<!-- TOGGLE CONTROLS -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<div class="grid-bg"></div>
+<div class="scanlines"></div>
+
+<nav>
+  <div class="nav-logo">HANIMO</div>
+  <div class="nav-links">
+    <a href="#features" data-ko="기능" data-en="FEATURES">기능</a>
+    <a href="#install" data-ko="설치" data-en="INSTALL">설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo">GITHUB</a>
+    <a href="https://hanimo.dev" data-ko="문서" data-en="DOCS">문서</a>
+    <span class="nav-badge">APACHE-2.0</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow" data-ko="// Go 기반 터미널 AI 에이전트 — v0.9.4" data-en="// GO-BASED TERMINAL AI AGENT — v0.9.4">// Go 기반 터미널 AI 에이전트 — v0.9.4</div>
+
+    <div class="hero-title-wrap">
+      <div class="hero-title-r" aria-hidden="true">HANIMO</div>
+      <div class="hero-title-b" aria-hidden="true">HANIMO</div>
+      <div class="hero-title">HANIMO</div>
+    </div>
+
+    <div class="hero-tagline" data-ko="오픈소스 AI 코딩 플랫폼" data-en="Open-source AI coding platform">오픈소스 AI 코딩 플랫폼</div>
+    <div class="hero-sub" data-ko="Go로 제작 · 14+ 프로바이더" data-en="Built in Go · 14+ Providers">Go로 제작 · 14+ 프로바이더</div>
+
+    <div class="install-strip">
+      <code>
+        <span class="prompt">$ </span>curl -fsSL https://hanimo.dev/install.sh | sh<span class="cursor"></span>
+      </code>
+    </div>
+
+    <div class="cta-row">
+      <a href="https://github.com/flykimjiwon/hanimo" class="btn-neon" data-ko="▶ 시작하기" data-en="▶ GET STARTED">▶ 시작하기</a>
+      <a href="https://hanimo.dev" class="btn-ghost" data-ko="문서 읽기 →" data-en="READ DOCS →">문서 읽기 →</a>
+    </div>
+  </div>
+</div>
+
+<div class="neon-divider"></div>
+
+<!-- TERMINAL PREVIEW -->
+<div class="section-wrap" id="demo">
+  <div class="section-label">// LIVE SESSION</div>
+  <div class="section-title" data-ko="실시간 동작" data-en="HANIMO IN ACTION">실시간 동작</div>
+
+  <div class="terminal-wrap">
+    <div class="t-bar">
+      <div class="t-dot t-dot-r"></div>
+      <div class="t-dot t-dot-y"></div>
+      <div class="t-dot t-dot-g"></div>
+      <div class="t-bar-title">hanimo — claude-sonnet-4 — Super</div>
+    </div>
+    <div class="t-body">
+      <div class="t-row"><span class="t-prompt-v">$ </span><span class="t-cmd-v">hanimo --provider anthropic --model claude-sonnet-4 --mode super</span></div>
+      <div class="t-sp"></div>
+      <div class="t-row t-out-v">╔══════════════════════════════════════════════════╗</div>
+      <div class="t-row t-out-v">║  hanimo v0.9.4  ·  Super  ·  tokens: 0/200K      ║</div>
+      <div class="t-row t-out-v">║  session: f7a2c9  ·  MCP: 3 tools                 ║</div>
+      <div class="t-row t-out-v">╚══════════════════════════════════════════════════╝</div>
+      <div class="t-sp"></div>
+      <div class="t-row"><span class="t-prompt-v">you&gt; </span><span class="t-cmd-v">add rate limiting to the REST API endpoints</span></div>
+      <div class="t-sp"></div>
+      <div class="t-row t-ok-v">● READING  src/api/router.go</div>
+      <div class="t-row t-ok-v">● READING  src/middleware/</div>
+      <div class="t-row" style="color: rgba(6,182,212,0.7)">  → Found 8 endpoints, 0 existing rate limiters</div>
+      <div class="t-sp"></div>
+      <div class="t-row t-ok-v">● WRITING  src/middleware/ratelimit.go  [NEW]</div>
+      <div class="t-row" style="color: rgba(139,92,246,0.6)">  ✓ +62 lines — sliding window, Redis-backed</div>
+      <div class="t-row t-ok-v">● PATCHING src/api/router.go</div>
+      <div class="t-row" style="color: rgba(139,92,246,0.6)">  ✓ +18 lines  -0 lines  [hash-anchored]</div>
+      <div class="t-sp"></div>
+      <div class="t-row t-info-v">  commands: /auto /save /remember /diagnostics /plan</div>
+      <div class="t-row"><span class="t-prompt-v">you&gt; </span><span class="cursor"></span></div>
+
+      <div class="theme-row">
+        <span style="font-size:10px; color: var(--text-dim); align-self: center;">THEME:</span>
+        <span class="theme-pill on">HONEY</span>
+        <span class="theme-pill">OCEAN</span>
+        <span class="theme-pill">DRACULA</span>
+        <span class="theme-pill">NEON</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="neon-divider"></div>
+
+<!-- FEATURES -->
+<div class="section-wrap" id="features">
+  <div class="section-label">// CAPABILITIES</div>
+  <div class="section-title" data-ko="터미널 네이티브를 위한 설계" data-en="ENGINEERED FOR TERMINAL NATIVES">터미널 네이티브를 위한 설계</div>
+
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-num">01 // EDIT</div>
+      <div class="feat-name" data-ko="해시 기반 편집" data-en="Hash-Anchored Editing">해시 기반 편집</div>
+      <div class="feat-desc" data-ko="콘텐츠 해시로 정밀 편집. 오류 없는 수술적 수정." data-en="Hash-anchored edits. Surgical precision, no phantom rewrites.">콘텐츠 해시로 정밀 편집. 오류 없는 수술적 수정.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">02 // PROVIDERS</div>
+      <div class="feat-name" data-ko="14+ LLM 프로바이더" data-en="14+ LLM Providers">14+ LLM 프로바이더</div>
+      <div class="feat-desc" data-ko="Ollama, OpenAI, Anthropic 등. 세션 중 전환 가능." data-en="Ollama, OpenAI, Anthropic and more. Switch mid-session.">Ollama, OpenAI, Anthropic 등. 세션 중 전환 가능.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">03 // MEMORY</div>
+      <div class="feat-name" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</div>
+      <div class="feat-desc" data-ko="컨텍스트 한계 시 자동 요약. 200K 토큰 이상 작업." data-en="Auto-summarizes at context limits. Work past 200K tokens.">컨텍스트 한계 시 자동 요약. 200K 토큰 이상 작업.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">04 // AGENT</div>
+      <div class="feat-name" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</div>
+      <div class="feat-desc" data-ko="작업 위임 후 자율 실행. 전체 감사 추적 제공." data-en="Delegate tasks. Autonomous execution with full auditability.">작업 위임 후 자율 실행. 전체 감사 추적 제공.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">05 // DATA</div>
+      <div class="feat-name" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+      <div class="feat-desc" data-ko="로컬 SQLite에 대화 저장. 데이터는 내 기기에." data-en="Sessions stored locally in SQLite. Your data, your machine.">로컬 SQLite에 대화 저장. 데이터는 내 기기에.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">06 // EXTEND</div>
+      <div class="feat-name" data-ko="MCP 프로토콜 지원" data-en="MCP Protocol Support">MCP 프로토콜 지원</div>
+      <div class="feat-desc" data-ko="외부 도구·DB·API를 컨텍스트로. 포크 없이 확장." data-en="Connect tools, DBs, APIs as context providers. No forking.">외부 도구·DB·API를 컨텍스트로. 포크 없이 확장.</div>
+    </div>
+  </div>
+</div>
+
+<div class="neon-divider"></div>
+
+<!-- COMPARISON -->
+<div class="section-wrap" id="compare">
+  <div class="section-label">// ANALYSIS</div>
+  <div class="section-title" data-ko="경쟁 분석" data-en="COMPETITIVE MATRIX">경쟁 분석</div>
+
+  <div class="comp-grid">
+    <div class="comp-cell comp-header">CAPABILITY</div>
+    <div class="comp-cell comp-header highlight">HANIMO</div>
+    <div class="comp-cell comp-header">CLAUDE CODE</div>
+    <div class="comp-cell comp-header">CURSOR</div>
+    <div class="comp-cell comp-header">AIDER</div>
+
+    <div class="comp-cell comp-label">Open Source (Apache-2.0)</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+
+    <div class="comp-cell comp-label">Local LLM (Ollama)</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-partial">△ PARTIAL</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+
+    <div class="comp-cell comp-label">Hash-Anchored Edits</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-partial">△ PARTIAL</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-partial">△ PARTIAL</div>
+
+    <div class="comp-cell comp-label">SQLite Session Store</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+
+    <div class="comp-cell comp-label">MCP Protocol</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+
+    <div class="comp-cell comp-label">IDE-Free Operation</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+
+    <div class="comp-cell comp-label">Smart Context Compaction</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-yes">✓ YES</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+    <div class="comp-cell comp-no">✗ NO</div>
+  </div>
+</div>
+
+<div class="neon-divider"></div>
+
+<!-- INSTALL -->
+<div class="section-wrap" id="install">
+  <div class="section-label">// DEPLOYMENT</div>
+  <div class="section-title" data-ko="30초 안에 시작" data-en="ZERO TO RUNNING IN 30 SECONDS">30초 안에 시작</div>
+
+  <div class="install-panels">
+    <div class="install-panel">
+      <div class="install-panel-title">// CURL BINARY</div>
+      <div class="install-code">
+        <div><span class="c"># Linux / macOS</span></div>
+        <div><span class="p">$ </span>curl -fsSL https://hanimo.dev/install.sh | sh</div>
+        <br>
+        <div><span class="c"># Verify</span></div>
+        <div><span class="p">$ </span>hanimo --version</div>
+        <div style="color: var(--text-dim)">hanimo v0.9.4 (darwin/arm64)</div>
+      </div>
+    </div>
+    <div class="install-panel">
+      <div class="install-panel-title">// GO BUILD</div>
+      <div class="install-code">
+        <div><span class="c"># From source</span></div>
+        <div><span class="p">$ </span>git clone github.com/flykimjiwon/hanimo</div>
+        <div><span class="p">$ </span>cd hanimo</div>
+        <div><span class="p">$ </span>go build -o hanimo ./cmd/hanimo</div>
+        <div><span class="p">$ </span>./hanimo --help</div>
+      </div>
+    </div>
+    <div class="install-panel">
+      <div class="install-panel-title">// QUICK START</div>
+      <div class="install-code">
+        <div><span class="c"># Anthropic</span></div>
+        <div><span class="p">$ </span>ANTHROPIC_API_KEY=sk-... hanimo</div>
+        <br>
+        <div><span class="c"># Local Ollama</span></div>
+        <div><span class="p">$ </span>hanimo --provider ollama --model qwen3:8b</div>
+        <br>
+        <div><span class="c"># OpenAI</span></div>
+        <div><span class="p">$ </span>OPENAI_API_KEY=sk-... hanimo --provider openai --model gpt-4o</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="neon-divider"></div>
+
+<footer>
+  <div class="footer-logo">HANIMO</div>
+  <div style="display: flex; gap: 28px;">
+    <a href="https://github.com/flykimjiwon/hanimo">github.com/flykimjiwon/hanimo</a>
+    <a href="https://hanimo.dev">hanimo.dev</a>
+  </div>
+  <div style="color: var(--text-dim); font-size: 10px; letter-spacing: 0.15em;">
+    APACHE-2.0 &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; GO 1.22+
+  </div>
+</footer>
+
+<script>
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  localStorage.setItem('hanimo-lang', lang);
+  document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+}
+(function init() {
+  const theme = localStorage.getItem('hanimo-theme') || 'dark';
+  const lang = localStorage.getItem('hanimo-lang') || 'ko';
+  setTheme(theme);
+  setLang(lang);
+})();
+</script>
+</body>
+</html>

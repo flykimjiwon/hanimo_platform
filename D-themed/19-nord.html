@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Nord Theme</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#2e3440',
+            surface: '#3b4252',
+            surfaceHigh: '#434c5e',
+            polar: '#4c566a',
+            frost1: '#88c0d0',
+            frost2: '#81a1c1',
+            frost3: '#5e81ac',
+            aurora1: '#a3be8c',
+            aurora2: '#ebcb8b',
+            aurora3: '#bf616a',
+            aurora4: '#b48ead',
+            text: '#eceff4',
+            subtext: '#d8dee9',
+            muted: '#7b88a1',
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'monospace'],
+            display: ['Cormorant Garamond', 'serif'],
+            sans: ['Jost', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background-color: #2e3440; color: #eceff4; font-family: 'Jost', sans-serif; overflow-x: hidden; }
+
+    /* Arctic atmosphere */
+    .aurora-bg {
+      position: fixed; top: 0; left: 0; right: 0; height: 400px;
+      background: linear-gradient(180deg,
+        rgba(136,192,208,0.04) 0%,
+        rgba(129,161,193,0.03) 30%,
+        rgba(163,190,140,0.02) 60%,
+        transparent 100%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Subtle snowfield grid */
+    body::after {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(136,192,208,0.06) 1px, transparent 0);
+      background-size: 32px 32px;
+    }
+
+    /* Theme switcher */
+    .theme-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      padding: 3px 10px; border-radius: 2px; border: 1px solid #434c5e;
+      color: #7b88a1; cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .theme-pill.active { background: #88c0d0; color: #2e3440; border-color: #88c0d0; font-weight: 600; }
+    .theme-pill:hover:not(.active) { border-color: #7b88a1; color: #d8dee9; }
+
+    /* Terminal */
+    .terminal {
+      background: #272c36; border: 1px solid #3b4252;
+      border-radius: 6px; overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(136,192,208,0.07), 0 32px 64px rgba(0,0,0,0.5);
+    }
+    .terminal-titlebar {
+      background: #3b4252; padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid #434c5e;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .terminal-body { padding: 20px 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.75; }
+
+    .c-frost1 { color: #88c0d0; }
+    .c-frost2 { color: #81a1c1; }
+    .c-frost3 { color: #5e81ac; }
+    .c-aurora1 { color: #a3be8c; }
+    .c-aurora2 { color: #ebcb8b; }
+    .c-aurora4 { color: #b48ead; }
+    .c-text { color: #eceff4; }
+    .c-sub { color: #d8dee9; }
+    .c-muted { color: #7b88a1; }
+
+    /* Feature card */
+    .feature-card {
+      background: #3b4252; border: 1px solid #434c5e; border-radius: 4px;
+      padding: 24px; transition: all 0.3s; position: relative;
+    }
+    .feature-card:hover {
+      border-color: rgba(136,192,208,0.4); background: #414b5c;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+
+    .provider-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      background: #3b4252; border: 1px solid #434c5e;
+      padding: 5px 12px; border-radius: 2px; color: #d8dee9;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .provider-pill:hover { border-color: #88c0d0; color: #88c0d0; }
+
+    .cursor { display: inline-block; width: 8px; height: 13px; background: #88c0d0; animation: blink 1.4s step-end infinite; vertical-align: middle; opacity: 0.85; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .delay-1 { animation-delay: 0.12s; }
+    .delay-2 { animation-delay: 0.24s; }
+    .delay-3 { animation-delay: 0.36s; }
+    .delay-4 { animation-delay: 0.48s; }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #88c0d0 0%, #81a1c1 60%, #a3be8c 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .theme-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      background: rgba(136,192,208,0.1); border: 1px solid rgba(136,192,208,0.25);
+      color: #88c0d0; padding: 3px 10px; border-radius: 2px; letter-spacing: 0.05em;
+    }
+
+    .nord-divider { height: 1px; background: linear-gradient(90deg, transparent, #434c5e, transparent); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #88c0d0, #81a1c1);
+      color: #2e3440; font-weight: 600; padding: 12px 28px; border-radius: 3px;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 16px rgba(136,192,208,0.2);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(136,192,208,0.3); }
+
+    .btn-secondary {
+      background: transparent; border: 1px solid #434c5e;
+      color: #d8dee9; padding: 12px 28px; border-radius: 3px;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: #88c0d0; color: #88c0d0; }
+
+    /* Rune decoration */
+    .rune { font-size: 48px; opacity: 0.04; position: absolute; font-family: serif; }
+
+    .section { position: relative; z-index: 2; }
+    nav { position: relative; z-index: 10; }
+
+    /* Feature number */
+    .feat-num { font-family: 'Cormorant Garamond', serif; font-size: 48px; font-weight: 600; opacity: 0.07; position: absolute; top: 12px; right: 16px; line-height: 1; color: #88c0d0; }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 12px; right: 16px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  }
+  .ctl-row { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: rgba(30,30,46,0.85); backdrop-filter: blur(10px); }
+  .ctl-btn {
+    background: transparent; border: none; color: rgba(205,214,244,0.5);
+    padding: 5px 12px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.08em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 1px solid rgba(255,255,255,0.1); }
+  .ctl-btn.active { background: rgba(205,214,244,0.15); color: #cdd6f4; }
+  [data-theme="light"] .ctl-row { background: rgba(239,241,245,0.9); border-color: rgba(76,79,105,0.2); }
+  [data-theme="light"] .ctl-btn { color: rgba(76,79,105,0.5); }
+  [data-theme="light"] .ctl-btn.active { background: rgba(76,79,105,0.12); color: #4c4f69; }
+
+  [data-theme="light"] body { background-color: #eff1f5 !important; color: #4c4f69 !important; }
+  [data-theme="light"] nav { background: rgba(239,241,245,0.95) !important; border-color: #ccd0da !important; }
+  [data-theme="light"] .bg-surface { background: #e6e9ef !important; }
+  [data-theme="light"] .bg-surface { background: #e6e9ef !important; }
+  [data-theme="light"] .border-surface { border-color: #ccd0da !important; }
+  [data-theme="light"] .border-surfaceHigh { border-color: #bcc0cc !important; }
+  [data-theme="light"] .text-text { color: #4c4f69 !important; }
+  [data-theme="light"] .text-subtext { color: #5c5f77 !important; }
+  [data-theme="light"] .text-muted { color: #7c7f93 !important; }
+  [data-theme="light"] footer { background: rgba(230,233,239,0.5) !important; border-color: #ccd0da !important; }
+
+  [data-theme="light"] .gradient-text { background: linear-gradient(135deg, #2563eb, #60a5fa) !important; }
+  [data-theme="light"] .c-frost1 { color: #2563eb !important; }
+  [data-theme="light"] .c-frost2 { color: #3b82f6 !important; }
+  </style>
+</head>
+<body>
+
+<!-- Toggle controls -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+  <div class="aurora-bg"></div>
+
+  <!-- Nav -->
+  <nav class="border-b border-surface">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <span class="font-display text-2xl font-semibold gradient-text tracking-wide">hanimo</span>
+        <span class="theme-badge">theme: nord</span>
+      </div>
+      <div class="hidden md:flex gap-2">
+        <a href="16-honey.html" class="theme-pill">honey</a>
+        <a href="17-ocean.html" class="theme-pill">ocean</a>
+        <a href="18-dracula.html" class="theme-pill">dracula</a>
+        <a href="19-nord.html" class="theme-pill active">nord</a>
+        <a href="20-forest.html" class="theme-pill">forest</a>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="#features" class="text-sm text-muted hover:text-frost1 transition-colors" data-ko="기능" data-en="Features">기능</a>
+        <a href="#providers" class="text-sm text-muted hover:text-frost1 transition-colors" data-ko="프로바이더" data-en="Providers">프로바이더</a>
+        <a href="#docs" class="text-sm text-muted hover:text-frost1 transition-colors" data-ko="문서" data-en="Docs">문서</a>
+        <a href="https://github.com/flykimjiwon/hanimo" class="text-sm font-mono text-frost1 hover:text-subtext transition-colors">GitHub →</a>
+      </div>
+    </div>
+    <div class="md:hidden px-6 pb-3 flex gap-2 overflow-x-auto">
+      <a href="16-honey.html" class="theme-pill">honey</a>
+      <a href="17-ocean.html" class="theme-pill">ocean</a>
+      <a href="18-dracula.html" class="theme-pill">dracula</a>
+      <a href="19-nord.html" class="theme-pill active">nord</a>
+      <a href="20-forest.html" class="theme-pill">forest</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="section max-w-6xl mx-auto px-6 pt-20 pb-16 relative">
+    <div class="rune" style="top:20px;right:60px">ᚱ</div>
+    <div class="rune" style="top:80px;right:160px;font-size:32px">ᚠ</div>
+
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <div class="fade-up mb-4">
+          <span class="font-mono text-xs text-muted uppercase tracking-widest letter-spacing: 0.15em" data-ko="북극 · 침착 · 미니멀" data-en="arctic · calm · minimal">북극 · 침착 · 미니멀</span>
+        </div>
+        <h1 class="fade-up delay-1 font-display text-5xl lg:text-6xl font-semibold leading-tight mb-3" style="letter-spacing:-0.01em">
+          <span data-ko="오픈소스" data-en="The open-source">오픈소스</span><br /><em class="gradient-text" data-ko="AI 코딩" data-en="AI coding">AI 코딩</em><br /><span data-ko="플랫폼" data-en="platform">플랫폼</span>
+        </h1>
+        <p class="fade-up delay-2 font-mono text-xs text-frost2 mb-2" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="AI coding agent for open-source">오픈소스를 위한 AI 코딩 에이전트</p>
+        <p class="fade-up delay-2 font-sans text-subtext text-base mb-8 max-w-md leading-relaxed font-light" data-ko="북극 공기의 명료함을 가진 터미널 AI 코딩 에이전트. 14개 이상의 프로바이더, 해시 앵커 정밀도, 집중 심층 작업을 위한 자율 실행." data-en="A terminal AI coding agent with the clarity of arctic air. 14+ providers, hash-anchored precision, and autonomous execution for focused deep work.">
+          북극 공기의 명료함을 가진 터미널 AI 코딩 에이전트. 14개 이상의 프로바이더, 해시 앵커 정밀도, 집중 심층 작업을 위한 자율 실행.
+        </p>
+
+        <div class="fade-up delay-3 mb-8">
+          <div class="bg-surface border border-surfaceHigh rounded p-4 inline-flex items-center gap-3 font-mono text-sm max-w-full">
+            <span class="c-muted">$</span>
+            <span class="c-frost1">curl -fsSL https://hanimo.dev/install.sh | sh</span>
+            <button class="c-muted hover:text-frost1 transition-colors text-xs ml-2">⎘</button>
+          </div>
+        </div>
+
+        <div class="fade-up delay-4 flex items-center gap-4 flex-wrap">
+          <a href="#" class="btn-primary">Begin →</a>
+          <a href="https://github.com/flykimjiwon/hanimo" class="btn-secondary">⭐ GitHub</a>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="fade-up delay-3">
+        <div class="terminal">
+          <div class="terminal-titlebar">
+            <div class="dot" style="background:#bf616a"></div>
+            <div class="dot" style="background:#ebcb8b"></div>
+            <div class="dot" style="background:#a3be8c"></div>
+            <span class="ml-3 font-mono text-xs c-muted">hanimo — /auto mode — nord theme</span>
+          </div>
+          <div class="terminal-body">
+            <div class="mb-2">
+              <span class="c-aurora1">❯</span>
+              <span class="c-frost1"> hanimo</span>
+              <span class="c-muted"> --provider mistral --model mistral-large</span>
+            </div>
+            <div class="c-muted mb-3 text-xs">◈ hanimo v0.4.1 · nord theme · Dev mode</div>
+
+            <div class="mb-1 text-xs c-sub">Session: refactor-api-types <span class="c-muted">(SQLite · 21 messages)</span></div>
+            <div class="mb-3 text-xs c-muted">Context window: 28% · Tokens: 9,420</div>
+
+            <div class="mb-1"><span class="c-frost2">you</span><span class="c-muted"> › </span><span class="c-text">/auto migrate all API types to strict TypeScript</span></div>
+            <div class="mb-2 ml-4 c-frost1 text-xs">◦ Autonomous mode engaged · quiet analysis</div>
+
+            <div class="c-frost2 text-xs mb-1">▷ src/types/api.ts <span class="c-muted">[#f3a1c2]</span> → reading</div>
+            <div class="c-frost1 text-xs mb-1">▷ src/types/api.ts → writing (strict types)</div>
+            <div class="c-frost2 text-xs mb-1">▷ src/api/*.ts → updating 8 files</div>
+            <div class="c-aurora1 text-xs mb-3">▷ Running tsc --strict → 0 errors</div>
+
+            <div class="mb-1"><span class="c-aurora1">✓</span> <span class="c-text text-xs">Migration complete · zero type errors</span></div>
+
+            <div class="mt-3 c-muted text-xs">hanimo › <span class="cursor"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section class="section max-w-6xl mx-auto px-6 py-12">
+    <div class="nord-divider mb-12"></div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="p-8 text-center border border-surfaceHigh rounded bg-surface">
+        <div class="text-frost1 text-3xl font-display font-semibold mb-3">I</div>
+        <h3 class="font-display text-lg font-semibold text-frost1 mb-2">Open Source</h3>
+        <p class="text-subtext text-sm font-light">Apache-2.0. Full transparency. Fork and own your tooling.</p>
+      </div>
+      <div class="p-8 text-center border border-surfaceHigh rounded bg-surface">
+        <div class="text-frost2 text-3xl font-display font-semibold mb-3">II</div>
+        <h3 class="font-display text-lg font-semibold text-frost2 mb-2">Local First</h3>
+        <p class="text-subtext text-sm font-light">Ollama, LM Studio. Your code stays on your machine.</p>
+      </div>
+      <div class="p-8 text-center border border-surfaceHigh rounded bg-surface">
+        <div class="text-aurora1 text-3xl font-display font-semibold mb-3">III</div>
+        <h3 class="font-display text-lg font-semibold text-aurora1 mb-2">Model Agnostic</h3>
+        <p class="text-subtext text-sm font-light">14+ providers. Switch models. One unified syntax.</p>
+      </div>
+    </div>
+    <div class="nord-divider mt-12"></div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="mb-12">
+      <span class="font-mono text-xs text-muted uppercase tracking-widest">Features</span>
+      <h2 class="font-display text-4xl font-semibold mt-2 leading-tight">Quiet power.<br /><span class="gradient-text">Absolute clarity.</span></h2>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <div class="feature-card relative overflow-hidden">
+        <div class="feat-num">I</div>
+        <div class="font-mono text-xs c-muted mb-3">editing</div>
+        <div class="c-frost1 font-display text-xl font-semibold mb-2">Hash-Anchored Editing</div>
+        <p class="text-subtext text-sm leading-relaxed font-light">Content hashes anchor every edit. Stale overwrites are impossible. Precise, surgical changes only.</p>
+        <div class="mt-4 font-mono text-xs c-muted">api.ts <span class="c-frost1">[#f3a1c2]</span></div>
+      </div>
+
+      <div class="feature-card relative overflow-hidden">
+        <div class="feat-num">II</div>
+        <div class="font-mono text-xs c-muted mb-3">providers</div>
+        <div class="c-frost2 font-display text-xl font-semibold mb-2">14+ LLM Providers</div>
+        <p class="text-subtext text-sm leading-relaxed font-light">Anthropic, OpenAI, Google, Mistral, Groq, DeepSeek, Ollama and more. One agent for all models.</p>
+        <div class="mt-4 font-mono text-xs c-muted"><span class="c-frost2">--provider mistral</span> <span class="c-muted">--model mistral-large</span></div>
+      </div>
+
+      <div class="feature-card relative overflow-hidden">
+        <div class="feat-num">III</div>
+        <div class="font-mono text-xs c-muted mb-3">context</div>
+        <div class="c-aurora4 font-display text-xl font-semibold mb-2">Smart Compaction</div>
+        <p class="text-subtext text-sm leading-relaxed font-light">Intelligent context window management. Long sessions, no limits. Automatically summarized.</p>
+        <div class="mt-4 font-mono text-xs c-muted">Context: <span class="c-aurora4">28%</span> · 9,420 tokens</div>
+      </div>
+
+      <div class="feature-card relative overflow-hidden">
+        <div class="feat-num">IV</div>
+        <div class="font-mono text-xs c-muted mb-3">autonomy</div>
+        <div class="c-frost1 font-display text-xl font-semibold mb-2">/auto Autonomous Mode</div>
+        <p class="text-subtext text-sm leading-relaxed font-light">Deliberate, quiet execution. Plans, reads, edits, verifies. Each step reported transparently.</p>
+        <div class="mt-4 font-mono text-xs c-muted"><span class="c-frost1">/auto</span> migrate to strict TypeScript</div>
+      </div>
+
+      <div class="feature-card relative overflow-hidden">
+        <div class="feat-num">V</div>
+        <div class="font-mono text-xs c-muted mb-3">persistence</div>
+        <div class="c-aurora2 font-display text-xl font-semibold mb-2">SQLite Sessions</div>
+        <p class="text-subtext text-sm leading-relaxed font-light">Sessions persisted in local SQLite. Resume any conversation exactly where you stopped.</p>
+        <div class="mt-4 font-mono text-xs c-muted"><span class="c-aurora2">/save</span> refactor-api · <span class="c-aurora2">/remember</span></div>
+      </div>
+
+      <div class="feature-card relative overflow-hidden">
+        <div class="feat-num">VI</div>
+        <div class="font-mono text-xs c-muted mb-3">extensibility</div>
+        <div class="c-aurora1 font-display text-xl font-semibold mb-2">MCP Support</div>
+        <p class="text-subtext text-sm leading-relaxed font-light">Model Context Protocol. Connect databases, file systems, browsers, APIs, custom integrations.</p>
+        <div class="mt-4 font-mono text-xs c-muted">MCP: <span class="c-aurora1">sqlite</span> · <span class="c-aurora1">filesystem</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Providers -->
+  <section id="providers" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="nord-divider mb-12"></div>
+    <div class="mb-8">
+      <span class="font-mono text-xs text-muted uppercase tracking-widest">Providers</span>
+      <h2 class="font-display text-3xl font-semibold mt-2">Every model. One agent.</h2>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <span class="provider-pill">Ollama</span>
+      <span class="provider-pill">OpenAI</span>
+      <span class="provider-pill">Anthropic</span>
+      <span class="provider-pill">Google</span>
+      <span class="provider-pill">DeepSeek</span>
+      <span class="provider-pill">Groq</span>
+      <span class="provider-pill">Mistral</span>
+      <span class="provider-pill">Novita</span>
+      <span class="provider-pill">OpenRouter</span>
+      <span class="provider-pill">vLLM</span>
+      <span class="provider-pill">LM Studio</span>
+      <span class="provider-pill">Together</span>
+      <span class="provider-pill">Fireworks</span>
+      <span class="provider-pill">Custom OpenAI</span>
+    </div>
+    <div class="nord-divider mt-12"></div>
+  </section>
+
+  <!-- Install -->
+  <section id="docs" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="mb-8">
+      <span class="font-mono text-xs text-muted uppercase tracking-widest">Install</span>
+      <h2 class="font-display text-3xl font-semibold mt-2">Simple as snowfall.</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5 mb-10">
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#bf616a"></div><div class="dot" style="background:#ebcb8b"></div><div class="dot" style="background:#a3be8c"></div><span class="ml-2 font-mono text-xs c-muted">curl</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># Linux / macOS</div>
+          <div><span class="c-muted">$ </span><span class="c-frost1">curl -fsSL</span> <span class="c-frost2">https://hanimo.dev/install.sh</span> <span class="c-frost1">| sh</span></div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#bf616a"></div><div class="dot" style="background:#ebcb8b"></div><div class="dot" style="background:#a3be8c"></div><span class="ml-2 font-mono text-xs c-muted">homebrew</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># macOS</div>
+          <div><span class="c-muted">$ </span><span class="c-frost2">brew tap</span> <span class="c-frost1">flykimjiwon/tap</span></div>
+          <div class="mt-1"><span class="c-muted">$ </span><span class="c-frost2">brew install hanimo</span></div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#bf616a"></div><div class="dot" style="background:#ebcb8b"></div><div class="dot" style="background:#a3be8c"></div><span class="ml-2 font-mono text-xs c-muted">go build</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># From source</div>
+          <div><span class="c-muted">$ </span><span class="c-aurora1">git clone</span> <span class="c-frost2">github.com/flykimjiwon/hanimo</span></div>
+          <div class="mt-1"><span class="c-muted">$ </span><span class="c-aurora1">go build ./...</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="bg-surface rounded p-5 border border-surfaceHigh">
+        <div class="font-mono text-xs c-frost1 mb-2">Super mode</div>
+        <div class="text-subtext text-sm font-light">Full capability. Read, write, execute, browse.</div>
+      </div>
+      <div class="bg-surface rounded p-5 border border-surfaceHigh">
+        <div class="font-mono text-xs c-frost2 mb-2">Dev mode</div>
+        <div class="text-subtext text-sm font-light">Editing and diagnostics. No shell execution.</div>
+      </div>
+      <div class="bg-surface rounded p-5 border border-surfaceHigh">
+        <div class="font-mono text-xs c-aurora1 mb-2">Plan mode</div>
+        <div class="text-subtext text-sm font-light">Read-only analysis. Safe and deliberate.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="section border-t border-surface">
+    <div class="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between items-start gap-6">
+      <div>
+        <div class="font-display text-xl font-semibold gradient-text mb-1">hanimo</div>
+        <div class="font-mono text-xs c-muted">Apache-2.0 · Built with Go</div>
+        <div class="font-mono text-xs c-muted mt-1">theme: <span class="c-frost1">nord</span></div>
+      </div>
+      <div class="flex gap-8 text-sm text-subtext">
+        <div>
+          <div class="font-mono text-xs c-muted mb-2">Links</div>
+          <div class="space-y-1">
+            <div><a href="https://github.com/flykimjiwon/hanimo" class="hover:text-frost1 transition-colors">GitHub</a></div>
+            <div><a href="https://hanimo.dev" class="hover:text-frost1 transition-colors">hanimo.dev</a></div>
+          </div>
+        </div>
+        <div>
+          <div class="font-mono text-xs c-muted mb-2">Commands</div>
+          <div class="space-y-1 font-mono text-xs c-muted">
+            <div><span class="c-frost1">/auto</span> · /save · /remember</div>
+            <div><span class="c-frost2">/diagnostics</span> · /theme</div>
+            <div><span class="c-aurora1">/theme nord</span> ← you are here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('hanimo-theme', t);
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+  }
+  (function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+
+  function setLang(lang) {
+    document.documentElement.lang = lang;
+    localStorage.setItem('hanimo-lang', lang);
+    document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+    document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  }
+  (function init() {
+    const theme = localStorage.getItem('hanimo-theme') || 'dark';
+    const lang = localStorage.getItem('hanimo-lang') || 'ko';
+    setTheme(theme);
+    setLang(lang);
+  })();
+</script>
+
+</body>
+</html>

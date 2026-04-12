@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>hanimo — The open-source AI coding platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #FAFAFA;
+    --paper2: #F4F4F4;
+    --paper3: #EBEBEB;
+    --rule: #DCDCDC;
+    --rule2: #C8C8C8;
+    --dim: #888;
+    --mid: #555;
+    --ink: #1A1A1A;
+    --black: #0A0A0A;
+    --accent: #0A0A0A;
+    --red: #E53E3E;
+    --green: #16A34A;
+    --yellow: #CA8A04;
+  }
+  [data-theme="dark"] {
+    --paper: #111111;
+    --paper2: #1A1A1A;
+    --paper3: #222222;
+    --rule: #2A2A2A;
+    --rule2: #383838;
+    --dim: #666;
+    --mid: #aaa;
+    --ink: #E8E8E8;
+    --black: #F0F0F0;
+    --accent: #F0F0F0;
+    --red: #F87171;
+    --green: #4ADE80;
+    --yellow: #FBBF24;
+  }
+  [data-theme="dark"] body { background: var(--paper); color: var(--ink); }
+  [data-theme="dark"] nav { background: var(--paper) !important; border-color: var(--rule) !important; }
+  [data-theme="dark"] .feat { background: var(--paper2); border-color: var(--rule); }
+  [data-theme="dark"] .mode-c { background: var(--paper2); border-color: var(--rule); }
+  [data-theme="dark"] .pvd { background: var(--paper2); border-color: var(--rule); color: var(--mid); }
+  [data-theme="dark"] .tag { background: var(--paper2); border-color: var(--rule2); color: var(--mid); }
+  [data-theme="dark"] .btn-black { background: var(--black); color: #111; }
+  [data-theme="dark"] .btn-outline { border-color: var(--rule2); color: var(--ink); }
+  [data-theme="dark"] .terminal { background: #000; }
+  [data-theme="dark"] th { background: var(--paper3); color: var(--dim); }
+  [data-theme="dark"] td { border-color: var(--rule); }
+  [data-theme="dark"] tr:hover td { background: var(--paper3); }
+  [data-theme="dark"] .itab.active { background: var(--black); color: #111; border-color: var(--black); }
+  [data-theme="dark"] .itab:not(.active) { color: var(--dim); border-color: var(--rule); background: var(--paper2); }
+  [data-theme="dark"] footer { background: var(--paper) !important; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.5;
+  }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* Nav */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    height: 52px;
+    display: flex; align-items: center;
+  }
+  .w { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  /* Tag/label */
+  .tag {
+    border: 1px solid var(--rule2);
+    border-radius: 2px;
+    padding: 1px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--mid);
+    letter-spacing: 0.04em;
+    background: var(--paper2);
+  }
+  .tag-black {
+    background: var(--black);
+    color: white;
+    border: 1px solid var(--black);
+    border-radius: 2px;
+    padding: 1px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+  }
+
+  /* Rule / horizontal line */
+  .rule { border: none; border-top: 1px solid var(--rule); }
+  .rule-heavy { border: none; border-top: 2px solid var(--black); }
+
+  /* Buttons */
+  .btn-black {
+    background: var(--black);
+    color: white;
+    border: 1px solid var(--black);
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .btn-black:hover { background: #333; }
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--rule2);
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    transition: border-color 0.15s, background 0.15s;
+    cursor: pointer;
+  }
+  .btn-outline:hover { border-color: var(--ink); background: var(--paper2); }
+
+  /* Terminal */
+  .terminal {
+    background: var(--black);
+    border-radius: 4px;
+    overflow: hidden;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .t-bar {
+    background: #1A1A1A;
+    border-bottom: 1px solid #333;
+    padding: 8px 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Feature card — editorial box style */
+  .feat {
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 20px;
+    background: white;
+    transition: border-color 0.15s;
+  }
+  .feat:hover { border-color: var(--rule2); }
+
+  .feat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    margin-bottom: 10px;
+  }
+
+  /* Provider chips */
+  .pvd {
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 3px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--mid);
+    background: white;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .pvd:hover { border-color: var(--black); color: var(--black); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 10px 14px; text-align: center; border-bottom: 1px solid var(--rule); font-size: 0.8rem; }
+  th {
+    background: var(--paper2);
+    color: var(--dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+    border-bottom: 1px solid var(--rule2);
+  }
+  td:first-child, th:first-child { text-align: left; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--paper2); }
+
+  /* Install tab */
+  .itab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.12s;
+    letter-spacing: 0.04em;
+  }
+  .itab.active { background: var(--black); color: white; border-color: var(--black); }
+  .itab:not(.active) { color: var(--dim); border-color: var(--rule); background: white; }
+
+  /* Mode card */
+  .mode-c {
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 18px;
+    background: white;
+  }
+
+  /* i18n */
+  [data-lang] { display: none; }
+  .lang-ko [data-lang="ko"] { display: inline; }
+  .lang-en [data-lang="en"] { display: inline; }
+  [data-lang-block] { display: none; }
+  .lang-ko [data-lang-block="ko"] { display: block; }
+  .lang-en [data-lang-block="en"] { display: block; }
+
+  /* Column layout helpers */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+  @media (max-width: 640px) {
+    .two-col, .three-col { grid-template-columns: 1fr; }
+  }
+
+  /* Editorial grid border trick */
+  .grid-bordered { display: grid; gap: 0; }
+  .grid-bordered > * { border: 1px solid var(--rule); margin: -1px 0 0 -1px; }
+
+  /* Big hero number */
+  .stat-big {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--black);
+    line-height: 1;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body class="lang-ko">
+
+<!-- Nav -->
+<nav>
+  <div class="w" style="width:100%;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="mono" style="font-weight:600;font-size:0.95rem;color:var(--black);letter-spacing:-0.01em">hanimo</span>
+      <span class="tag">Apache-2.0</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <a href="#features" class="mono" style="color:var(--dim);font-size:0.75rem;transition:color 0.12s" onmouseover="this.style.color='var(--black)'" onmouseout="this.style.color='var(--dim)'">
+        <span data-lang="ko">기능</span><span data-lang="en">Features</span>
+      </a>
+      <a href="#install" class="mono" style="color:var(--dim);font-size:0.75rem;transition:color 0.12s" onmouseover="this.style.color='var(--black)'" onmouseout="this.style.color='var(--dim)'">
+        <span data-lang="ko">설치</span><span data-lang="en">Install</span>
+      </a>
+      <a href="https://github.com/flykimjiwon/hanimo" class="mono" style="color:var(--dim);font-size:0.75rem;transition:color 0.12s" onmouseover="this.style.color='var(--black)'" onmouseout="this.style.color='var(--dim)'">GitHub</a>
+      <div style="display:flex;border:1px solid var(--rule2);border-radius:2px;overflow:hidden;margin-right:4px;">
+        <button onclick="setTheme('light')" id="btn-light" class="tag" style="cursor:pointer;border:none;border-radius:0;background:var(--black);color:white;" data-lang-theme="light" data-ko="라이트" data-en="LIGHT"><span data-lang="ko">라이트</span><span data-lang="en" style="display:none">LIGHT</span></button>
+        <button onclick="setTheme('dark')" id="btn-dark" class="tag" style="cursor:pointer;border:none;border-radius:0;border-left:1px solid var(--rule2);" data-lang-theme="dark" data-ko="다크" data-en="DARK"><span data-lang="ko">다크</span><span data-lang="en" style="display:none">DARK</span></button>
+      </div>
+      <button onclick="toggleLang()" id="langBtn" class="tag cursor-pointer" style="transition:background 0.12s" onmouseover="this.style.background='var(--rule)'" onmouseout="this.style.background='var(--paper2)'">EN</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section style="padding:96px 0 64px;border-bottom:1px solid var(--rule)">
+  <div class="w">
+    <!-- Editorial header band -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px">
+      <span class="tag">v1.0</span>
+      <span style="color:var(--rule2)">—</span>
+      <span class="mono" style="color:var(--dim);font-size:0.72rem">Successor to Modol · Go · Local-first</span>
+    </div>
+
+    <div class="two-col" style="gap:48px;align-items:start">
+      <div>
+        <h1 style="font-size:clamp(2.2rem,5vw,3.4rem);font-weight:700;color:var(--black);line-height:1.05;letter-spacing:-0.03em;margin-bottom:16px">
+          <span data-lang="ko">오픈소스를 위한<br/>AI 코딩 에이전트</span>
+          <span data-lang="en">The open-source<br/>AI coding platform</span>
+        </h1>
+        <p class="mono" style="color:var(--mid);font-size:0.82rem;line-height:1.6;max-width:360px;margin-bottom:24px">
+          <span data-lang="ko">14개 이상의 LLM 프로바이더. 로컬 우선. 터미널 네이티브. Apache-2.0.</span>
+          <span data-lang="en">14+ LLM providers. Local-first. Terminal-native. Apache-2.0.</span>
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <a href="#install" class="btn-black" style="padding:9px 20px">
+            <span data-lang="ko">시작하기</span><span data-lang="en">Get started</span>
+          </a>
+          <a href="https://github.com/flykimjiwon/hanimo" class="btn-outline" style="padding:9px 20px">
+            github.com/flykimjiwon/hanimo
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats column -->
+      <div style="border-left:1px solid var(--rule);padding-left:40px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div>
+            <div class="stat-big">14+</div>
+            <div class="mono" style="color:var(--dim);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;margin-top:4px">
+              <span data-lang="ko">LLM 프로바이더</span><span data-lang="en">LLM providers</span>
+            </div>
+          </div>
+          <div>
+            <div class="stat-big">3</div>
+            <div class="mono" style="color:var(--dim);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;margin-top:4px">
+              <span data-lang="ko">작업 모드</span><span data-lang="en">Work modes</span>
+            </div>
+          </div>
+          <div>
+            <div class="stat-big">6</div>
+            <div class="mono" style="color:var(--dim);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;margin-top:4px">
+              <span data-lang="ko">핵심 기능</span><span data-lang="en">Core features</span>
+            </div>
+          </div>
+          <div>
+            <div class="stat-big" style="font-size:2rem">OSS</div>
+            <div class="mono" style="color:var(--dim);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;margin-top:4px">Apache-2.0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Terminal Demo -->
+<section style="padding:40px 0;border-bottom:1px solid var(--rule)">
+  <div class="w">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span class="mono" style="color:var(--dim);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em">
+        <span data-lang="ko">터미널 미리보기</span><span data-lang="en">Terminal preview</span>
+      </span>
+      <span style="color:var(--rule2)">—</span>
+      <span class="tag">dev mode</span>
+    </div>
+    <div class="terminal">
+      <div class="t-bar">
+        <div class="t-dot" style="background:#FF5F57"></div>
+        <div class="t-dot" style="background:#FEBC2E"></div>
+        <div class="t-dot" style="background:#28C840"></div>
+        <span class="mono" style="color:#555;font-size:0.7rem;margin-left:8px">~/project — hanimo</span>
+      </div>
+      <div style="padding:18px 20px;font-family:'IBM Plex Mono',monospace;font-size:0.79rem;line-height:1.7">
+        <div style="color:#666">$ hanimo</div>
+        <div style="margin-top:6px">
+          <span style="color:#DDD">hanimo</span> <span style="color:#555">v1.0.0</span>
+          <span style="color:#444"> · </span>
+          <span style="color:#888">ollama/qwen2.5-coder</span>
+        </div>
+        <div style="margin:10px 0;background:#111;border:1px solid #333;border-radius:2px;padding:8px 12px">
+          <span style="color:#AAA">› </span>
+          <span style="color:#EEE">Add rate limiting middleware to the API</span>
+        </div>
+        <div style="color:#555">  reading 6 files...</div>
+        <div><span style="color:#22C55E">  ✓ </span><span style="color:#DDD">middleware/ratelimit.go</span><span style="color:#444">  created  +67</span></div>
+        <div><span style="color:#22C55E">  ✓ </span><span style="color:#DDD">router/api.go</span><span style="color:#444">           modified +5 -1</span></div>
+        <div><span style="color:#CA8A04">  ~ </span><span style="color:#DDD">config/defaults.go</span><span style="color:#444">       modified +3</span></div>
+        <div style="margin-top:8px;color:#AAA">  done · 3 files · 4.8s · 1,924 tokens</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features" style="padding:56px 0;border-bottom:1px solid var(--rule)">
+  <div class="w">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:4px">
+      <h2 style="font-size:1.1rem;font-weight:600;color:var(--black)">
+        <span data-lang="ko">기능</span><span data-lang="en">Features</span>
+      </h2>
+      <span class="tag">6</span>
+    </div>
+    <hr class="rule" style="margin:16px 0 24px" />
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)">
+      <div class="feat" style="border:none">
+        <div class="feat-label">01 — Edit</div>
+        <h3 style="color:var(--black);font-weight:600;font-size:0.88rem;margin-bottom:6px">
+          <span data-lang="ko">해시 앵커 편집</span><span data-lang="en">Hash-Anchored Editing</span>
+        </h3>
+        <p style="color:var(--mid);font-size:0.78rem;line-height:1.5">
+          <span data-lang="ko">콘텐츠 해시 기반 정밀 파일 변경</span>
+          <span data-lang="en">Precise changes via content hashes</span>
+        </p>
+      </div>
+      <div class="feat" style="border:none">
+        <div class="feat-label">02 — Provider</div>
+        <h3 style="color:var(--black);font-weight:600;font-size:0.88rem;margin-bottom:6px">
+          <span data-lang="ko">14+ LLM 프로바이더</span><span data-lang="en">14+ LLM Providers</span>
+        </h3>
+        <p style="color:var(--mid);font-size:0.78rem;line-height:1.5">
+          <span data-lang="ko">로컬부터 클라우드까지 단일 인터페이스</span>
+          <span data-lang="en">Local to cloud, one interface</span>
+        </p>
+      </div>
+      <div class="feat" style="border:none">
+        <div class="feat-label">03 — Memory</div>
+        <h3 style="color:var(--black);font-weight:600;font-size:0.88rem;margin-bottom:6px">
+          <span data-lang="ko">스마트 컴팩션</span><span data-lang="en">Smart Compaction</span>
+        </h3>
+        <p style="color:var(--mid);font-size:0.78rem;line-height:1.5">
+          <span data-lang="ko">컨텍스트 자동 요약 최적화</span>
+          <span data-lang="en">Auto-compress context windows</span>
+        </p>
+      </div>
+      <div class="feat" style="border:none">
+        <div class="feat-label">04 — Auto</div>
+        <h3 style="color:var(--black);font-weight:600;font-size:0.88rem;margin-bottom:6px">
+          <span data-lang="ko">/auto 자율 에이전트</span><span data-lang="en">/auto Autonomous</span>
+        </h3>
+        <p style="color:var(--mid);font-size:0.78rem;line-height:1.5">
+          <span data-lang="ko">무개입 자동 작업 완수</span>
+          <span data-lang="en">Complex tasks, zero intervention</span>
+        </p>
+      </div>
+      <div class="feat" style="border:none">
+        <div class="feat-label">05 — Session</div>
+        <h3 style="color:var(--black);font-weight:600;font-size:0.88rem;margin-bottom:6px">
+          <span data-lang="ko">SQLite 세션</span><span data-lang="en">SQLite Sessions</span>
+        </h3>
+        <p style="color:var(--mid);font-size:0.78rem;line-height:1.5">
+          <span data-lang="ko">대화 히스토리 로컬 영구 보존</span>
+          <span data-lang="en">Persistent local session history</span>
+        </p>
+      </div>
+      <div class="feat" style="border:none">
+        <div class="feat-label">06 — Protocol</div>
+        <h3 style="color:var(--black);font-weight:600;font-size:0.88rem;margin-bottom:6px">
+          <span data-lang="ko">MCP 지원</span><span data-lang="en">MCP Support</span>
+        </h3>
+        <p style="color:var(--mid);font-size:0.78rem;line-height:1.5">
+          <span data-lang="ko">Model Context Protocol 완전 지원</span>
+          <span data-lang="en">Full Model Context Protocol</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Providers -->
+<section style="padding:48px 0;border-bottom:1px solid var(--rule)">
+  <div class="w">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:20px">
+      <h2 style="font-size:1.1rem;font-weight:600;color:var(--black)">
+        <span data-lang="ko">지원 프로바이더</span><span data-lang="en">Providers</span>
+      </h2>
+      <span class="tag">14+</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <span class="pvd">Ollama</span>
+      <span class="pvd">OpenAI</span>
+      <span class="pvd">Anthropic</span>
+      <span class="pvd">Google</span>
+      <span class="pvd">DeepSeek</span>
+      <span class="pvd">Groq</span>
+      <span class="pvd">Novita</span>
+      <span class="pvd">OpenRouter</span>
+      <span class="pvd">Mistral</span>
+      <span class="pvd">Fireworks</span>
+      <span class="pvd">vLLM</span>
+      <span class="pvd">LM Studio</span>
+      <span class="pvd">Together</span>
+      <span class="pvd" style="background:var(--black);color:white;border-color:var(--black)">+ Custom</span>
+    </div>
+  </div>
+</section>
+
+<!-- Modes -->
+<section style="padding:48px 0;border-bottom:1px solid var(--rule)">
+  <div class="w">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:20px">
+      <h2 style="font-size:1.1rem;font-weight:600;color:var(--black)">
+        <span data-lang="ko">모드</span><span data-lang="en">Modes</span>
+      </h2>
+      <span class="tag">3</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)">
+      <div class="mode-c" style="border:none;border-left:3px solid var(--black)">
+        <div class="mono" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);margin-bottom:10px">super</div>
+        <div style="font-weight:600;color:var(--black);font-size:0.88rem;margin-bottom:4px">
+          <span data-lang="ko">슈퍼 모드</span><span data-lang="en">Super Mode</span>
+        </div>
+        <div style="color:var(--mid);font-size:0.78rem">
+          <span data-lang="ko">최대 성능, 전체 컨텍스트</span>
+          <span data-lang="en">Max power, full context</span>
+        </div>
+      </div>
+      <div class="mode-c" style="border:none;border-left:3px solid #555">
+        <div class="mono" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);margin-bottom:10px">dev</div>
+        <div style="font-weight:600;color:var(--black);font-size:0.88rem;margin-bottom:4px">
+          <span data-lang="ko">개발 모드</span><span data-lang="en">Dev Mode</span>
+        </div>
+        <div style="color:var(--mid);font-size:0.78rem">
+          <span data-lang="ko">빠른 반복, 일상 코딩 최적</span>
+          <span data-lang="en">Fast iteration, daily coding</span>
+        </div>
+      </div>
+      <div class="mode-c" style="border:none;border-left:3px solid #999">
+        <div class="mono" style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);margin-bottom:10px">plan</div>
+        <div style="font-weight:600;color:var(--black);font-size:0.88rem;margin-bottom:4px">
+          <span data-lang="ko">플랜 모드</span><span data-lang="en">Plan Mode</span>
+        </div>
+        <div style="color:var(--mid);font-size:0.78rem">
+          <span data-lang="ko">실행 전 검토, 안전한 변경</span>
+          <span data-lang="en">Plan before run, safe changes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison -->
+<section style="padding:48px 0;border-bottom:1px solid var(--rule)">
+  <div class="w">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:20px">
+      <h2 style="font-size:1.1rem;font-weight:600;color:var(--black)">
+        <span data-lang="ko">비교</span><span data-lang="en">Comparison</span>
+      </h2>
+    </div>
+    <div style="border:1px solid var(--rule);border-radius:2px;overflow:hidden">
+      <table>
+        <thead>
+          <tr>
+            <th><span data-lang="ko">기능</span><span data-lang="en">Feature</span></th>
+            <th style="color:var(--black)">hanimo</th>
+            <th>Claude Code</th>
+            <th>Cursor</th>
+            <th>Aider</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--mid);font-size:0.79rem"><span data-lang="ko">오픈소스</span><span data-lang="en">Open source</span></td>
+            <td style="color:var(--green);font-weight:600">✓</td>
+            <td style="color:var(--rule2)">✗</td>
+            <td style="color:var(--rule2)">✗</td>
+            <td style="color:var(--green);font-weight:600">✓</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mid);font-size:0.79rem"><span data-lang="ko">로컬 LLM</span><span data-lang="en">Local LLM</span></td>
+            <td style="color:var(--green);font-weight:600">✓</td>
+            <td style="color:var(--rule2)">✗</td>
+            <td style="color:var(--yellow)">△</td>
+            <td style="color:var(--green);font-weight:600">✓</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mid);font-size:0.79rem"><span data-lang="ko">SQLite 세션</span><span data-lang="en">SQLite sessions</span></td>
+            <td style="color:var(--green);font-weight:600">✓</td>
+            <td style="color:var(--rule2)">✗</td>
+            <td style="color:var(--rule2)">✗</td>
+            <td style="color:var(--rule2)">✗</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mid);font-size:0.79rem"><span data-lang="ko">MCP 지원</span><span data-lang="en">MCP support</span></td>
+            <td style="color:var(--green);font-weight:600">✓</td>
+            <td style="color:var(--green);font-weight:600">✓</td>
+            <td style="color:var(--rule2)">✗</td>
+            <td style="color:var(--rule2)">✗</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mid);font-size:0.79rem"><span data-lang="ko">해시 앵커</span><span data-lang="en">Hash anchoring</span></td>
+            <td style="color:var(--green);font-weight:600">✓</td>
+            <td style="color:var(--rule2)">✗</td>
+            <td style="color:var(--rule2)">✗</td>
+            <td style="color:var(--rule2)">✗</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Install -->
+<section id="install" style="padding:48px 0;border-bottom:1px solid var(--rule)">
+  <div class="w">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:20px">
+      <h2 style="font-size:1.1rem;font-weight:600;color:var(--black)">
+        <span data-lang="ko">설치</span><span data-lang="en">Install</span>
+      </h2>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button class="itab active" onclick="switchTab('curl',this)">curl</button>
+      <button class="itab" onclick="switchTab('brew',this)">brew</button>
+      <button class="itab" onclick="switchTab('go',this)">go install</button>
+    </div>
+    <div class="terminal" style="border-radius:2px">
+      <div style="padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem">
+        <div id="tab-curl">
+          <div style="color:#555;font-size:0.72rem;margin-bottom:6px"># <span data-lang="ko">바이너리 설치</span><span data-lang="en">Install binary</span></div>
+          <div style="color:#E8E8E8">curl -fsSL https://hanimo.dev/install.sh | sh</div>
+        </div>
+        <div id="tab-brew" class="hidden">
+          <div style="color:#555;font-size:0.72rem;margin-bottom:6px"># Homebrew</div>
+          <div style="color:#E8E8E8">brew install flykimjiwon/tap/hanimo</div>
+        </div>
+        <div id="tab-go" class="hidden">
+          <div style="color:#555;font-size:0.72rem;margin-bottom:6px"># <span data-lang="ko">소스 빌드</span><span data-lang="en">Build from source</span></div>
+          <div style="color:#E8E8E8">go install github.com/flykimjiwon/hanimo@latest</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="padding:32px 0;background:var(--paper)">
+  <div class="w" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="mono" style="font-weight:600;font-size:0.85rem;color:var(--black)">hanimo</span>
+      <span class="tag">Apache-2.0</span>
+      <a href="https://hanimo.dev" class="mono" style="color:var(--dim);font-size:0.72rem;transition:color 0.12s" onmouseover="this.style.color='var(--black)'" onmouseout="this.style.color='var(--dim)'">hanimo.dev</a>
+    </div>
+    <div style="display:flex;gap:16px" class="mono">
+      <a href="https://github.com/flykimjiwon/hanimo" style="color:var(--dim);font-size:0.72rem;transition:color 0.12s" onmouseover="this.style.color='var(--black)'" onmouseout="this.style.color='var(--dim)'">GitHub</a>
+      <a href="https://hanimo.dev/docs" style="color:var(--dim);font-size:0.72rem;transition:color 0.12s" onmouseover="this.style.color='var(--black)'" onmouseout="this.style.color='var(--dim)'">
+        <span data-lang="ko">문서</span><span data-lang="en">Docs</span>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  let currentLang = 'ko';
+  let currentTheme = 'light';
+
+  function setTheme(t) {
+    currentTheme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    const lightBtn = document.getElementById('btn-light');
+    const darkBtn = document.getElementById('btn-dark');
+    if (t === 'light') {
+      lightBtn.style.background = 'var(--black)'; lightBtn.style.color = 'white';
+      darkBtn.style.background = 'var(--paper2)'; darkBtn.style.color = 'var(--dim)';
+    } else {
+      darkBtn.style.background = 'var(--black)'; darkBtn.style.color = '#111';
+      lightBtn.style.background = 'var(--paper2)'; lightBtn.style.color = 'var(--dim)';
+    }
+    document.querySelectorAll('[data-lang-theme]').forEach(btn => {
+      btn.querySelector('[data-lang="ko"]').style.display = currentLang === 'ko' ? '' : 'none';
+      btn.querySelector('[data-lang="en"]').style.display = currentLang === 'en' ? '' : 'none';
+    });
+  }
+
+  function toggleLang() {
+    currentLang = currentLang === 'ko' ? 'en' : 'ko';
+    document.body.className = document.body.className.replace(/lang-\w+/, 'lang-' + currentLang);
+    document.getElementById('langBtn').textContent = currentLang === 'ko' ? 'EN' : 'KO';
+    document.documentElement.lang = currentLang;
+    document.querySelectorAll('[data-lang-theme]').forEach(btn => {
+      btn.querySelector('[data-lang="ko"]').style.display = currentLang === 'ko' ? '' : 'none';
+      btn.querySelector('[data-lang="en"]').style.display = currentLang === 'en' ? '' : 'none';
+    });
+  }
+
+  function switchTab(tab, btn) {
+    ['curl','brew','go'].forEach(t => document.getElementById('tab-'+t).classList.add('hidden'));
+    document.querySelectorAll('.itab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-'+tab).classList.remove('hidden');
+    btn.classList.add('active');
+  }
+
+  (function() {
+    const saved = localStorage.getItem('hanimo-theme') || 'light';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

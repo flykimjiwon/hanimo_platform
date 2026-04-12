@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — tmux split</title>
+<script>
+  (function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #1e1e2e; --bg2: #181825; --surface: #313244; --border: #45475a;
+    --active: #89b4fa; --text: #cdd6f4; --sub: #a6adc8;
+    --green: #a6e3a1; --yellow: #f9e2af; --red: #f38ba8;
+    --blue: #89b4fa; --cyan: #89dceb; --mauve: #cba6f7; --peach: #fab387;
+  }
+  /* light theme overrides */
+  [data-theme="light"] {
+    --bg: #eff1f5; --bg2: #e6e9ef; --surface: #ccd0da; --border: #bcc0cc;
+    --active: #1e66f5; --text: #4c4f69; --sub: #6c6f85;
+    --green: #40a02b; --yellow: #df8e1d; --red: #d20f39;
+    --blue: #1e66f5; --cyan: #04a5e5; --mauve: #8839ef; --peach: #fe640b;
+  }
+  html, body { height: 100%; background: #0d0d1a; font-family: 'JetBrains Mono', monospace; }
+  [data-theme="light"] body, [data-theme="light"] html { background: #dce0e8; }
+
+  /* i18n + theme toggle */
+  .ctrl-bar {
+    position: fixed; top: 8px; right: 12px; z-index: 999;
+    display: flex; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+  .lang-toggle, .theme-toggle { display: flex; gap: 0; }
+  .lang-btn, .theme-btn {
+    padding: 3px 10px; border: 1px solid var(--border); background: var(--bg2);
+    color: var(--sub); cursor: pointer; user-select: none;
+  }
+  .lang-btn.active { background: var(--active); color: var(--bg); border-color: var(--active); }
+  .theme-btn.active { background: var(--active); color: var(--bg); border-color: var(--active); }
+
+  /* tmux shell */
+  .tmux-session { width: 100%; height: 100vh; min-height: 600px; display: flex; flex-direction: column; background: var(--bg); border: 2px solid var(--border); }
+  .tmux-topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 12px; height: 26px; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--sub); flex-shrink: 0; }
+  .tmux-topbar .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #f38ba8; } .dot-y { background: #f9e2af; } .dot-g { background: #a6e3a1; }
+  .tmux-topbar .ttitle { flex: 1; text-align: center; color: var(--text); font-size: 12px; }
+
+  .pane-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; overflow: hidden; }
+  .pane { border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+  .pane.active { border-color: var(--active); }
+  .pane-titlebar { background: var(--surface); padding: 2px 10px; font-size: 11px; color: var(--sub); display: flex; justify-content: space-between; flex-shrink: 0; }
+  .pane.active .pane-titlebar { background: var(--active); color: var(--bg); }
+  .pane-num { font-size: 10px; opacity: 0.6; position: absolute; top: 22px; right: 6px; color: var(--active); }
+  .pane-content { flex: 1; padding: 10px 12px; font-size: 12px; line-height: 1.6; color: var(--text); overflow: hidden; }
+
+  /* pane content */
+  .hero-ascii { font-size: 9px; line-height: 1.2; color: var(--blue); margin-bottom: 10px; }
+  .hero-tag { color: var(--mauve); font-size: 13px; margin-bottom: 4px; }
+  .hero-sub { color: var(--sub); font-size: 11px; margin-bottom: 12px; }
+  .install-cmd { background: var(--bg2); border-left: 3px solid var(--green); padding: 6px 10px; font-size: 12px; color: var(--green); margin-bottom: 10px; }
+  .feat-pills { font-size: 10px; color: var(--sub); line-height: 1.8; }
+  .feat-pills span { color: var(--green); }
+  .cursor-blink { display: inline-block; width: 8px; height: 13px; background: var(--text); vertical-align: text-bottom; animation: blink 1.2s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .t-dim { color: var(--sub); } .t-ok { color: var(--green); } .t-warn { color: var(--yellow); }
+  .t-prompt { color: var(--blue); } .t-err { color: var(--red); }
+  .term-line { margin-bottom: 2px; }
+
+  .htop-hdr { display: flex; justify-content: space-between; color: var(--yellow); font-size: 11px; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 6px; }
+  .hrow { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-bottom: 3px; }
+  .hlbl { color: var(--cyan); width: 55px; flex-shrink: 0; }
+  .hbar { flex: 1; height: 10px; background: var(--bg2); border: 1px solid var(--border); position: relative; overflow: hidden; }
+  .hfill { position: absolute; left: 0; top: 0; height: 100%; background: var(--green); transition: width 2s; }
+  .hfill.w { background: var(--yellow); } .hfill.c { background: var(--red); }
+  .hpct { width: 36px; text-align: right; font-size: 10px; color: var(--sub); }
+  .proc-hdr { color: var(--blue); display: flex; gap: 8px; font-size: 10px; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
+  .proc-row { display: flex; gap: 8px; font-size: 10px; color: var(--text); margin-bottom: 2px; }
+  .cpid { width: 40px; color: var(--yellow); } .ccpu { width: 45px; color: var(--red); } .cmem { width: 45px; color: var(--cyan); } .cname { color: var(--green); }
+
+  .git-commit { display: flex; gap: 8px; font-size: 11px; margin-bottom: 5px; align-items: flex-start; }
+  .ghash { color: var(--yellow); flex-shrink: 0; }
+  .gref { color: var(--blue); flex-shrink: 0; font-size: 10px; }
+  .gmsg { color: var(--text); flex: 1; }
+  .gdate { color: var(--sub); flex-shrink: 0; font-size: 10px; }
+
+  .tmux-statusbar { background: var(--bg2); border-top: 1px solid var(--border); height: 24px; display: flex; align-items: center; font-size: 11px; flex-shrink: 0; }
+  .sl { background: var(--green); color: var(--bg); padding: 0 12px; height: 100%; display: flex; align-items: center; font-weight: 700; gap: 6px; }
+  .swins { display: flex; height: 100%; }
+  .swin { padding: 0 10px; display: flex; align-items: center; color: var(--sub); border-right: 1px solid var(--border); font-size: 11px; }
+  .swin.cur { background: var(--surface); color: var(--text); }
+  .sr { margin-left: auto; display: flex; align-items: center; height: 100%; }
+  .sr span { padding: 0 10px; border-left: 1px solid var(--border); height: 100%; display: flex; align-items: center; color: var(--sub); font-size: 11px; }
+  .sr .stime { background: var(--blue); color: var(--bg); font-weight: 700; }
+
+  /* below-fold sections */
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
+  .sec-title { font-size: 11px; letter-spacing: 0.2em; color: var(--blue); text-transform: uppercase; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+  .feat-card { background: var(--bg); border: 1px solid var(--border); padding: 16px; font-size: 12px; }
+  .feat-card:hover { border-color: var(--blue); }
+  .fc-tag { color: var(--blue); font-size: 11px; margin-bottom: 6px; }
+  .fc-name { color: var(--text); font-size: 13px; margin-bottom: 4px; font-weight: 700; }
+  .fc-desc { color: var(--sub); line-height: 1.5; }
+
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .cmp-table th { background: var(--surface); color: var(--text); padding: 8px 12px; text-align: left; border: 1px solid var(--border); font-weight: 700; }
+  .cmp-table th.hl { background: var(--blue); color: var(--bg); }
+  .cmp-table td { padding: 7px 12px; border: 1px solid var(--border); color: var(--sub); }
+  .cmp-table td.hl { color: var(--green); background: rgba(166,227,161,0.04); }
+  .cmp-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .yes { color: var(--green); } .no { color: var(--red); } .par { color: var(--yellow); }
+
+  .inst-block { background: var(--bg2); border: 1px solid var(--border); padding: 18px 22px; margin-bottom: 14px; }
+  .inst-label { font-size: 10px; letter-spacing: 0.15em; color: var(--blue); text-transform: uppercase; margin-bottom: 8px; }
+  .inst-block code { color: var(--green); font-size: 13px; display: block; line-height: 1.8; }
+  .inst-block .cmt { color: var(--sub); }
+
+  footer { background: var(--bg2); border-top: 1px solid var(--border); padding: 22px 24px; text-align: center; font-size: 11px; color: var(--sub); }
+  footer a { color: var(--blue); text-decoration: none; }
+
+  @media (max-width: 700px) {
+    .pane-grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); }
+    .tmux-session { height: auto; min-height: 100vh; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Controls: lang + theme -->
+<div class="ctrl-bar">
+  <div class="theme-toggle">
+    <div class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</div>
+    <div class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</div>
+  </div>
+  <div class="lang-toggle">
+    <div class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</div>
+    <div class="lang-btn" id="btn-en" onclick="setLang('en')">EN</div>
+  </div>
+</div>
+
+<!-- TMUX SESSION HERO -->
+<div class="tmux-session">
+  <div class="tmux-topbar">
+    <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+    <div class="ttitle">tmux — hanimo [0] — 4 panes</div>
+  </div>
+
+  <div class="pane-grid">
+
+    <!-- PANE 0: Hero -->
+    <div class="pane active">
+      <div class="pane-titlebar"><span>0: nvim — README.md</span><span>NORMAL</span></div>
+      <span class="pane-num">[0]</span>
+      <div class="pane-content">
+        <div class="hero-ascii">
+ ██╗  ██╗ █████╗ ███╗  ██╗██╗███╗  ███╗ ██████╗
+ ██╔══██╗██╔══██╗████╗ ██║██║████╗████║██╔═══██╗
+ ███████║███████║██╔██╗██║██║██╔████╔██║██║   ██║
+ ██╔══██║██╔══██║██║╚████║██║██║╚██╔╝██║██║   ██║
+ ██║  ██║██║  ██║██║ ╚███║██║██║ ╚═╝ ██║╚██████╔╝
+        </div>
+        <div class="hero-tag" data-ko="오픈소스 AI 코딩 에이전트" data-en="The open-source AI coding platform">오픈소스 AI 코딩 에이전트</div>
+        <div class="hero-sub" data-ko="터미널에서 바로. Go로 제작. Apache-2.0." data-en="Runs in your terminal. Built in Go. Apache-2.0.">터미널에서 바로. Go로 제작. Apache-2.0.</div>
+        <div class="install-cmd">$ curl -fsSL https://hanimo.dev/install.sh | sh</div>
+        <div class="feat-pills">
+          <span>✓</span> <span data-ko="해시 앵커 편집" data-en="Hash-anchored edits">해시 앵커 편집</span> &nbsp;
+          <span>✓</span> <span data-ko="14+ LLM" data-en="14+ LLMs">14+ LLM</span> &nbsp;
+          <span>✓</span> <span data-ko="MCP 지원" data-en="MCP support">MCP 지원</span><br>
+          <span>✓</span> <span data-ko="스마트 압축" data-en="Smart compaction">스마트 압축</span> &nbsp;
+          <span>✓</span> <span data-ko="/auto 20회" data-en="/auto 20 iters">/auto 20회</span> &nbsp;
+          <span>✓</span> <span data-ko="SQLite 세션" data-en="SQLite sessions">SQLite 세션</span>
+        </div>
+        <div style="margin-top:10px; font-size:11px; color:var(--sub);">
+          <span data-ko="↓ 스크롤하여 탐색" data-en="↓ scroll to explore">↓ 스크롤하여 탐색</span>
+          <span class="cursor-blink"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 1: Terminal -->
+    <div class="pane">
+      <div class="pane-titlebar"><span>1: zsh — ~/project</span><span>bash</span></div>
+      <span class="pane-num">[1]</span>
+      <div class="pane-content">
+        <div class="term-line t-dim"># install hanimo</div>
+        <div class="term-line"><span class="t-prompt">~/project $</span> curl -fsSL https://hanimo.dev/install.sh | sh</div>
+        <div class="term-line t-ok">  ✓ Installed to /usr/local/bin/hanimo</div>
+        <div class="term-line">&nbsp;</div>
+        <div class="term-line"><span class="t-prompt">~/project $</span> hanimo</div>
+        <div class="term-line t-dim">  hanimo v0.9.2 · claude-3-7-sonnet</div>
+        <div class="term-line">&nbsp;</div>
+        <div class="term-line"><span class="t-prompt">hanimo &gt;</span> refactor auth.go to use context</div>
+        <div class="term-line t-warn">  ◆ Planning...</div>
+        <div class="term-line">  ✎ auth.go [42-89] → context param added</div>
+        <div class="term-line t-ok">  ✓ 3 files · 0 errors</div>
+        <div class="term-line">&nbsp;</div>
+        <div class="term-line"><span class="t-prompt">hanimo &gt;</span> /auto write tests</div>
+        <div class="term-line t-dim">  [iter 1/20] Analysing coverage...</div>
+        <div class="term-line t-dim">  [iter 2/20] Writing auth_test.go...</div>
+        <div class="term-line t-ok">  ✓ 14 tests · all passing</div>
+      </div>
+    </div>
+
+    <!-- PANE 2: htop -->
+    <div class="pane">
+      <div class="pane-titlebar"><span>2: htop — process stats</span><span>F5=tree</span></div>
+      <span class="pane-num">[2]</span>
+      <div class="pane-content">
+        <div class="htop-hdr"><span>CPU / MEM</span><span id="htop-time">00:00:00</span></div>
+        <div class="hrow"><div class="hlbl">CPU[0]</div><div class="hbar"><div class="hfill" style="width:23%"></div></div><div class="hpct">23%</div></div>
+        <div class="hrow"><div class="hlbl">CPU[1]</div><div class="hbar"><div class="hfill" style="width:41%"></div></div><div class="hpct">41%</div></div>
+        <div class="hrow"><div class="hlbl">CPU[2]</div><div class="hbar"><div class="hfill w" style="width:67%"></div></div><div class="hpct">67%</div></div>
+        <div class="hrow"><div class="hlbl">CPU[3]</div><div class="hbar"><div class="hfill" style="width:12%"></div></div><div class="hpct">12%</div></div>
+        <div class="hrow"><div class="hlbl">Mem</div><div class="hbar"><div class="hfill w" style="width:58%"></div></div><div class="hpct">1.8G</div></div>
+        <div class="hrow"><div class="hlbl">Swp</div><div class="hbar"><div class="hfill" style="width:4%"></div></div><div class="hpct">128M</div></div>
+        <div class="proc-hdr"><span class="cpid">PID</span><span class="ccpu">CPU%</span><span class="cmem">MEM%</span><span class="cname">Command</span></div>
+        <div class="proc-row"><span class="cpid">4821</span><span class="ccpu">42.1</span><span class="cmem">3.2</span><span class="cname">hanimo /auto</span></div>
+        <div class="proc-row"><span class="cpid">4822</span><span class="ccpu">8.4</span><span class="cmem">1.1</span><span class="cname">hanimo session</span></div>
+        <div class="proc-row"><span class="cpid">4823</span><span class="ccpu">1.2</span><span class="cmem">0.4</span><span class="cname">hanimo mcp-srv</span></div>
+        <div class="proc-row"><span class="cpid">4824</span><span class="ccpu">0.1</span><span class="cmem">0.2</span><span class="cname">hanimo sqlite</span></div>
+      </div>
+    </div>
+
+    <!-- PANE 3: git log -->
+    <div class="pane">
+      <div class="pane-titlebar"><span>3: git log — flykimjiwon/hanimo</span><span>↑ main</span></div>
+      <span class="pane-num">[3]</span>
+      <div class="pane-content">
+        <div class="git-commit"><span class="ghash">a3f9c12</span><span class="gref">(HEAD→main)</span><span class="gmsg">feat: /auto 20-iter autonomous mode</span><span class="gdate">2h ago</span></div>
+        <div class="git-commit"><span class="ghash">b7d2e44</span><span class="gref"></span><span class="gmsg">feat: SQLite session persistence</span><span class="gdate">1d ago</span></div>
+        <div class="git-commit"><span class="ghash">c1a8f03</span><span class="gref"></span><span class="gmsg">feat: MCP server support</span><span class="gdate">2d ago</span></div>
+        <div class="git-commit"><span class="ghash">d4c3b21</span><span class="gref"></span><span class="gmsg">feat: hash-anchored editing engine</span><span class="gdate">3d ago</span></div>
+        <div class="git-commit"><span class="ghash">e9f1d87</span><span class="gref"></span><span class="gmsg">feat: 14+ LLM providers</span><span class="gdate">5d ago</span></div>
+        <div class="git-commit"><span class="ghash">f2b5a60</span><span class="gref"></span><span class="gmsg">feat: smart context compaction</span><span class="gdate">6d ago</span></div>
+        <div class="git-commit"><span class="ghash">0a7e3c9</span><span class="gref">(tag: v0.8.0)</span><span class="gmsg">release: v0.8.0 public</span><span class="gdate">2w ago</span></div>
+      </div>
+    </div>
+
+  </div><!-- /pane-grid -->
+
+  <div class="tmux-statusbar">
+    <div class="sl"><span>&#9654;</span><span>hanimo</span></div>
+    <div class="swins">
+      <div class="swin cur">0:nvim*</div>
+      <div class="swin">1:zsh</div>
+      <div class="swin">2:htop</div>
+      <div class="swin">3:git</div>
+    </div>
+    <div class="sr">
+      <span>flykimjiwon/hanimo</span>
+      <span>main</span>
+      <span>v0.9.2</span>
+      <span class="stime" id="status-time">09:41</span>
+    </div>
+  </div>
+</div><!-- /tmux-session -->
+
+<!-- FEATURES -->
+<div style="background:var(--bg2); border-top:1px solid var(--border);">
+  <div class="wrap">
+    <div class="sec-title" data-ko="핵심 기능" data-en="Core Features">핵심 기능</div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="fc-tag">[HASH]</div>
+        <div class="fc-name" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</div>
+        <div class="fc-desc" data-ko="라인별 MD5. 수정 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 수정 충돌 없음.</div>
+      </div>
+      <div class="feat-card">
+        <div class="fc-tag">[LLM]</div>
+        <div class="fc-name" data-ko="14+ LLM 제공자" data-en="14+ LLM Providers">14+ LLM 제공자</div>
+        <div class="fc-desc" data-ko="Claude, GPT-4o, Gemini, Ollama 등." data-en="Claude, GPT-4o, Gemini, Ollama, more.">Claude, GPT-4o, Gemini, Ollama 등.</div>
+      </div>
+      <div class="feat-card">
+        <div class="fc-tag">[ZIP]</div>
+        <div class="fc-name" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</div>
+        <div class="fc-desc" data-ko="대화 자동 요약. 토큰 절반 절감." data-en="Auto-summarizes turns. Halves token use.">대화 자동 요약. 토큰 절반 절감.</div>
+      </div>
+      <div class="feat-card">
+        <div class="fc-tag">[AUTO]</div>
+        <div class="fc-name" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</div>
+        <div class="fc-desc" data-ko="최대 20회 반복. 계획→코드→테스트 자동." data-en="Up to 20 iters. Plan, code, test alone.">최대 20회 반복. 계획→코드→테스트 자동.</div>
+      </div>
+      <div class="feat-card">
+        <div class="fc-tag">[DB]</div>
+        <div class="fc-name" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+        <div class="fc-desc" data-ko="로컬 저장. 이어서 작업, 히스토리 검색." data-en="Local persist. Resume, search history.">로컬 저장. 이어서 작업, 히스토리 검색.</div>
+      </div>
+      <div class="feat-card">
+        <div class="fc-tag">[MCP]</div>
+        <div class="fc-name" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+        <div class="fc-desc" data-ko="파일시스템·git·DB 연결. 확장 가능." data-en="Filesystem, git, DB via MCP. Extensible.">파일시스템·git·DB 연결. 확장 가능.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARE -->
+<div style="background:var(--bg);">
+  <div class="wrap">
+    <div class="sec-title" data-ko="비교" data-en="Comparison">비교</div>
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th data-ko="기능" data-en="Feature">기능</th>
+          <th class="hl">hanimo</th>
+          <th>Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td data-ko="오픈소스" data-en="Open Source">오픈소스</td><td class="hl yes">✓ Apache-2.0</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+        <tr><td data-ko="14+ LLM" data-en="14+ LLMs">14+ LLM</td><td class="hl yes">✓</td><td class="no">✗</td><td class="par">~</td><td class="yes">✓</td></tr>
+        <tr><td data-ko="해시 앵커 편집" data-en="Hash-Anchored Edits">해시 앵커 편집</td><td class="hl yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td data-ko="SQLite 세션 DB" data-en="SQLite Session DB">SQLite 세션 DB</td><td class="hl yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td data-ko="자율 /auto 모드" data-en="Autonomous /auto">/auto</td><td class="hl yes">✓ 20회</td><td class="yes">✓</td><td class="par">~</td><td class="par">~</td></tr>
+        <tr><td>MCP</td><td class="hl yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td data-ko="순수 CLI" data-en="Pure CLI">순수 CLI</td><td class="hl yes">✓</td><td class="yes">✓</td><td class="no">✗ GUI</td><td class="yes">✓</td></tr>
+        <tr><td data-ko="비용" data-en="Cost">비용</td><td class="hl yes" data-ko="무료 + API" data-en="Free + API">무료 + API</td><td class="no">$20/mo+</td><td class="no">$20/mo+</td><td class="yes" data-ko="무료 + API" data-en="Free + API">무료 + API</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- INSTALL -->
+<div style="background:var(--bg2); border-top:1px solid var(--border);">
+  <div class="wrap">
+    <div class="sec-title" data-ko="설치" data-en="Installation">설치</div>
+    <div class="inst-block">
+      <div class="inst-label" data-ko="curl (권장)" data-en="curl (recommended)">curl (권장)</div>
+      <code>$ curl -fsSL https://hanimo.dev/install.sh | sh</code>
+    </div>
+    <div class="inst-block">
+      <div class="inst-label">Homebrew</div>
+      <code>$ brew tap flykimjiwon/hanimo</code>
+      <code>$ brew install hanimo</code>
+    </div>
+    <div class="inst-block">
+      <div class="inst-label" data-ko="소스 빌드 (Go 1.22+)" data-en="Build from source (Go 1.22+)">소스 빌드 (Go 1.22+)</div>
+      <code class="cmt"># Go 1.22+ 필요 / requires Go 1.22+</code>
+      <code>$ git clone https://github.com/flykimjiwon/hanimo</code>
+      <code>$ cd hanimo &amp;&amp; go build -o hanimo ./cmd/hanimo</code>
+      <code>$ ./hanimo</code>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div style="margin-bottom:6px;">
+    <strong style="color:var(--text)">hanimo</strong> &nbsp;·&nbsp;
+    <a href="https://github.com/flykimjiwon/hanimo">flykimjiwon/hanimo</a> &nbsp;·&nbsp;
+    <a href="https://hanimo.dev">hanimo.dev</a> &nbsp;·&nbsp;
+    Apache-2.0
+  </div>
+  <div data-ko="오픈소스를 위한 AI 코딩 에이전트 · © 2024 kimjiwon" data-en="AI coding agent for open-source · © 2024 kimjiwon">오픈소스를 위한 AI 코딩 에이전트 · © 2024 kimjiwon</div>
+</footer>
+
+<script>
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function tick() {
+    const d = new Date();
+    const hms = pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+    const hm  = pad(d.getHours())+':'+pad(d.getMinutes());
+    const ht = document.getElementById('htop-time');
+    const st = document.getElementById('status-time');
+    if(ht) ht.textContent = hms;
+    if(st) st.textContent = hm;
+  }
+  tick(); setInterval(tick, 1000);
+
+  const fills = document.querySelectorAll('.hfill');
+  setInterval(() => {
+    fills.forEach(f => {
+      const base = parseInt(f.style.width);
+      const next = Math.min(95, Math.max(2, base + (Math.random()-0.5)*6));
+      f.style.width = next+'%';
+    });
+  }, 2000);
+
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('hanimo-theme', t);
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+  }
+  function setLang(lang) {
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      el.textContent = el.getAttribute('data-' + lang);
+    });
+    document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.documentElement.lang = lang;
+  }
+  // init theme toggle state
+  (function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+</script>
+</body>
+</html>

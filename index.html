@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo Landing Mockups — 20 variants</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111113;
+    --border: #1f1f22;
+    --text: #fafafa;
+    --muted: #71717a;
+    --accent: #F9E2AF;
+    --violet: #8b5cf6;
+    --emerald: #10b981;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  header {
+    padding: 48px 32px 32px;
+    border-bottom: 1px solid var(--border);
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  .brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+  h1 span { color: var(--accent); font-style: italic; font-weight: 500; }
+  .sub {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+  .stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .stats b { color: var(--text); font-weight: 600; }
+
+  nav.groups {
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,11,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    padding: 16px 32px;
+  }
+  nav.groups .inner {
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  nav.groups a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  nav.groups a:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  main {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 48px 32px 120px;
+  }
+  section {
+    margin-bottom: 80px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-head h2 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .section-head .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 24px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(249, 226, 175, 0.08);
+  }
+  .preview {
+    position: relative;
+    aspect-ratio: 16/10;
+    background: #000;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1440px;
+    height: 900px;
+    border: 0;
+    transform-origin: top left;
+    transform: scale(0.35);
+    pointer-events: none;
+  }
+  .card-body {
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+  }
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .skill-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(139, 92, 246, 0.12);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    letter-spacing: 0.03em;
+  }
+  .skill-tag.design { background: rgba(16, 185, 129, 0.12); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.25); }
+  .skill-tag.tui { background: rgba(249, 226, 175, 0.12); color: var(--accent); border-color: rgba(249, 226, 175, 0.25); }
+  .skill-tag.guide { background: rgba(244, 114, 182, 0.12); color: #f9a8d4; border-color: rgba(244, 114, 182, 0.25); }
+  .skill-tag.brand { background: rgba(56, 189, 248, 0.12); color: #7dd3fc; border-color: rgba(56, 189, 248, 0.25); }
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #0a0a0b;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.ghost:hover { border-color: var(--accent); }
+
+  @media (max-width: 640px) {
+    header, main, nav.groups { padding-left: 20px; padding-right: 20px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">hanimo / design exploration</div>
+  <h1>Landing Mockups <span>— 20 variants</span></h1>
+  <p class="sub">스무 가지 디자인 방향으로 탐색한 hanimo 랜딩 페이지 시안. 카드를 클릭하면 전체 화면으로 열립니다.</p>
+  <div class="stats">
+    <div><b>70</b> variants</div>
+    <div><b>10</b> groups</div>
+    <div><b>Apache-2.0</b></div>
+    <div><b>flykimjiwon/hanimo</b></div>
+  </div>
+</header>
+
+<nav class="groups">
+  <div class="inner">
+    <a href="#group-a">A · Terminal/TUI</a>
+    <a href="#group-b">B · Modern SaaS</a>
+    <a href="#group-c">C · Developer-docs</a>
+    <a href="#group-d">D · Themed</a>
+    <a href="#group-e">E · Advanced TUI</a>
+    <a href="#group-f">F · Palettes</a>
+    <a href="#group-g">G · Cute</a>
+    <a href="#group-h">H · Comparison</a>
+    <a href="#group-i">I · Fusion A×D</a>
+    <a href="#group-j">J · Brand-inspired</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="group-a">
+  <div class="section-head">
+    <h2>A · Terminal / TUI-first</h2>
+    <span class="tag">5 variants · retro · hacker</span>
+  </div>
+  <div class="grid">
+    <!-- A cards injected below -->
+  </div>
+</section>
+
+<section id="group-b">
+  <div class="section-head">
+    <h2>B · Modern SaaS</h2>
+    <span class="tag">5 variants · premium · polished</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+<section id="group-c">
+  <div class="section-head">
+    <h2>C · Developer-docs</h2>
+    <span class="tag">5 variants · technical · dense</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+<section id="group-d">
+  <div class="section-head">
+    <h2>D · Themed (5 built-in themes)</h2>
+    <span class="tag">honey · ocean · dracula · nord · forest</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+<section id="group-e">
+  <div class="section-head">
+    <h2>E · Advanced TUI</h2>
+    <span class="tag">tmux · rainbow · ncurses · synthwave · zen</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+<section id="group-f">
+  <div class="section-head">
+    <h2>F · Expanded Palettes</h2>
+    <span class="tag">cream · sunset · tropical · lofi · vaporwave</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+<section id="group-g">
+  <div class="section-head">
+    <h2>G · Cute &amp; Playful</h2>
+    <span class="tag">kawaii · pixel · sticker · duolingo · candy</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+<section id="group-h">
+  <div class="section-head">
+    <h2>H · Comparison-heavy</h2>
+    <span class="tag">vs-competitors · matrix · pricing · migration · benchmark</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+<section id="group-i">
+  <div class="section-head">
+    <h2>I · Fusion (A × D)</h2>
+    <span class="tag">10 variants · TUI techniques × hanimo themes</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+<section id="group-j">
+  <div class="section-head">
+    <h2>J · Brand-inspired</h2>
+    <span class="tag">20 variants · awesome-design-md principles</span>
+  </div>
+  <div class="grid"></div>
+</section>
+
+</main>
+
+<script>
+// [num, title, desc, href, skills[]]
+const data = {
+  'group-a': [
+    ['01', 'CRT Phosphor', 'Vintage CRT, green phosphor, scanlines, screen curvature, boot sequence', 'A-tui/01-crt-phosphor.html', ['tui-designer']],
+    ['02', 'Cyberpunk Neon', 'Violet neon on black, glitch effects, grid floor, chromatic aberration', 'A-tui/02-cyberpunk-neon.html', ['tui-designer']],
+    ['03', 'ASCII Art Heavy', 'Giant ASCII logo, box-drawing dividers, honey gold accent, pure mono', 'A-tui/03-ascii-art-heavy.html', ['tui-designer']],
+    ['04', 'Hacker Matrix', 'Matrix rain, green-on-black, corner HUD with live stats', 'A-tui/04-hacker-matrix.html', ['tui-designer']],
+    ['05', 'BBS Retro', '1990s BBS amber-on-black, CONNECT 14400 banner, ANSI-style headers', 'A-tui/05-bbs-retro.html', ['tui-designer']],
+  ],
+  'group-b': [
+    ['06', 'Glassmorphism Dark', 'Frosted glass over blurred gradient mesh, noise, rounded-3xl tiles', 'B-saas/06-glassmorphism-dark.html', ['frontend-design']],
+    ['07', 'Bento Grid', 'Apple bento box, asymmetric tiles, dark with gold accents', 'B-saas/07-bento-grid.html', ['frontend-design']],
+    ['08', 'Gradient Glow', 'Vercel/Linear radial glows, mouse spotlight, animated headline', 'B-saas/08-gradient-glow.html', ['frontend-design']],
+    ['09', 'Editorial Magazine', 'Serif display + mono body, oversized section numbers, masthead', 'B-saas/09-editorial-magazine.html', ['frontend-design']],
+    ['10', 'Premium Dark', 'Stripe/Arc luxury, hairlines, deep black, whisper-quiet luxury', 'B-saas/10-premium-dark.html', ['frontend-design']],
+  ],
+  'group-c': [
+    ['11', 'Swiss Minimal', 'Helvetica, strong grid, hairlines, black/white + honey gold', 'C-docs/11-swiss-minimal.html', ['frontend-design', 'web-design-guidelines']],
+    ['12', 'Brutalist Mono', 'All mono, 2px hard borders, oversized brutal type, red accent', 'C-docs/12-brutalist-mono.html', ['frontend-design', 'web-design-guidelines']],
+    ['13', 'Comparison Matrix', 'Matrix-first. Hero + massive comparison table vs competitors', 'C-docs/13-comparison-matrix.html', ['frontend-design', 'web-design-guidelines']],
+    ['14', 'GitHub Style', 'GitHub product page, gradient orbs, code window hero, rounded cards', 'C-docs/14-github-style.html', ['frontend-design', 'web-design-guidelines']],
+    ['15', 'Linear Docs', 'Linear.app/Vercel docs, DM Sans, sidebar nav, TOC, 1px borders', 'C-docs/15-linear-docs.html', ['frontend-design', 'web-design-guidelines']],
+  ],
+  'group-d': [
+    ['16', 'Honey (default)', 'Warm amber/gold, mocha base, inviting premium bar lighting', 'D-themed/16-honey.html', ['frontend-design']],
+    ['17', 'Ocean', 'Deep slate + sky/cyan, submarine depth, focused', 'D-themed/17-ocean.html', ['frontend-design']],
+    ['18', 'Dracula', 'Purple/pink vampire, nightfall, creative coder maximalism', 'D-themed/18-dracula.html', ['frontend-design']],
+    ['19', 'Nord', 'Arctic frost, pastel cool, minimal Scandinavian craft', 'D-themed/19-nord.html', ['frontend-design']],
+    ['20', 'Forest', 'Phosphor CRT green, retro hacker, earthy air-gapped ops', 'D-themed/20-forest.html', ['frontend-design']],
+  ],
+  'group-e': [
+    ['21', 'Tmux Split', 'Fake tmux layout with 4 panes: editor, terminal, htop, git log', 'E-tui2/21-tmux-split.html', ['tui-designer']],
+    ['22', 'Rainbow ANSI', '16-color ANSI palette, LOLCat gradient, party parrot energy', 'E-tui2/22-rainbow-ansi.html', ['tui-designer']],
+    ['23', 'ncurses Classic', 'Norton Commander teal-on-blue, F-key hints, double-line boxes', 'E-tui2/23-ncurses-classic.html', ['tui-designer']],
+    ['24', 'Synthwave', '80s pink/cyan/purple, neon grid floor, chrome text, Miami Vice', 'E-tui2/24-synthwave.html', ['tui-designer']],
+    ['25', 'Zen Matrix', 'Calm sage green matrix, Japanese zen garden minimalism', 'E-tui2/25-zen-matrix.html', ['tui-designer']],
+  ],
+  'group-f': [
+    ['26', 'Pastel Cream', 'Cream bg, peach + lavender + sage, cozy stationery', 'F-palettes/26-pastel-cream.html', ['frontend-design']],
+    ['27', 'Sunset Gradient', 'Plum → magenta → coral → amber romantic sky', 'F-palettes/27-sunset-gradient.html', ['frontend-design']],
+    ['28', 'Tropical Mint', 'Mint + turquoise + coral + banana, fresh summer', 'F-palettes/28-tropical-mint.html', ['frontend-design']],
+    ['29', 'Lofi Brown', 'Espresso + cream + caramel + matcha, coffeeshop cozy', 'F-palettes/29-lofi-brown.html', ['frontend-design']],
+    ['30', 'Vaporwave', 'Hot pink + cyan + lavender 90s retro-futurism', 'F-palettes/30-vaporwave.html', ['frontend-design']],
+  ],
+  'group-g': [
+    ['31', 'Kawaii Pastel', 'Soft pink/mint/butter, rounded-full, fluffy, (｡◕‿◕｡)', 'G-cute/31-kawaii-pastel.html', ['frontend-design']],
+    ['32', 'Pixel Art', '8-bit GameBoy green, VT323 font, pixel HP bars', 'G-cute/32-pixel-art.html', ['frontend-design']],
+    ['33', 'Sticker Collage', 'Washi tape, tilted polaroids, handwritten marker doodles', 'G-cute/33-sticker-collage.html', ['frontend-design']],
+    ['34', 'Duolingo Bright', 'Nunito + chunky green CTAs, gamified bouncy', 'G-cute/34-duolingo-bright.html', ['frontend-design']],
+    ['35', 'Bubble Candy', 'Pink/mint/sunshine rounded bubble shadows, Fredoka', 'G-cute/35-bubble-candy.html', ['frontend-design']],
+  ],
+  'group-h': [
+    ['36', 'vs Claude Code', 'Head-to-head split-screen battle page', 'H-compare/36-vs-claude-code.html', ['frontend-design']],
+    ['37', 'Feature Matrix Pro', 'Massive 25×6 filterable feature matrix', 'H-compare/37-feature-matrix-pro.html', ['frontend-design']],
+    ['38', 'Pricing Calculator', 'Interactive slider showing $0 vs $100/mo savings', 'H-compare/38-pricing-calculator.html', ['frontend-design']],
+    ['39', 'Migration Guide', 'Switching-from-Cursor guide, warm welcoming tone', 'H-compare/39-migration-guide.html', ['frontend-design']],
+    ['40', 'Benchmark Scores', 'CSS bar charts, SWE-bench, latency, token efficiency', 'H-compare/40-benchmark-scores.html', ['frontend-design']],
+  ],
+  'group-i': [
+    ['41', 'Honey × CRT', '허니 앰버 인광에 스캔라인·베럴 왜곡 부트 시퀀스', 'I-fusion/41-honey-crt.html', ['tui-designer']],
+    ['42', 'Ocean × Cyberpunk', '스카이/시안 네온 글리치 + 그리드 플로어', 'I-fusion/42-ocean-cyberpunk.html', ['tui-designer']],
+    ['43', 'Dracula × Matrix', '퍼플/핑크 매트릭스 레인 + 드라큘라 그린 헤더', 'I-fusion/43-dracula-matrix.html', ['tui-designer']],
+    ['44', 'Nord × ASCII', '프로스트 ASCII 블록 로고 + 오로라 그린 체크', 'I-fusion/44-nord-ascii.html', ['tui-designer']],
+    ['45', 'Forest × BBS', '포레스트 인광 + CONNECT 14400 BBS 배너', 'I-fusion/45-forest-bbs.html', ['tui-designer']],
+    ['46', 'Honey × tmux', '4-pane tmux 스플릿 (nvim/term/htop/git)', 'I-fusion/46-honey-tmux.html', ['tui-designer']],
+    ['47', 'Ocean × Synthwave', '오션 블루 크롬 + 신스웨이브 그리드', 'I-fusion/47-ocean-synthwave.html', ['tui-designer']],
+    ['48', 'Dracula × ncurses', 'Norton Commander 드라큘라 리이매진', 'I-fusion/48-dracula-ncurses.html', ['tui-designer']],
+    ['49', 'Nord × Zen', '저밀도 오로라 매트릭스 + 명상적 여백', 'I-fusion/49-nord-zen.html', ['tui-designer']],
+    ['50', 'Forest × Boot', '포레스트 ASCII 로고 + 부트 로그 히어로', 'I-fusion/50-forest-boot.html', ['tui-designer']],
+  ],
+  'group-j': [
+    ['51', 'Linear', '#0F0F10 near-black, 퍼플 #5E6AD2, 타이트 레터스페이싱', 'J-brand/51-linear-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['52', 'Raycast', '스포트라이트 런처 히어로, 오렌지-레드 글로우', 'J-brand/52-raycast-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['53', 'Vercel', '순백/순흑 모노크롬, Geist, 그리드 셀', 'J-brand/53-vercel-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['54', 'Stripe', '네이비→인디고 그라디언트, 스플릿 히어로', 'J-brand/54-stripe-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['55', 'Supabase', '그린 #3ECF8E + DB 스키마 뷰 모티프', 'J-brand/55-supabase-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['56', 'Claude', '클레이 테라코타 + Tiempos 세리프 editorial', 'J-brand/56-claude-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['57', 'Cursor', 'Geist Mono, 순흑 배경, 블루 액센트', 'J-brand/57-cursor-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['58', 'Mistral', '다크 네이비 + 오렌지 #fa5429 플레임', 'J-brand/58-mistral-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['59', 'Cohere', '필 셰이프 CTA, 코랄/틸/퍼플 3-컬러', 'J-brand/59-cohere-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['60', 'x.ai / Grok', '풀 브루탈리즘, 순흑/순백, 넘버드 카드', 'J-brand/60-xai-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['61', 'Ollama', '크림 + 러스트, 필 배지, friendly', 'J-brand/61-ollama-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['62', 'opencode.ai', '보이드 블랙 + 전기 블루, 모노 전반', 'J-brand/62-opencode-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['63', 'Warp', '퍼플→블루→시안 그라디언트 헤드라인', 'J-brand/63-warp-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['64', 'VoltAgent', '전기 옐로우 #F5D020, 라이트닝 볼트 모티프', 'J-brand/64-voltagent-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['65', 'Replicate', '에디토리얼 신문 그리드, 1px 룰, IBM Plex', 'J-brand/65-replicate-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['66', 'Mintlify', '화이트 + 스카이/에메랄드, 3px 레인보우 바', 'J-brand/66-mintlify-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['67', 'Sentry', '딥 인디고-블랙, Rubik 900, 퍼포먼스 모니터', 'J-brand/67-sentry-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['68', 'Notion', '노션 문서 그대로, 이모지 커버, 프로퍼티 테이블', 'J-brand/68-notion-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['69', 'Resend', '순흑/순백 미니멀, 제로 마케팅', 'J-brand/69-resend-inspired.html', ['frontend-design', 'awesome-design-md']],
+    ['70', 'Figma', '다크 캔버스 + 4컬러 시스템, 프레임 핸들', 'J-brand/70-figma-inspired.html', ['frontend-design', 'awesome-design-md']],
+  ],
+};
+
+function skillClass(s) {
+  if (s.includes('awesome') || s.includes('brand')) return 'brand';
+  if (s.includes('tui')) return 'tui';
+  if (s.includes('frontend')) return 'design';
+  if (s.includes('guidelines')) return 'guide';
+  return '';
+}
+
+function card([num, title, desc, href, skills]) {
+  const skillTags = (skills || []).map(s =>
+    `<span class="skill-tag ${skillClass(s)}">${s}</span>`
+  ).join('');
+  return `
+    <div class="card">
+      <a href="${href}" target="_blank" class="preview">
+        <iframe src="${href}" loading="lazy" scrolling="no"></iframe>
+      </a>
+      <div class="card-body">
+        <div class="num">#${num}</div>
+        <div class="title">${title}</div>
+        <div class="desc">${desc}</div>
+        <div class="skills">${skillTags}</div>
+        <div class="actions">
+          <a class="btn primary" href="${href}" target="_blank">Open ↗</a>
+          <a class="btn ghost" href="${href}" download>Download</a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+Object.entries(data).forEach(([id, items]) => {
+  const grid = document.querySelector(`#${id} .grid`);
+  grid.innerHTML = items.map(card).join('');
+});
+</script>
+
+</body>
+</html>

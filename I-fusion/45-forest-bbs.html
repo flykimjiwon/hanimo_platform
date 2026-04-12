@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — Forest × BBS Retro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --green: #22c55e;
+    --lime: #84cc16;
+    --green-dim: #16a34a;
+    --green-dark: #14532d;
+    --bg: #0a1a0f;
+    --bg2: #0f2414;
+    --surface: #1a3a1f;
+    --surface2: #2d5a35;
+    --t-bg: #0a1a0f;
+    --t-surface: #0f2414;
+    --t-border: #16a34a;
+    --t-text: #22c55e;
+    --t-muted: #2d5a35;
+    --t-accent: #22c55e;
+  }
+  [data-theme="light"] {
+    --t-bg: #f0fdf4;
+    --t-surface: #dcfce7;
+    --t-border: #16a34a;
+    --t-text: #14532d;
+    --t-muted: #166534;
+    --t-accent: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    overflow-x: hidden;
+  }
+
+  /* Phosphor glow */
+  .glow {
+    color: var(--green);
+    text-shadow: 0 0 6px var(--green), 0 0 12px rgba(34,197,94,0.5);
+  }
+  .glow-lime {
+    color: var(--lime);
+    text-shadow: 0 0 6px var(--lime), 0 0 12px rgba(132,204,22,0.4);
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.12),
+      rgba(0,0,0,0.12) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* BBS top menu bar */
+  .menu-bar {
+    background: var(--green);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    padding: 0.15rem 1rem;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  .menu-bar span { margin-right: 2rem; cursor: default; }
+  .menu-bar span:hover { background: var(--bg); color: var(--green); }
+  .menu-bar .title { font-weight: bold; margin-right: auto; }
+
+  /* BBS bottom F-key bar */
+  .fkey-bar {
+    background: var(--surface);
+    color: var(--green);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.3rem 1rem;
+    font-size: 0.85rem;
+    border-top: 1px solid var(--green-dim);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+  }
+  .fkey-bar .fkey {
+    background: var(--green-dark);
+    color: var(--lime);
+    padding: 0 0.4rem;
+    margin-right: 0.1rem;
+  }
+
+  /* Controls row */
+  .ctrl-row {
+    position: fixed;
+    top: 2rem;
+    right: 1rem;
+    z-index: 10000;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  /* Lang toggle */
+  #lang-toggle {
+    background: var(--t-surface);
+    border: 1px solid var(--green-dim);
+    color: var(--t-text);
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+  }
+  #lang-toggle:hover { background: var(--green); color: var(--t-bg); }
+  .theme-ctrl {
+    display: flex;
+    background: var(--t-surface);
+    border: 1px solid var(--green-dim);
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    overflow: hidden;
+  }
+  .theme-btn {
+    padding: 0.2rem 0.5rem;
+    background: none;
+    border: none;
+    color: var(--t-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    transition: all 0.15s;
+  }
+  .theme-btn.active { background: var(--green-dim); color: var(--t-bg); }
+  .theme-btn:not(.active):hover { color: var(--t-text); }
+
+  /* Double-line box */
+  .dbl-box {
+    border: 1px solid var(--t-border);
+    box-shadow: 0 0 0 1px var(--t-bg), 0 0 0 2px var(--t-surface);
+    padding: 1.25rem;
+    background: var(--t-surface);
+  }
+
+  /* Modem banner */
+  .modem-banner {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    font-size: 1.1rem;
+  }
+
+  /* BBS file list table */
+  .bbs-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  .bbs-table th {
+    background: var(--t-accent);
+    color: var(--t-bg);
+    padding: 0.3rem 0.75rem;
+    text-align: left;
+  }
+  .bbs-table td {
+    border: 1px solid var(--t-border);
+    padding: 0.3rem 0.75rem;
+    color: var(--t-muted);
+  }
+  .bbs-table tr:hover td { background: var(--t-surface); color: var(--lime); }
+  .bbs-table .highlight { color: var(--lime); }
+
+  /* Terminal */
+  .terminal {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  .prompt { color: var(--lime); }
+  .comment { color: var(--t-muted); }
+  .out { color: var(--t-muted); }
+  .ok { color: var(--t-text); }
+
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+  .cursor::after { content:'█'; animation: blink 1s infinite; }
+
+  /* Comparison table */
+  table.cmp { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  table.cmp th { background: var(--t-accent); color: var(--t-bg); padding: 0.4rem 0.75rem; }
+  table.cmp td { border: 1px solid var(--t-border); padding: 0.4rem 0.75rem; color: var(--t-muted); }
+  table.cmp tr:hover td { background: var(--t-surface); }
+
+  /* pb for fkey bar */
+  .page-wrap { padding-bottom: 3rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor::after { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- BBS top menu bar -->
+<div class="menu-bar">
+  <span class="title">HANIMO BBS v1.0</span>
+  <span data-ko="[M]인 메뉴" data-en="[M]ain">[M]인 메뉴</span>
+  <span data-ko="[F]파일" data-en="[F]iles">[F]파일</span>
+  <span data-ko="[H]도움말" data-en="[H]elp">[H]도움말</span>
+  <span data-ko="[Q]종료" data-en="[Q]uit">[Q]종료</span>
+</div>
+
+<div class="ctrl-row">
+  <div class="theme-ctrl">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <button id="lang-toggle" onclick="toggleLang()">KO/EN</button>
+</div>
+
+<div class="page-wrap">
+
+<!-- MODEM BANNER -->
+<div class="max-w-3xl mx-auto px-4 pt-8 pb-4">
+  <div class="modem-banner glow">
+    CONNECT 14400 · HANIMO BBS · NODE 1/64 AVAILABLE<br>
+    <span style="color:var(--lime)">ATZ OK · ATD1-800-HANIMO · CARRIER DETECTED</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="max-w-4xl mx-auto px-4 py-10 text-center">
+  <div class="dbl-box mb-6">
+    <div style="color:var(--lime)">╔══════════════════════════════════════════╗</div>
+    <div class="glow text-3xl py-2">★ HANIMO — 터미널 AI 코딩 에이전트 ★</div>
+    <div style="color:var(--lime)">╚══════════════════════════════════════════╝</div>
+  </div>
+
+  <p class="glow-lime mb-2">
+    <span data-ko="오픈소스 Go AI 코딩 에이전트 · Apache-2.0" data-en="Open-source Go AI coding agent · Apache-2.0">오픈소스 Go AI 코딩 에이전트 · Apache-2.0</span>
+  </p>
+  <p class="mb-6" style="color:var(--surface2)">
+    <span data-ko="14개 프로바이더 · SQLite 세션 · MCP 지원" data-en="14 providers · SQLite sessions · MCP support">14개 프로바이더 · SQLite 세션 · MCP 지원</span>
+  </p>
+
+  <div class="terminal mb-6">
+    <div class="prompt">HANIMO:&gt; curl -sSL hanimo.dev/install | bash<span class="cursor"></span></div>
+  </div>
+
+  <div class="flex gap-4 justify-center flex-wrap">
+    <a href="https://github.com/flykimjiwon/hanimo"
+      class="dbl-box"
+      style="padding:0.4rem 1.5rem;text-decoration:none;"
+      onmouseover="this.style.background='var(--surface)'"
+      onmouseout="this.style.background='var(--bg2)'">
+      <span class="glow" data-ko="[G] GITHUB 보기" data-en="[G] VIEW GITHUB">[G] GITHUB 보기</span>
+    </a>
+    <a href="#install"
+      style="background:var(--green);color:var(--bg);padding:0.4rem 1.5rem;text-decoration:none;font-weight:bold;">
+      <span data-ko="[I] 설치하기" data-en="[I] INSTALL NOW">[I] 설치하기</span>
+    </a>
+  </div>
+</section>
+
+<!-- FILE LIST — FEATURES AS BBS DOWNLOAD LIST -->
+<section class="max-w-4xl mx-auto px-4 py-10">
+  <div class="glow-lime mb-4">
+    ╔═ FILE AREA #1: HANIMO FEATURES ══════════════════╗
+  </div>
+  <table class="bbs-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th data-ko="파일명" data-en="Filename">파일명</th>
+        <th data-ko="설명" data-en="Description">설명</th>
+        <th data-ko="크기" data-en="Size">크기</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="highlight">01</td>
+        <td>hash-anchor.go</td>
+        <td><span data-ko="라인별 MD5. 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 충돌 없음.</span></td>
+        <td>4KB</td>
+      </tr>
+      <tr>
+        <td class="highlight">02</td>
+        <td>providers.go</td>
+        <td><span data-ko="14개 프로바이더. 즉시 전환." data-en="14 providers. Switch instantly.">14개 프로바이더. 즉시 전환.</span></td>
+        <td>12KB</td>
+      </tr>
+      <tr>
+        <td class="highlight">03</td>
+        <td>compaction.go</td>
+        <td><span data-ko="자동 압축. 비용 절감." data-en="Auto-compress. Cut costs.">자동 압축. 비용 절감.</span></td>
+        <td>6KB</td>
+      </tr>
+      <tr>
+        <td class="highlight">04</td>
+        <td>auto-mode.go</td>
+        <td><span data-ko="자율 루프. 목표까지 실행." data-en="Autonomous loop. Runs to goal.">자율 루프. 목표까지 실행.</span></td>
+        <td>8KB</td>
+      </tr>
+      <tr>
+        <td class="highlight">05</td>
+        <td>sessions.go</td>
+        <td><span data-ko="SQLite 세션. 언제든 재개." data-en="SQLite sessions. Resume anytime.">SQLite 세션. 언제든 재개.</span></td>
+        <td>5KB</td>
+      </tr>
+      <tr>
+        <td class="highlight">06</td>
+        <td>mcp-bridge.go</td>
+        <td><span data-ko="MCP 도구. 확장 무제한." data-en="MCP tools. Unlimited extension.">MCP 도구. 확장 무제한.</span></td>
+        <td>7KB</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="glow-lime mt-2">╚══════════════════════════════════════════════════╝</div>
+</section>
+
+<!-- TERMINAL PREVIEW -->
+<section class="max-w-4xl mx-auto px-4 py-10">
+  <div class="glow-lime mb-4">╔═ LIVE SESSION ══════════════════════════════════╗</div>
+  <div class="terminal">
+    <div class="comment"># forest theme · provider: anthropic · CONNECT 14400</div>
+    <div class="prompt">HANIMO:&gt; hanimo --theme forest --mode super</div>
+    <div class="ok">ONLINE · session: bbs-session-045 · SQLite ready</div>
+    <div class="prompt">HANIMO:&gt; /auto add pagination to user list endpoint</div>
+    <div class="out">  READING: handlers/user.go [MD5:d3f2...]</div>
+    <div class="ok">  ANCHOR: line 88 → locked</div>
+    <div class="out">  PLAN: cursor-based pagination, 20 items/page</div>
+    <div class="ok">  WRITE: handlers/user.go patched · 0 conflicts</div>
+    <div class="ok">  DONE · 1.4s · 1 file · 0 stale edits</div>
+  </div>
+  <div class="glow-lime mt-2">╚════════════════════════════════════════════════╝</div>
+</section>
+
+<!-- COMPARISON -->
+<section class="max-w-4xl mx-auto px-4 py-10">
+  <div class="glow-lime mb-4">╔═ SYSOP COMPARISON TABLE ═══════════════════════╗</div>
+  <div class="overflow-x-auto">
+    <table class="cmp">
+      <thead>
+        <tr>
+          <th data-ko="항목" data-en="Feature">항목</th>
+          <th style="color:var(--bg)">hanimo</th>
+          <th>Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-ko="해시 앵커" data-en="Hash anchor">해시 앵커</td>
+          <td class="highlight">✓ native</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+        </tr>
+        <tr>
+          <td data-ko="로컬 모델" data-en="Local models">로컬 모델</td>
+          <td class="highlight">✓ Ollama</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="제한적" data-en="Limited">제한적</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td data-ko="비용" data-en="Cost">비용</td>
+          <td class="highlight" data-ko="무료" data-en="Free">무료</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="무료" data-en="Free">무료</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="glow-lime mt-2">╚════════════════════════════════════════════════╝</div>
+</section>
+
+<!-- INSTALL -->
+<section id="install" class="max-w-4xl mx-auto px-4 py-10">
+  <div class="glow-lime mb-4">╔═ DOWNLOAD / INSTALL ════════════════════════════╗</div>
+  <div class="space-y-4">
+    <div class="terminal">
+      <div class="comment"># PROTOCOL: curl</div>
+      <div class="prompt">$ curl -sSL hanimo.dev/install | bash</div>
+    </div>
+    <div class="terminal">
+      <div class="comment"># PROTOCOL: homebrew</div>
+      <div class="prompt">$ brew install flykimjiwon/tap/hanimo</div>
+    </div>
+    <div class="terminal">
+      <div class="comment"># PROTOCOL: go</div>
+      <div class="prompt">$ go install github.com/flykimjiwon/hanimo@latest</div>
+    </div>
+  </div>
+  <div class="glow-lime mt-2">╚════════════════════════════════════════════════╝</div>
+</section>
+
+<!-- FOOTER -->
+<footer class="max-w-4xl mx-auto px-4 py-8 text-center" style="color:var(--surface2)">
+  <p class="mb-1">hanimo · flykimjiwon/hanimo · hanimo.dev</p>
+  <p class="text-sm">Apache-2.0 · <span data-ko="오픈소스" data-en="Open Source">오픈소스</span></p>
+  <p class="text-sm mt-2 glow">THANK YOU FOR CALLING HANIMO BBS · HAVE A NICE DAY</p>
+</footer>
+
+</div><!-- .page-wrap -->
+
+<!-- BBS F-key bar -->
+<div class="fkey-bar">
+  <span><span class="fkey">F1</span><span data-ko="도움말" data-en="Help">도움말</span></span>
+  <span><span class="fkey">F2</span><span data-ko="파일" data-en="Files">파일</span></span>
+  <span><span class="fkey">F3</span><span data-ko="설치" data-en="Install">설치</span></span>
+  <span><span class="fkey">F4</span>GitHub</span>
+  <span><span class="fkey">F5</span><span data-ko="비교" data-en="Compare">비교</span></span>
+  <span><span class="fkey">F10</span><span data-ko="종료" data-en="Quit">종료</span></span>
+</div>
+
+<script>
+  let lang = 'ko';
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+
+  function toggleLang() {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+  }
+
+  (function() {
+    const saved = localStorage.getItem('hanimo-theme') || 'dark';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

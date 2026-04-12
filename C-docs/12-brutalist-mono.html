@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HANIMO — RAW AI CODING AGENT</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'light';document.documentElement.dataset.theme=t;})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #000000;
+    --white: #ffffff;
+    --red: #ff1a1a;
+    --grey: #888888;
+    --bg: #ffffff;
+    --border: 2px solid #000000;
+    --font: 'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--black);
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    cursor: crosshair;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; text-decoration-thickness: 2px; }
+  a:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+  /* LAYOUT */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  /* NAV */
+  nav {
+    border-bottom: var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 100;
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: stretch;
+    height: 56px;
+  }
+
+  .nav-logo {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    padding: 0 24px 0 0;
+    border-right: var(--border);
+    text-transform: uppercase;
+  }
+
+  .nav-logo .accent { color: var(--red); }
+
+  .nav-links {
+    display: flex;
+    list-style: none;
+    flex: 1;
+  }
+
+  .nav-links li {
+    border-right: var(--border);
+  }
+
+  .nav-links a {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 100%;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .nav-links a:hover {
+    background: var(--black);
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .nav-cta {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--red);
+    color: var(--white);
+    border-left: var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .nav-cta:hover { background: #cc0000; }
+
+  /* HERO */
+  .hero {
+    border-bottom: var(--border);
+    padding: 0;
+  }
+
+  .hero-top {
+    border-bottom: var(--border);
+    padding: 48px 40px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .hero-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 20px;
+  }
+
+  .hero-title {
+    font-size: clamp(56px, 8vw, 128px);
+    font-weight: 800;
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+  }
+
+  .hero-title .line-red { color: var(--red); }
+  .hero-title .line-outline {
+    -webkit-text-stroke: 2px var(--black);
+    color: transparent;
+  }
+
+  .hero-right-block {
+    min-width: 320px;
+    max-width: 400px;
+    border: var(--border);
+    padding: 24px;
+  }
+
+  .hero-right-block .block-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--black);
+    padding-bottom: 10px;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .stat {
+    padding: 16px;
+    border: 1px solid var(--black);
+    margin: -1px 0 0 -1px;
+  }
+
+  .stat-num {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-num.red { color: var(--red); }
+
+  .stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  .hero-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero-install {
+    padding: 40px;
+    border-right: var(--border);
+  }
+
+  .install-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 12px;
+  }
+
+  .install-cmd {
+    background: var(--black);
+    color: var(--white);
+    padding: 20px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border: var(--border);
+    position: relative;
+  }
+
+  .install-cmd .ps1 { color: var(--red); }
+
+  .install-cmd:hover::after {
+    content: '[COPIED]';
+    position: absolute;
+    right: 24px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--red);
+  }
+
+  .install-opts {
+    margin-top: 16px;
+    display: flex;
+    gap: 0;
+  }
+
+  .install-opt {
+    flex: 1;
+    border: 1px solid var(--black);
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    background: none;
+    transition: background 0.1s, color 0.1s;
+    border-left: none;
+    margin-left: -1px;
+    text-align: center;
+  }
+
+  .install-opt:first-child { border-left: 1px solid var(--black); }
+  .install-opt:hover, .install-opt.active { background: var(--black); color: var(--white); }
+
+  .hero-subtitle-block {
+    padding: 40px;
+  }
+
+  .hero-subtitle {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .hero-korean {
+    font-size: 14px;
+    color: var(--grey);
+    margin-bottom: 24px;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: var(--border);
+  }
+
+  .tag.red { background: var(--red); color: var(--white); border-color: var(--red); }
+
+  /* TERMINAL */
+  .terminal-section {
+    border-bottom: var(--border);
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .terminal-header-bar {
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    height: 48px;
+    border-bottom: 2px solid #333;
+  }
+
+  .terminal-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+
+  .terminal-title-bar {
+    margin-left: auto;
+    font-size: 11px;
+    color: #555;
+    letter-spacing: 0.04em;
+  }
+
+  .terminal-body {
+    padding: 40px;
+    font-size: 13px;
+    line-height: 1.8;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+
+  .t-col { display: flex; flex-direction: column; gap: 0; }
+
+  .t-ln { display: block; }
+  .t-p { color: #ff1a1a; font-weight: 700; }
+  .t-cmd { color: #ffffff; }
+  .t-out { color: #888; }
+  .t-ok { color: #22dd44; font-weight: 700; }
+  .t-info { color: #4488ff; }
+  .t-warn { color: #ffaa00; font-weight: 700; }
+  .t-dim { color: #444; }
+
+  /* BLINK */
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .cursor { display: inline-block; width: 9px; height: 16px; background: var(--red); vertical-align: middle; animation: blink 1s step-end infinite; }
+
+  /* SECTION WRAPPER */
+  .section-wrap { border-bottom: var(--border); }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    border-bottom: var(--border);
+    padding: 0 40px;
+    height: 56px;
+    gap: 24px;
+  }
+
+  .section-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+    min-width: 80px;
+  }
+
+  .section-h {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  /* FEATURES */
+  .features-body {
+    padding: 40px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: var(--border);
+    margin: 40px;
+  }
+
+  .feat {
+    padding: 32px;
+    border-right: var(--border);
+    border-bottom: var(--border);
+  }
+
+  .feat:nth-child(3n) { border-right: none; }
+  .feat:nth-last-child(-n+3) { border-bottom: none; }
+
+  .feat-num {
+    font-size: 48px;
+    font-weight: 800;
+    color: #f0f0f0;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .feat-title {
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+
+  .feat-title .r { color: var(--red); }
+
+  .feat-desc {
+    font-size: 12px;
+    color: var(--grey);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .feat-code {
+    background: var(--black);
+    color: #ccc;
+    padding: 14px 16px;
+    font-size: 11px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+    border: 1px solid #333;
+  }
+
+  .fc-k { color: #ff1a1a; font-weight: 700; }
+  .fc-v { color: #22dd44; }
+  .fc-s { color: #4488ff; }
+  .fc-c { color: #555; }
+  .fc-f { color: #ffaa00; }
+
+  /* PROVIDERS */
+  .providers-body { padding: 40px; }
+
+  .providers-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: var(--border);
+  }
+
+  .providers-table th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    background: var(--black);
+    color: var(--white);
+    border-right: 2px solid #333;
+  }
+
+  .providers-table th:last-child { border-right: none; }
+
+  .providers-table td {
+    padding: 12px 16px;
+    font-size: 12px;
+    border-top: var(--border);
+    border-right: var(--border);
+    vertical-align: middle;
+  }
+
+  .providers-table td:last-child { border-right: none; }
+  .providers-table tr:hover td { background: #f8f8f8; }
+
+  .p-name { font-weight: 800; font-size: 13px; }
+  .p-local { color: var(--red); font-weight: 700; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .p-yes { color: #000; font-weight: 700; }
+  .p-no { color: #ccc; }
+
+  /* COMPARISON */
+  .compare-body { padding: 40px; }
+
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: var(--border);
+  }
+
+  .compare-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px 18px;
+    border: var(--border);
+    white-space: nowrap;
+  }
+
+  .compare-table th.th-h {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .compare-table th.th-h .r { color: var(--red); }
+
+  .compare-table td {
+    padding: 12px 18px;
+    font-size: 12px;
+    border: var(--border);
+    vertical-align: middle;
+  }
+
+  .compare-table tbody tr:nth-child(even) td { background: #fafafa; }
+  .compare-table tbody tr:hover td { background: #fff3f3; }
+
+  .compare-table td:first-child { font-weight: 700; }
+
+  .c-win { background: var(--black) !important; color: var(--white); font-weight: 800; font-size: 13px; }
+  .c-yes { color: var(--black); font-weight: 700; }
+  .c-no { color: #ccc; }
+  .c-partial { color: var(--grey); font-size: 11px; }
+
+  /* QUICKSTART */
+  .qs-body { padding: 40px; }
+
+  .qs-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border: var(--border);
+  }
+
+  .qs-tab {
+    flex: 1;
+    padding: 14px 20px;
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    border-right: var(--border);
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .qs-tab:last-child { border-right: none; }
+  .qs-tab.active { background: var(--black); color: var(--white); }
+  .qs-tab:hover:not(.active) { background: #f0f0f0; }
+
+  .qs-panel { display: none; border: var(--border); border-top: none; }
+  .qs-panel.active { display: block; }
+
+  .qs-code {
+    background: var(--black);
+    color: #ccc;
+    padding: 32px 40px;
+    font-size: 13px;
+    line-height: 1.8;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  .qc-p { color: var(--red); font-weight: 700; }
+  .qc-cmd { color: #ffffff; font-weight: 700; }
+  .qc-url { color: #4488ff; }
+  .qc-cmt { color: #555; }
+  .qc-key { color: #ffaa00; }
+
+  /* DOCS */
+  .docs-body { padding: 40px; }
+
+  .docs-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: var(--border);
+  }
+
+  .doc-link {
+    display: block;
+    padding: 28px 24px;
+    border-right: var(--border);
+    border-bottom: var(--border);
+    text-decoration: none;
+    color: var(--black);
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .doc-link:hover {
+    background: var(--black);
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .doc-link:focus-visible { outline: 3px solid var(--red); outline-offset: -3px; }
+  .doc-link:nth-child(4n) { border-right: none; }
+  .doc-link:nth-last-child(-n+4) { border-bottom: none; }
+
+  .doc-link-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 12px;
+  }
+
+  .doc-link:hover .doc-link-num { color: #ff6666; }
+
+  .doc-link-title {
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    margin-bottom: 8px;
+  }
+
+  .doc-link-desc {
+    font-size: 11px;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+
+  .doc-link:hover .doc-link-desc { color: #aaa; }
+
+  /* FOOTER */
+  footer {
+    border-top: var(--border);
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: var(--border);
+  }
+
+  .footer-brand {
+    padding: 48px 40px;
+    border-right: var(--border);
+  }
+
+  .footer-logo {
+    font-size: 48px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .footer-logo .r { color: var(--red); }
+  .footer-logo .outline {
+    -webkit-text-stroke: 2px var(--black);
+    color: transparent;
+  }
+
+  .footer-desc {
+    font-size: 13px;
+    color: var(--grey);
+    line-height: 1.6;
+    max-width: 380px;
+  }
+
+  .footer-links-col {
+    padding: 48px 40px;
+  }
+
+  .footer-links-title {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 20px;
+  }
+
+  .footer-links-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-links-list a {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--black);
+    text-decoration: none;
+    transition: color 0.1s;
+  }
+
+  .footer-links-list a:hover { color: var(--red); }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .footer-meta {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #555;
+  }
+
+  .footer-meta span { color: var(--red); }
+
+  /* ANIMATIONS */
+  @keyframes slideIn {
+    from { transform: translateX(-30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .hero-title { animation: slideIn 0.5s ease both; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .hero-right-block { animation: fadeIn 0.6s 0.2s ease both; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1024px) {
+    .hero-top { grid-template-columns: 1fr; }
+    .hero-right-block { max-width: 100%; }
+    .hero-bottom { grid-template-columns: 1fr; }
+    .hero-install { border-right: none; border-bottom: var(--border); }
+    .features-body { grid-template-columns: 1fr 1fr; margin: 24px; }
+    .feat:nth-child(3n) { border-right: var(--border); }
+    .feat:nth-child(2n) { border-right: none; }
+    .docs-grid { grid-template-columns: 1fr 1fr; }
+    .doc-link:nth-child(4n) { border-right: var(--border); }
+    .doc-link:nth-child(2n) { border-right: none; }
+    .terminal-body { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .container { padding: 0 16px; }
+    .hero-top, .hero-install, .hero-subtitle-block { padding: 24px 16px; }
+    .features-body { grid-template-columns: 1fr; margin: 16px; }
+    .feat:nth-child(n) { border-right: none; }
+    .feat:nth-child(n) { border-bottom: var(--border); }
+    .feat:last-child { border-bottom: none; }
+    .docs-grid { grid-template-columns: 1fr; }
+    .doc-link:nth-child(n) { border-right: none; border-bottom: var(--border); }
+    .nav-links { display: none; }
+    .footer-top { grid-template-columns: 1fr; }
+    .footer-brand { border-right: none; border-bottom: var(--border); }
+    .providers-body, .compare-body, .qs-body, .docs-body { padding: 16px; }
+    .qs-code { padding: 20px 16px; }
+  }
+
+  /* ── DARK MODE ── */
+  [data-theme="dark"] {
+    --black: #ffffff;
+    --white: #000000;
+    --bg: #000000;
+    --grey: #666666;
+    --border: 2px solid #ffffff;
+  }
+  [data-theme="dark"] body { background: #000000; color: #ffffff; cursor: crosshair; }
+  [data-theme="dark"] nav { background: #000000; border-color: #ffffff; }
+  [data-theme="dark"] .nav-cta { background: #ff1a1a; color: #ffffff; border-color: #ff1a1a; }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 12px; right: 16px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: var(--font); font-size: 10px;
+  }
+  .ctl-row { display: flex; border: 2px solid var(--black); background: var(--bg); }
+  .ctl-btn {
+    background: transparent; border: none; color: var(--grey);
+    padding: 4px 10px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.1em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 2px solid var(--black); }
+  .ctl-btn.active { background: var(--black); color: var(--bg); }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 12px; right: 16px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 10px;
+  }
+  .ctl-row { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid rgba(0,0,0,0.12); background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); }
+  .ctl-btn {
+    background: transparent; border: none; color: rgba(0,0,0,0.45);
+    padding: 5px 12px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.08em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 1px solid rgba(0,0,0,0.1); }
+  .ctl-btn.active { background: rgba(0,0,0,0.08); color: rgba(0,0,0,0.85); }
+  [data-theme="dark"] .ctl-row { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.12); }
+  [data-theme="dark"] .ctl-btn { color: rgba(255,255,255,0.45); }
+  [data-theme="dark"] .ctl-btn.active { background: rgba(255,255,255,0.15); color: #fff; }
+
+  [data-theme="dark"] body { background: #0a0a0a; color: #ffffff; cursor: crosshair; }
+  [data-theme="dark"] nav { background: #0a0a0a; border-color: #333; }
+  [data-theme="dark"] .nav-logo { color: #ffffff; }
+  [data-theme="dark"] .nav-links a { color: #888; }
+  [data-theme="dark"] .nav-links a:hover { background: #ffffff; color: #0a0a0a; }
+  [data-theme="dark"] .nav-cta { background: #ff1a1a; }
+  [data-theme="dark"] .hero { border-color: #333; }
+  [data-theme="dark"] .hero-right-block { border-color: #333; }
+  [data-theme="dark"] section { border-color: #333; }
+  [data-theme="dark"] footer { background: #0a0a0a; color: #888; border-color: #333; }
+
+</style>
+</head>
+<body>
+
+<!-- Toggle controls -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn active" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+
+<!-- Toggle controls -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn active" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner" style="padding: 0 40px; max-width: 1280px; margin: 0 auto;">
+    <a href="#" class="nav-logo">HANI<span class="accent">MO</span></a>
+    <ul class="nav-links">
+      <li><a href="#features" data-ko="기능" data-en="FEATURES">기능</a></li>
+      <li><a href="#providers" data-ko="프로바이더" data-en="PROVIDERS">프로바이더</a></li>
+      <li><a href="#compare" data-ko="비교" data-en="COMPARE">비교</a></li>
+      <li><a href="#quickstart" data-ko="설치" data-en="INSTALL">설치</a></li>
+      <li><a href="#docs" data-ko="문서" data-en="DOCS">문서</a></li>
+    </ul>
+    <a href="https://github.com/flykimjiwon/hanimo" target="_blank" rel="noopener" class="nav-cta" data-ko="GITHUB →" data-en="GITHUB →">GITHUB →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-top" style="max-width: 1280px; margin: 0 auto;">
+    <div>
+      <div class="hero-label" data-ko="// 오픈소스 AI 코딩 플랫폼" data-en="// OPEN-SOURCE AI CODING PLATFORM">// 오픈소스 AI 코딩 플랫폼</div>
+      <h1 class="hero-title">
+        HANI<span class="line-red">MO</span><br>
+        <span class="line-outline" data-ko="코딩" data-en="CODES">코딩</span><br>
+        <span data-ko="당신을" data-en="FOR">당신을</span><br>
+        <span data-ko="위해." data-en="YOU.">위해.</span>
+      </h1>
+    </div>
+    <div class="hero-right-block">
+      <div class="block-label">// SYSTEM METRICS</div>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-num red">14+</div>
+          <div class="stat-label">Providers</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">~20</div>
+          <div class="stat-label">MB Binary</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">20</div>
+          <div class="stat-label">Max Iterations</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num red">$0</div>
+          <div class="stat-label">License Cost</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">14</div>
+          <div class="stat-label">Built-in Tools</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">5</div>
+          <div class="stat-label">Themes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-bottom" style="max-width: 1280px; margin: 0 auto;">
+    <div class="hero-install">
+      <div class="install-label">// PRIMARY INSTALL — CURL</div>
+      <div class="install-cmd" onclick="copyInstall(this)" role="button" tabindex="0" aria-label="Copy install command">
+        <span class="ps1">$</span>
+        curl -fsSL https://hanimo.dev/install.sh | sh
+      </div>
+      <div class="install-opts">
+        <button class="install-opt active" onclick="setInstall(this, 'curl -fsSL https://hanimo.dev/install.sh | sh')">CURL</button>
+        <button class="install-opt" onclick="setInstall(this, 'brew install hanimo')">BREW</button>
+        <button class="install-opt" onclick="setInstall(this, 'go install github.com/flykimjiwon/hanimo/cmd/hanimo@latest')">GO</button>
+      </div>
+    </div>
+    <div class="hero-subtitle-block">
+      <p class="hero-subtitle">Successor to Modol. 14+ LLM providers. Hash-anchored editing. Local-first. Apache-2.0.</p>
+      <p class="hero-korean">오픈소스를 위한 AI 코딩 에이전트</p>
+      <div class="hero-tags">
+        <span class="tag red">FREE</span>
+        <span class="tag">APACHE-2.0</span>
+        <span class="tag">LOCAL-FIRST</span>
+        <span class="tag">OPEN-SOURCE</span>
+        <span class="tag">GO + BUBBLE TEA</span>
+        <span class="tag">NO RUNTIME DEPS</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL SESSION -->
+<div class="terminal-section">
+  <div class="terminal-header-bar" style="max-width: 1280px; margin: 0 auto;">
+    <span class="terminal-label">// LIVE SESSION — HONEY THEME</span>
+    <span class="terminal-title-bar">hanimo v0.9.0 · anthropic/claude-3-5-sonnet · Mode: Dev</span>
+  </div>
+  <div class="terminal-body" style="max-width: 1280px; margin: 0 auto;">
+    <div class="t-col">
+      <span class="t-ln"><span class="t-dim">hanimo v0.9.0  [honey]</span></span>
+      <span class="t-ln"><span class="t-dim">session: auth-refactor-001</span></span>
+      <span class="t-ln"><span class="t-dim">context: 42k/200k tokens</span></span>
+      <span class="t-ln">&nbsp;</span>
+      <span class="t-ln"><span class="t-p">›</span> <span class="t-cmd">/auto refactor the auth module</span></span>
+      <span class="t-ln">&nbsp;</span>
+      <span class="t-ln"><span class="t-info">[1/20] Scanning codebase...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ 12 files found in auth/</span></span>
+      <span class="t-ln"><span class="t-info">[2/20] Hash-anchoring lines...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ MD5 hashes computed (847 lines)</span></span>
+      <span class="t-ln"><span class="t-info">[3/20] Reading auth/middleware.go...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ Context loaded</span></span>
+      <span class="t-ln"><span class="t-info">[4/20] Analyzing patterns...</span></span>
+      <span class="t-ln"><span class="t-warn">! 3 anti-patterns detected</span></span>
+      <span class="t-ln"><span class="t-info">[5/20] Building refactor plan...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ Plan: extract JWT → middleware layer</span></span>
+      <span class="t-ln"><span class="t-info">[6/20] Editing middleware.go:42-89...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ Hash-verified edit applied (8 changes)</span></span>
+    </div>
+    <div class="t-col">
+      <span class="t-ln"><span class="t-info">[7/20] Editing auth/handlers.go...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ Removed redundant JWT checks</span></span>
+      <span class="t-ln"><span class="t-info">[8/20] Creating auth/jwt.go...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ New JWT service extracted</span></span>
+      <span class="t-ln"><span class="t-info">[9/20] Updating imports...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ 7 files updated</span></span>
+      <span class="t-ln"><span class="t-info">[10/20] Running: go build ./...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ Build successful</span></span>
+      <span class="t-ln"><span class="t-info">[11/20] Running: go test ./auth/...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ 34/34 tests pass</span></span>
+      <span class="t-ln"><span class="t-info">[12/20] Running: golangci-lint...</span></span>
+      <span class="t-ln"><span class="t-ok">✓ No lint errors</span></span>
+      <span class="t-ln">&nbsp;</span>
+      <span class="t-ln"><span class="t-ok">✓ /auto COMPLETE in 12 iterations</span></span>
+      <span class="t-ln"><span class="t-dim">  Files modified: 8 | Lines changed: +124 -89</span></span>
+      <span class="t-ln"><span class="t-p">›</span> <span class="cursor"></span></span>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section-wrap" id="features">
+  <div style="max-width: 1280px; margin: 0 auto;">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-h">CAPABILITIES</h2>
+    </div>
+    <div class="features-body">
+      <div class="feat">
+        <div class="feat-num">01</div>
+        <h3 class="feat-title"><span class="r">HASH-ANCHORED</span> EDITING</h3>
+        <p class="feat-desc">MD5 per line. Edits verified before apply. Zero hallucinated changes. The only tool that guarantees edit correctness at the line level.</p>
+        <div class="feat-code"><span class="fc-c"># .hanimo.md project config</span>
+<span class="fc-k">edit_strategy</span>: hash-anchored
+<span class="fc-k">verify</span>: md5
+<span class="fc-k">strict</span>: true
+<span class="fc-c"># line 42: hash=a3f8d91c</span></div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">02</div>
+        <h3 class="feat-title">THREE OPERATING <span class="r">MODES</span></h3>
+        <p class="feat-desc">Tab to switch: Super (full autonomy), Dev (interactive pair-programming), Plan (structured multi-step). Context preserved across mode switches.</p>
+        <div class="feat-code"><span class="fc-c"># config.yaml</span>
+<span class="fc-k">modes</span>:
+  <span class="fc-f">super</span>: <span class="fc-v">full-autonomy</span>
+  <span class="fc-f">dev</span>:   <span class="fc-v">interactive</span>
+  <span class="fc-f">plan</span>:  <span class="fc-v">structured</span>
+<span class="fc-k">default_mode</span>: dev</div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">03</div>
+        <h3 class="feat-title"><span class="r">/AUTO</span> AUTONOMOUS MODE</h3>
+        <p class="feat-desc">Up to 20 iterations. Reads code. Writes edits. Runs tests. Fixes errors. Reports back. Like delegating to a senior engineer who never gets distracted.</p>
+        <div class="feat-code"><span class="fc-c"># autonomous execution</span>
+<span class="fc-f">/auto</span> <span class="fc-s">add pagination to users API</span>
+
+<span class="fc-f">/auto</span> <span class="fc-k">--max-iter</span>=10 \
+  <span class="fc-s">refactor auth module</span></div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">04</div>
+        <h3 class="feat-title">SQLITE <span class="r">SESSIONS</span></h3>
+        <p class="feat-desc">Every conversation persisted to SQLite. Save. Load. Fork. Full-text search across all sessions. Resume across days, branches, machines.</p>
+        <div class="feat-code"><span class="fc-f">/session</span> <span class="fc-v">save</span> auth-refactor-v2
+<span class="fc-f">/session</span> <span class="fc-v">fork</span> auth-refactor-v2
+<span class="fc-f">/session</span> <span class="fc-v">search</span> <span class="fc-s">"pagination bug"</span>
+<span class="fc-f">/session</span> <span class="fc-v">load</span> auth-refactor-v2</div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">05</div>
+        <h3 class="feat-title">3-STAGE CONTEXT <span class="r">COMPACTION</span></h3>
+        <p class="feat-desc">Summarize at 80%. Compress at 90%. Evict at 95%. Never hit a context wall mid-task. Long sessions stay sharp and coherent automatically.</p>
+        <div class="feat-code"><span class="fc-k">context</span>:
+  <span class="fc-k">stages</span>:
+    <span class="fc-v">80%</span>: summarize
+    <span class="fc-v">90%</span>: compress
+    <span class="fc-v">95%</span>: evict
+  <span class="fc-k">preserve</span>: [system, tools]</div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">06</div>
+        <h3 class="feat-title">MCP STDIO <span class="r">SUPPORT</span></h3>
+        <p class="feat-desc">Model Context Protocol via stdio. Connect databases, APIs, custom tools. One config line per server. 14 built-in tools + unlimited MCP extensibility.</p>
+        <div class="feat-code"><span class="fc-k">mcp_servers</span>:
+  <span class="fc-f">postgres</span>:
+    <span class="fc-k">cmd</span>: mcp-postgres
+    <span class="fc-k">args</span>: [<span class="fc-s">"$DATABASE_URL"</span>]
+  <span class="fc-f">github</span>:
+    <span class="fc-k">cmd</span>: mcp-github</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROVIDERS -->
+<section class="section-wrap" id="providers">
+  <div style="max-width: 1280px; margin: 0 auto;">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-h">14+ LLM PROVIDERS</h2>
+    </div>
+    <div class="providers-body">
+      <table class="providers-table">
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Endpoint</th>
+            <th>Type</th>
+            <th>Local</th>
+            <th>Free Tier</th>
+            <th>Recommended Model</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="p-name">Anthropic</td><td>api.anthropic.com</td><td>Cloud</td><td class="p-no">—</td><td class="p-no">—</td><td>claude-3-5-sonnet</td></tr>
+          <tr><td class="p-name">OpenAI</td><td>api.openai.com</td><td>Cloud</td><td class="p-no">—</td><td class="p-no">—</td><td>gpt-4o</td></tr>
+          <tr><td class="p-name">Google</td><td>generativelanguage.googleapis.com</td><td>Cloud</td><td class="p-no">—</td><td class="p-yes">✓</td><td>gemini-2.0-flash</td></tr>
+          <tr><td class="p-name">Ollama</td><td>localhost:11434</td><td>Local</td><td class="p-local">LOCAL</td><td class="p-yes">✓</td><td>qwen2.5-coder:7b</td></tr>
+          <tr><td class="p-name">DeepSeek</td><td>api.deepseek.com</td><td>Cloud</td><td class="p-no">—</td><td class="p-yes">✓</td><td>deepseek-chat</td></tr>
+          <tr><td class="p-name">Groq</td><td>api.groq.com</td><td>Cloud</td><td class="p-no">—</td><td class="p-yes">✓</td><td>llama-3.3-70b</td></tr>
+          <tr><td class="p-name">Novita</td><td>api.novita.ai</td><td>Cloud</td><td class="p-no">—</td><td class="p-no">—</td><td>meta-llama/llama-3.1-70b</td></tr>
+          <tr><td class="p-name">OpenRouter</td><td>openrouter.ai/api/v1</td><td>Aggregator</td><td class="p-no">—</td><td class="p-yes">✓</td><td>any</td></tr>
+          <tr><td class="p-name">Mistral</td><td>api.mistral.ai</td><td>Cloud</td><td class="p-no">—</td><td class="p-no">—</td><td>mistral-large-latest</td></tr>
+          <tr><td class="p-name">Fireworks</td><td>api.fireworks.ai</td><td>Cloud</td><td class="p-no">—</td><td class="p-no">—</td><td>firefunction-v2</td></tr>
+          <tr><td class="p-name">vLLM</td><td>self-hosted</td><td>Local</td><td class="p-local">LOCAL</td><td class="p-yes">✓</td><td>any HF model</td></tr>
+          <tr><td class="p-name">LM Studio</td><td>localhost:1234</td><td>Local</td><td class="p-local">LOCAL</td><td class="p-yes">✓</td><td>any GGUF model</td></tr>
+          <tr><td class="p-name">Together</td><td>api.together.xyz</td><td>Cloud</td><td class="p-no">—</td><td class="p-yes">✓</td><td>meta-llama/Llama-3-70b</td></tr>
+          <tr><td class="p-name">Custom</td><td>any OpenAI-compatible</td><td>Any</td><td class="p-yes">✓</td><td class="p-yes">✓</td><td>configurable</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="section-wrap" id="compare">
+  <div style="max-width: 1280px; margin: 0 auto;">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2 class="section-h">COMPARISON</h2>
+    </div>
+    <div class="compare-body">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>FEATURE</th>
+            <th class="th-h">HANI<span class="r">MO</span></th>
+            <th>CLAUDE CODE</th>
+            <th>CURSOR</th>
+            <th>AIDER</th>
+            <th>OPENCODE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Price</td>
+            <td class="c-win">FREE / $0</td>
+            <td>$20/mo</td>
+            <td>$20/mo</td>
+            <td>Free</td>
+            <td>Free</td>
+          </tr>
+          <tr>
+            <td>Hash-Anchored Editing</td>
+            <td class="c-win">✓ UNIQUE</td>
+            <td class="c-no">—</td>
+            <td class="c-no">—</td>
+            <td class="c-no">—</td>
+            <td class="c-no">—</td>
+          </tr>
+          <tr>
+            <td>LLM Providers</td>
+            <td class="c-win">14+</td>
+            <td class="c-no">1</td>
+            <td class="c-partial">3</td>
+            <td class="c-yes">10+</td>
+            <td class="c-partial">5</td>
+          </tr>
+          <tr>
+            <td>Local / Offline</td>
+            <td class="c-win">✓ OLLAMA+</td>
+            <td class="c-no">—</td>
+            <td class="c-no">—</td>
+            <td class="c-yes">✓</td>
+            <td class="c-partial">partial</td>
+          </tr>
+          <tr>
+            <td>Autonomous Mode</td>
+            <td class="c-win">✓ 20 iter</td>
+            <td class="c-yes">✓</td>
+            <td class="c-no">—</td>
+            <td class="c-partial">partial</td>
+            <td class="c-yes">✓</td>
+          </tr>
+          <tr>
+            <td>Session Persistence</td>
+            <td class="c-win">✓ SQLITE</td>
+            <td class="c-no">—</td>
+            <td class="c-no">—</td>
+            <td class="c-no">—</td>
+            <td class="c-yes">✓</td>
+          </tr>
+          <tr>
+            <td>MCP Support</td>
+            <td class="c-win">✓ STDIO</td>
+            <td class="c-yes">✓</td>
+            <td class="c-no">—</td>
+            <td class="c-no">—</td>
+            <td class="c-partial">partial</td>
+          </tr>
+          <tr>
+            <td>Binary Size</td>
+            <td class="c-win">~20 MB</td>
+            <td class="c-no">large</td>
+            <td class="c-no">large</td>
+            <td class="c-partial">Python</td>
+            <td class="c-yes">small</td>
+          </tr>
+          <tr>
+            <td>Apache-2.0 License</td>
+            <td class="c-win">✓ APACHE</td>
+            <td class="c-no">proprietary</td>
+            <td class="c-no">proprietary</td>
+            <td class="c-yes">✓</td>
+            <td class="c-yes">✓</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- QUICKSTART -->
+<section class="section-wrap" id="quickstart">
+  <div style="max-width: 1280px; margin: 0 auto;">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-h">INSTALL IN 60 SECONDS</h2>
+    </div>
+    <div class="qs-body">
+      <div class="qs-tabs" role="tablist">
+        <button class="qs-tab active" onclick="switchQs('curl', this)" role="tab" aria-selected="true">CURL BINARY</button>
+        <button class="qs-tab" onclick="switchQs('brew', this)" role="tab" aria-selected="false">HOMEBREW</button>
+        <button class="qs-tab" onclick="switchQs('go', this)" role="tab" aria-selected="false">GO BUILD</button>
+      </div>
+      <div id="qs-curl" class="qs-panel active">
+        <div class="qs-code"><span class="qc-cmt"># 1. Download binary</span>
+<span class="qc-p">$</span> <span class="qc-cmd">curl</span> -fsSL <span class="qc-url">https://hanimo.dev/install.sh</span> | sh
+
+<span class="qc-cmt"># 2. Set API key (pick your provider)</span>
+<span class="qc-p">$</span> <span class="qc-cmd">export</span> <span class="qc-key">ANTHROPIC_API_KEY</span>=sk-ant-...
+<span class="qc-cmt"># or: OPENAI_API_KEY, GOOGLE_API_KEY, etc.</span>
+
+<span class="qc-cmt"># 3. Launch</span>
+<span class="qc-p">$</span> <span class="qc-cmd">hanimo</span></div>
+      </div>
+      <div id="qs-brew" class="qs-panel">
+        <div class="qs-code"><span class="qc-cmt"># 1. Tap and install</span>
+<span class="qc-p">$</span> <span class="qc-cmd">brew</span> tap flykimjiwon/hanimo
+<span class="qc-p">$</span> <span class="qc-cmd">brew</span> install hanimo
+
+<span class="qc-cmt"># 2. Configure provider</span>
+<span class="qc-p">$</span> <span class="qc-cmd">export</span> <span class="qc-key">ANTHROPIC_API_KEY</span>=sk-ant-...
+
+<span class="qc-cmt"># 3. Launch</span>
+<span class="qc-p">$</span> <span class="qc-cmd">hanimo</span></div>
+      </div>
+      <div id="qs-go" class="qs-panel">
+        <div class="qs-code"><span class="qc-cmt"># Requires Go 1.22+</span>
+<span class="qc-p">$</span> <span class="qc-cmd">git</span> clone <span class="qc-url">https://github.com/flykimjiwon/hanimo</span>
+<span class="qc-p">$</span> <span class="qc-cmd">cd</span> hanimo
+
+<span class="qc-cmt"># Build</span>
+<span class="qc-p">$</span> <span class="qc-cmd">go</span> build -o hanimo ./cmd/hanimo
+
+<span class="qc-cmt"># Install to PATH and run</span>
+<span class="qc-p">$</span> <span class="qc-cmd">sudo</span> mv hanimo /usr/local/bin/
+<span class="qc-p">$</span> <span class="qc-cmd">hanimo</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOCS -->
+<section class="section-wrap" id="docs">
+  <div style="max-width: 1280px; margin: 0 auto;">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2 class="section-h">DOCUMENTATION</h2>
+    </div>
+    <div class="docs-body">
+      <div class="docs-grid">
+        <a href="https://hanimo.dev/docs/getting-started" class="doc-link">
+          <div class="doc-link-num">01 —</div>
+          <div class="doc-link-title">GETTING STARTED</div>
+          <div class="doc-link-desc">Install, configure provider, first session. Under 5 minutes.</div>
+        </a>
+        <a href="https://hanimo.dev/docs/configuration" class="doc-link">
+          <div class="doc-link-num">02 —</div>
+          <div class="doc-link-title">CONFIGURATION</div>
+          <div class="doc-link-desc">Full config.yaml reference. Providers, themes, tools.</div>
+        </a>
+        <a href="https://hanimo.dev/docs/slash-commands" class="doc-link">
+          <div class="doc-link-num">03 —</div>
+          <div class="doc-link-title">SLASH COMMANDS</div>
+          <div class="doc-link-desc">/auto, /session, /tools, /plan — all documented.</div>
+        </a>
+        <a href="https://hanimo.dev/docs/mcp" class="doc-link">
+          <div class="doc-link-num">04 —</div>
+          <div class="doc-link-title">MCP SETUP</div>
+          <div class="doc-link-desc">Connect PostgreSQL, GitHub, Filesystem via stdio.</div>
+        </a>
+        <a href="https://hanimo.dev/docs/themes" class="doc-link">
+          <div class="doc-link-num">05 —</div>
+          <div class="doc-link-title">THEMES</div>
+          <div class="doc-link-desc">honey, ocean, dracula, nord, forest — configure your TUI.</div>
+        </a>
+        <a href="https://hanimo.dev/docs/tools" class="doc-link">
+          <div class="doc-link-num">06 —</div>
+          <div class="doc-link-title">BUILT-IN TOOLS</div>
+          <div class="doc-link-desc">All 14 tools: file, shell, search, browser, code analysis.</div>
+        </a>
+        <a href="https://hanimo.dev/docs/sessions" class="doc-link">
+          <div class="doc-link-num">07 —</div>
+          <div class="doc-link-title">SESSIONS</div>
+          <div class="doc-link-desc">Save, load, fork, and search SQLite-backed sessions.</div>
+        </a>
+        <a href="https://hanimo.dev/docs/faq" class="doc-link">
+          <div class="doc-link-num">08 —</div>
+          <div class="doc-link-title">FAQ</div>
+          <div class="doc-link-desc">Providers, security, contributing, troubleshooting.</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top" style="max-width: 1280px; margin: 0 auto;">
+    <div class="footer-brand">
+      <div class="footer-logo">HANI<span class="r">MO</span></div>
+      <div class="footer-desc">The open-source AI coding platform. Successor to Modol. 14+ LLM providers. Hash-anchored editing. Single 20MB binary. No runtime dependencies. Apache-2.0 forever.</div>
+    </div>
+    <div class="footer-links-col">
+      <div class="footer-links-title">// LINKS</div>
+      <ul class="footer-links-list">
+        <li><a href="https://github.com/flykimjiwon/hanimo" target="_blank" rel="noopener">github.com/flykimjiwon/hanimo</a></li>
+        <li><a href="https://hanimo.dev" target="_blank" rel="noopener">hanimo.dev</a></li>
+        <li><a href="https://hanimo.dev/docs" target="_blank" rel="noopener">Documentation</a></li>
+        <li><a href="https://github.com/flykimjiwon/hanimo/releases" target="_blank" rel="noopener">Releases</a></li>
+        <li><a href="https://github.com/flykimjiwon/hanimo/issues" target="_blank" rel="noopener">Bug Reports</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom" style="max-width: 1280px; margin: 0 auto; max-width: 100%;">
+    <span class="footer-meta">HANIMO © 2025 — <span>APACHE-2.0</span></span>
+    <span class="footer-meta">BUILT WITH <span>GO + BUBBLE TEA</span></span>
+  </div>
+</footer>
+
+<script>
+function copyInstall(el) {
+  const text = el.textContent.replace('$', '').trim();
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+function setInstall(btn, cmd) {
+  document.querySelectorAll('.install-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelector('.install-cmd').innerHTML = '<span class="ps1">$</span> ' + cmd;
+}
+
+function switchQs(id, btn) {
+  document.querySelectorAll('.qs-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.qs-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+  document.getElementById('qs-' + id).classList.add('active');
+  btn.classList.add('active');
+  btn.setAttribute('aria-selected', 'true');
+}
+</script>
+<script>
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  localStorage.setItem('hanimo-lang', lang);
+  document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+}
+(function init() {
+  const theme = localStorage.getItem('hanimo-theme') || 'light';
+  const lang = localStorage.getItem('hanimo-lang') || 'ko';
+  setTheme(theme);
+  setLang(lang);
+})();
+</script>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('hanimo-theme', t);
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+  }
+  (function(){ setTheme(document.documentElement.dataset.theme || 'light'); })();
+
+  function setLang(lang) {
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      const text = el.getAttribute('data-' + lang);
+      if (text) el.innerHTML = text;
+    });
+    document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  }
+</script>
+
+</body>
+</html>

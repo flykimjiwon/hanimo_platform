@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo Feature Matrix</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3efe5;
+    --paper2: #e9e4d8;
+    --ink: #1c1814;
+    --ink2: #4a4035;
+    --ink3: #8a7d6a;
+    --rule: #cfc8b8;
+    --win-bg: #e6f4e6;
+    --win-fg: #1a5c1a;
+    --lose-bg: #fceaea;
+    --lose-fg: #8b1a1a;
+    --tie-bg: #fef9e7;
+    --tie-fg: #7a5c00;
+    --amber: #b8860b;
+    --amber2: #d4a017;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Lato',sans-serif; background:var(--paper); color:var(--ink); }
+
+  /* dark theme — invert the paper design */
+  [data-theme="dark"] body { background:var(--ink); color:var(--paper); }
+  [data-theme="dark"] .filter-bar { background:#222; border-bottom-color:#333; }
+  [data-theme="dark"] .f-btn { border-color:#444; color:#aaa; }
+  [data-theme="dark"] .f-btn:hover { background:#333; color:var(--paper); border-color:#555; }
+  [data-theme="dark"] .f-btn.active { background:var(--amber); color:#000; }
+  /* LANG + THEME */
+  .lang-bar { position:fixed; top:0; right:0; z-index:200; display:flex; }
+  .lang-btn, .theme-btn { background:var(--ink); border:1px solid #333; color:#666; font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.5rem 0.8rem; cursor:pointer; transition:all 0.15s; }
+  .lang-btn.active, .theme-btn.active { background:var(--amber); color:#000; border-color:var(--amber); }
+  [data-theme="light"] .lang-btn, [data-theme="light"] .theme-btn { background:var(--paper2); border-color:var(--rule); color:var(--ink3); }
+  [data-theme="light"] .lang-btn.active, [data-theme="light"] .theme-btn.active { background:var(--amber); color:#000; }
+
+  /* MASTHEAD */
+  .mast { background:var(--ink); color:var(--paper); border-bottom:3px solid var(--amber); }
+  .mast-inner { max-width:1360px; margin:0 auto; padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .mast-logo { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:900; }
+  .mast-logo span { color:var(--amber); }
+  .mast-sub { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:#888; letter-spacing:0.18em; margin-top:0.2rem; }
+  .install-btn { font-family:'JetBrains Mono',monospace; font-size:0.72rem; background:#111; border:1px solid #333; color:var(--amber2); padding:0.45rem 0.9rem; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .install-btn:hover { background:#1a1a1a; border-color:var(--amber); }
+
+  /* HERO */
+  .hero { background:var(--ink); color:var(--paper); padding:5rem 2rem 4rem; text-align:center; position:relative; }
+  .hero::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:repeating-linear-gradient(90deg,var(--amber) 0,var(--amber) 30px,transparent 30px,transparent 40px); }
+  .hero-eye { font-family:'JetBrains Mono',monospace; font-size:0.68rem; letter-spacing:0.38em; color:var(--amber); text-transform:uppercase; margin-bottom:1.4rem; }
+  .hero-h1 { font-family:'Playfair Display',serif; font-size:clamp(2.2rem,5.5vw,4.5rem); font-weight:900; line-height:1.08; margin-bottom:0.9rem; }
+  .hero-h1 em { font-style:italic; color:var(--amber); }
+  .hero-sub { font-size:0.95rem; color:#aaa; max-width:520px; margin:0 auto 1.2rem; line-height:1.65; }
+  .hero-ko { font-size:0.85rem; color:#666; }
+
+  /* FILTER */
+  .filter-bar { background:var(--paper2); border-bottom:2px solid var(--rule); padding:0.85rem 2rem; position:sticky; top:0; z-index:50; }
+  .filter-inner { max-width:1360px; margin:0 auto; display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap; }
+  .f-label { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--ink3); letter-spacing:0.18em; text-transform:uppercase; margin-right:0.4rem; }
+  .f-btn { font-family:'JetBrains Mono',monospace; font-size:0.67rem; letter-spacing:0.08em; padding:0.3rem 0.85rem; border:1.5px solid var(--rule); background:transparent; color:var(--ink2); cursor:pointer; transition:all 0.13s; text-transform:uppercase; }
+  .f-btn:hover { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .f-btn.active { background:var(--amber); color:#000; border-color:var(--amber); }
+  .f-count { margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--ink3); }
+
+  /* TABLE WRAP */
+  .table-wrap { max-width:1360px; margin:0 auto; padding:1.5rem 2rem 3rem; overflow-x:auto; }
+
+  table { width:100%; border-collapse:collapse; font-size:0.8rem; min-width:860px; }
+
+  /* Header */
+  thead tr { background:var(--ink); color:var(--paper); }
+  thead th { padding:0.85rem 0.7rem; text-align:left; font-family:'JetBrains Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:500; border-right:1px solid #2a2a2a; white-space:nowrap; }
+  thead th.hcol { background:var(--amber); color:#000; font-weight:700; border-right:1px solid #7a5c00; }
+  thead th:first-child { width:120px; }
+  thead th:nth-child(2) { width:200px; }
+
+  /* Category header */
+  .cat-hd td { background:var(--ink2); color:var(--paper); font-family:'Playfair Display',serif; font-style:italic; font-size:0.82rem; padding:0.55rem 0.7rem; border-top:2px solid var(--amber); }
+
+  /* Data rows */
+  tbody tr:not(.cat-hd):not(.score-hd) { border-bottom:1px solid var(--rule); transition:background 0.1s; }
+  tbody tr:not(.cat-hd):not(.score-hd):hover { background:rgba(0,0,0,0.025); }
+  td { padding:0.72rem 0.7rem; vertical-align:middle; border-right:1px solid var(--paper2); }
+  td:first-child { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--ink3); letter-spacing:0.1em; text-transform:uppercase; background:var(--paper2); border-right:1px solid var(--rule); white-space:nowrap; }
+  td:nth-child(2) { font-weight:700; background:#fdfaf4; }
+
+  /* hanimo col */
+  td.hcol { background:#eaf5ea; border-right:2px solid var(--win-fg); }
+
+  /* States */
+  .win { background:var(--win-bg) !important; }
+  .win .v { color:var(--win-fg); font-weight:700; }
+  .lose { background:var(--lose-bg) !important; }
+  .lose .v { color:var(--lose-fg); font-weight:700; }
+  .tie { background:var(--tie-bg) !important; }
+  .tie .v { color:var(--tie-fg); font-weight:700; }
+
+  .v { display:block; font-size:0.78rem; }
+  .n { display:block; font-size:0.65rem; color:var(--ink3); font-weight:300; margin-top:0.1rem; line-height:1.35; }
+
+  .ico-win::before { content:'✓ '; color:var(--win-fg); font-weight:900; }
+  .ico-lose::before { content:'✗ '; color:var(--lose-fg); font-weight:900; }
+  .ico-tie::before { content:'◑ '; color:var(--tie-fg); font-weight:900; }
+
+  /* Score row */
+  .score-hd td { background:var(--ink) !important; color:var(--paper) !important; font-family:'JetBrains Mono',monospace; font-size:0.75rem; padding:1.1rem 0.7rem; border-right:1px solid #333; }
+  .score-hd td.hcol { background:var(--amber) !important; color:#000 !important; font-weight:700; }
+  .s-num { font-family:'Playfair Display',serif; font-size:2rem; font-weight:900; display:block; line-height:1; }
+  .s-lbl { font-size:0.58rem; letter-spacing:0.12em; opacity:0.65; text-transform:uppercase; }
+
+  tr.hidden { display:none; }
+
+  /* BOTTOM */
+  .bottom { max-width:1360px; margin:3rem auto 0; padding:0 2rem 4rem; display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  @media(max-width:760px){ .bottom{grid-template-columns:1fr;} }
+  .panel { background:var(--paper2); border:1px solid var(--rule); padding:1.3rem; }
+  .panel-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; margin-bottom:0.9rem; padding-bottom:0.7rem; border-bottom:1px solid var(--rule); }
+  .term { background:#0e0e0e; color:#e0dbd0; font-family:'JetBrains Mono',monospace; font-size:0.73rem; padding:1.1rem; line-height:1.85; overflow-x:auto; }
+  .tp { color:var(--amber2); } .ts { color:#5eff5e; } .ti { color:#5eb8ff; } .th { color:#c8920e; } .to { color:#777; }
+  .tcur { display:inline-block; width:7px; height:0.9em; background:var(--amber2); vertical-align:text-bottom; animation:blink 1s step-end infinite; }
+  @keyframes blink{50%{opacity:0;}}
+
+  .prov-wrap { display:flex; flex-wrap:wrap; gap:0.35rem; }
+  .prov { background:var(--ink); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:0.62rem; padding:0.22rem 0.55rem; transition:background 0.12s; cursor:default; }
+  .prov:hover { background:var(--amber); color:#000; }
+
+  /* FOOTER */
+  footer { background:var(--ink); color:#888; padding:2rem; font-family:'JetBrains Mono',monospace; font-size:0.68rem; }
+  .footer-in { max-width:1360px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+  .f-logo { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--paper); font-weight:900; }
+  .f-logo span { color:var(--amber); }
+  footer a { color:#aaa; text-decoration:none; } footer a:hover { color:var(--amber); }
+</style>
+</head>
+<body>
+
+<div class="lang-bar">
+  <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+  <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  <button class="lang-btn active" data-lang="ko" onclick="setLang('ko')">KO</button>
+  <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+</div>
+
+<header class="mast">
+  <div class="mast-inner">
+    <div>
+      <div class="mast-logo">hani<span>mo</span></div>
+      <div class="mast-sub" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding agent">오픈소스를 위한 AI 코딩 에이전트</div>
+    </div>
+    <code class="install-btn" id="ibtn">$ curl -sSL https://hanimo.dev/install | sh</code>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-eye" data-ko="완전 기능 비교 · 2026" data-en="Complete Feature Matrix · 2026">완전 기능 비교 · 2026</div>
+  <h1 class="hero-h1" data-ko="25개 기능. 6개 도구.<br><em>완전한 비교.</em>" data-en="25 Features. 6 Tools.<br><em>The complete comparison.</em>">25개 기능. 6개 도구.<br><em>완전한 비교.</em></h1>
+  <p class="hero-sub" data-ko="마케팅 없이, 데이터로만 판단하세요." data-en="No marketing. Just data.">마케팅 없이, 데이터로만 판단하세요.</p>
+  <p class="hero-ko" data-ko="Apache-2.0 · 한국어 지원 · 영구 무료" data-en="Apache-2.0 · Korean i18n · Free forever">Apache-2.0 · 한국어 지원 · 영구 무료</p>
+</section>
+
+<div class="filter-bar">
+  <div class="filter-inner">
+    <span class="f-label" data-ko="필터:" data-en="Filter:">필터:</span>
+    <button class="f-btn active" data-filter="all" data-ko="전체" data-en="All">전체</button>
+    <button class="f-btn" data-filter="pricing" data-ko="가격" data-en="Pricing">가격</button>
+    <button class="f-btn" data-filter="models" data-ko="모델" data-en="Models">모델</button>
+    <button class="f-btn" data-filter="safety" data-ko="안전성" data-en="Safety">안전성</button>
+    <button class="f-btn" data-filter="dx" data-ko="개발 경험" data-en="Dev Experience">개발 경험</button>
+    <button class="f-btn" data-filter="sessions" data-ko="세션" data-en="Sessions">세션</button>
+    <button class="f-btn" data-filter="oss" data-ko="오픈소스" data-en="Open Source">오픈소스</button>
+    <span class="f-count" id="rcount" data-ko-tpl="25개 기능" data-en-tpl="25 features">25개 기능</span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table id="mtable">
+    <thead>
+      <tr>
+        <th data-ko="분류" data-en="Category">분류</th>
+        <th data-ko="기능" data-en="Feature">기능</th>
+        <th class="hcol" data-ko="hanimo" data-en="hanimo">hanimo</th>
+        <th data-ko="Claude Code" data-en="Claude Code">Claude Code</th>
+        <th data-ko="Cursor" data-en="Cursor">Cursor</th>
+        <th data-ko="Aider" data-en="Aider">Aider</th>
+        <th data-ko="Codex CLI" data-en="Codex CLI">Codex CLI</th>
+        <th data-ko="opencode" data-en="opencode">opencode</th>
+      </tr>
+    </thead>
+    <tbody id="mbody">
+
+      <!-- PRICING -->
+      <tr class="cat-hd" data-cat="pricing"><td colspan="8" data-ko="가격 및 라이선스" data-en="Pricing &amp; Licensing">가격 및 라이선스</td></tr>
+
+      <tr data-cat="pricing">
+        <td data-ko="월 비용" data-en="Monthly Cost">월 비용</td>
+        <td data-ko="기본 구독료" data-en="Base subscription">기본 구독료</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="$0" data-en="$0">$0</span><span class="n" data-ko="영구 무료" data-en="Free forever">영구 무료</span></td>
+        <td class="lose"><span class="v ico-lose">$20–$100+</span><span class="n" data-ko="Pro/Max 요금제" data-en="Pro/Max tiers">Pro/Max 요금제</span></td>
+        <td class="lose"><span class="v ico-lose">$20</span><span class="n">Hobby</span></td>
+        <td class="win"><span class="v ico-win" data-ko="$0" data-en="$0">$0</span><span class="n" data-ko="오픈소스" data-en="Open source">오픈소스</span></td>
+        <td class="lose"><span class="v ico-lose">$0*</span><span class="n" data-ko="OpenAI API 비용" data-en="OpenAI API costs">OpenAI API 비용</span></td>
+        <td class="win"><span class="v ico-win" data-ko="$0" data-en="$0">$0</span><span class="n" data-ko="오픈소스" data-en="Open source">오픈소스</span></td>
+      </tr>
+
+      <tr data-cat="pricing oss">
+        <td data-ko="라이선스" data-en="License">라이선스</td>
+        <td data-ko="소프트웨어 라이선스" data-en="Software license">소프트웨어 라이선스</td>
+        <td class="hcol win"><span class="v ico-win">Apache-2.0</span><span class="n" data-ko="특허 허여 포함" data-en="Patent grant included">특허 허여 포함</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="독점" data-en="Proprietary">독점</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="독점" data-en="Proprietary">독점</span></td>
+        <td class="win"><span class="v ico-win">Apache-2.0</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="독점" data-en="Proprietary">독점</span></td>
+        <td class="win"><span class="v ico-win">Apache-2.0</span></td>
+      </tr>
+
+      <tr data-cat="pricing oss">
+        <td data-ko="특허 허여" data-en="Patent Grant">특허 허여</td>
+        <td data-ko="명시적 특허 보호" data-en="Explicit patent protection">명시적 특허 보호</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span><span class="n">Apache-2.0 §3</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <tr data-cat="pricing">
+        <td data-ko="벤더 종속" data-en="Vendor Lock-in">벤더 종속</td>
+        <td data-ko="전환/자체 호스팅 자유도" data-en="Freedom to switch / self-host">전환 자유도</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="없음" data-en="Zero">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="완전 종속" data-en="Complete">완전 종속</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="높음" data-en="High">높음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="낮음" data-en="Low">낮음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="완전 종속" data-en="Complete">완전 종속</span></td>
+        <td class="win"><span class="v ico-win" data-ko="낮음" data-en="Low">낮음</span></td>
+      </tr>
+
+      <!-- MODELS -->
+      <tr class="cat-hd" data-cat="models"><td colspan="8" data-ko="모델 지원" data-en="Model Support">모델 지원</td></tr>
+
+      <tr data-cat="models">
+        <td data-ko="프로바이더 수" data-en="Provider Count">프로바이더 수</td>
+        <td data-ko="지원 AI 프로바이더" data-en="Supported AI providers">지원 프로바이더</td>
+        <td class="hcol win"><span class="v ico-win">14+</span></td>
+        <td class="lose"><span class="v ico-lose">1</span><span class="n" data-ko="Anthropic 전용" data-en="Anthropic only">Anthropic 전용</span></td>
+        <td class="tie"><span class="v ico-tie">3</span></td>
+        <td class="win"><span class="v ico-win">10+</span></td>
+        <td class="lose"><span class="v ico-lose">1</span><span class="n" data-ko="OpenAI 전용" data-en="OpenAI only">OpenAI 전용</span></td>
+        <td class="win"><span class="v ico-win">75+</span></td>
+      </tr>
+
+      <tr data-cat="models">
+        <td data-ko="로컬 모델" data-en="Local Models">로컬 모델</td>
+        <td data-ko="Ollama 로컬 실행" data-en="Ollama local support">Ollama 지원</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span><span class="n">Ollama + vLLM</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <tr data-cat="models">
+        <td data-ko="Anthropic 모델" data-en="Anthropic Models">Anthropic 모델</td>
+        <td data-ko="Claude 패밀리 지원" data-en="Claude family support">Claude 패밀리</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음 (네이티브)" data-en="Yes (native)">있음 (네이티브)</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <tr data-cat="models">
+        <td>BYOM</td>
+        <td data-ko="설정 파일로 모델 교체" data-en="Swap model via config">설정으로 모델 교체</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="tie"><span class="v ico-tie" data-ko="일부" data-en="Partial">일부</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <!-- SAFETY -->
+      <tr class="cat-hd" data-cat="safety"><td colspan="8" data-ko="안전성" data-en="Safety &amp; Edit Integrity">안전성</td></tr>
+
+      <tr data-cat="safety">
+        <td data-ko="해시 앵커" data-en="Hash-Anchored Edits">해시 앵커</td>
+        <td data-ko="콘텐츠 해시로 편집 검증" data-en="Content-hash edit verification">해시 편집 검증</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음 (업계 유일)" data-en="Yes (industry-unique)">있음 (업계 유일)</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+      </tr>
+
+      <tr data-cat="safety">
+        <td data-ko="로컬 프라이버시" data-en="Local Privacy">로컬 프라이버시</td>
+        <td data-ko="코드가 외부로 나가지 않음" data-en="Code never leaves machine">코드 외부 미전송</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span><span class="n">Ollama/vLLM</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <tr data-cat="safety">
+        <td data-ko="오프라인 모드" data-en="Offline Mode">오프라인</td>
+        <td data-ko="인터넷 없이 작동" data-en="Works without internet">인터넷 없이 작동</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <!-- DX -->
+      <tr class="cat-hd" data-cat="dx"><td colspan="8" data-ko="개발 경험" data-en="Developer Experience">개발 경험</td></tr>
+
+      <tr data-cat="dx">
+        <td data-ko="바이너리 크기" data-en="Binary Size">바이너리 크기</td>
+        <td data-ko="설치 용량" data-en="Install footprint">설치 용량</td>
+        <td class="hcol win"><span class="v ico-win">~20MB</span><span class="n" data-ko="Go 단일 바이너리" data-en="Single Go binary">Go 단일 바이너리</span></td>
+        <td class="lose"><span class="v ico-lose">~200MB</span><span class="n">Node.js</span></td>
+        <td class="lose"><span class="v ico-lose">~500MB+</span><span class="n">VS Code fork</span></td>
+        <td class="tie"><span class="v ico-tie">~50MB</span><span class="n">Python env</span></td>
+        <td class="lose"><span class="v ico-lose">~100MB</span><span class="n">Node.js</span></td>
+        <td class="tie"><span class="v ico-tie">~80MB</span><span class="n">TypeScript</span></td>
+      </tr>
+
+      <tr data-cat="dx">
+        <td data-ko="런타임 의존성" data-en="Runtime Deps">런타임</td>
+        <td data-ko="필요한 외부 런타임" data-en="External runtimes required">외부 런타임</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="없음" data-en="None">없음</span></td>
+        <td class="lose"><span class="v ico-lose">Node.js</span></td>
+        <td class="lose"><span class="v ico-lose">VS Code + Node</span></td>
+        <td class="lose"><span class="v ico-lose">Python 3.x</span></td>
+        <td class="lose"><span class="v ico-lose">Node.js</span></td>
+        <td class="tie"><span class="v ico-tie">Bun</span></td>
+      </tr>
+
+      <tr data-cat="dx">
+        <td data-ko="에이전트 모드" data-en="Agent Modes">에이전트 모드</td>
+        <td data-ko="운영 모드 수" data-en="Number of distinct modes">운영 모드 수</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="3가지" data-en="3 Modes">3가지</span><span class="n">Super / Dev / Plan</span></td>
+        <td class="tie"><span class="v ico-tie">1</span></td>
+        <td class="tie"><span class="v ico-tie">1</span></td>
+        <td class="tie"><span class="v ico-tie">1</span></td>
+        <td class="tie"><span class="v ico-tie">1</span></td>
+        <td class="tie"><span class="v ico-tie">1</span></td>
+      </tr>
+
+      <tr data-cat="dx">
+        <td>MCP</td>
+        <td data-ko="MCP stdio 지원" data-en="MCP stdio support">MCP stdio</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <tr data-cat="dx">
+        <td data-ko="한국어" data-en="Korean i18n">한국어</td>
+        <td data-ko="한국어 UI 지원" data-en="Korean UI support">한국어 UI</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+      </tr>
+
+      <tr data-cat="dx">
+        <td data-ko="Git 연동" data-en="Git Integration">Git 연동</td>
+        <td data-ko="네이티브 Git 인식" data-en="Native git awareness">Git 인식</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음 (핵심)" data-en="Yes (core)">있음 (핵심)</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <!-- SESSIONS -->
+      <tr class="cat-hd" data-cat="sessions"><td colspan="8" data-ko="세션 관리" data-en="Sessions &amp; Context">세션 관리</td></tr>
+
+      <tr data-cat="sessions">
+        <td data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite</td>
+        <td data-ko="영구 세션 DB" data-en="Persistent session database">영구 세션 DB</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+      </tr>
+
+      <tr data-cat="sessions">
+        <td data-ko="세션 포크" data-en="Session Fork">포크</td>
+        <td data-ko="Git처럼 컨텍스트 분기" data-en="Branch context like git">컨텍스트 분기</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+      </tr>
+
+      <tr data-cat="sessions">
+        <td data-ko="세션 검색" data-en="Session Search">검색</td>
+        <td data-ko="히스토리 전문 검색" data-en="Full-text history search">히스토리 FTS</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+      </tr>
+
+      <tr data-cat="sessions">
+        <td data-ko="컨텍스트 압축" data-en="Context Compaction">컨텍스트 압축</td>
+        <td data-ko="3단계 토큰 압축" data-en="3-stage token compression">3단계 압축</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="tie"><span class="v ico-tie" data-ko="일부" data-en="Partial">일부</span></td>
+        <td class="tie"><span class="v ico-tie" data-ko="일부" data-en="Partial">일부</span></td>
+        <td class="tie"><span class="v ico-tie" data-ko="일부" data-en="Partial">일부</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="tie"><span class="v ico-tie" data-ko="일부" data-en="Partial">일부</span></td>
+      </tr>
+
+      <!-- OSS -->
+      <tr class="cat-hd" data-cat="oss"><td colspan="8" data-ko="오픈소스" data-en="Open Source">오픈소스</td></tr>
+
+      <tr data-cat="oss">
+        <td data-ko="소스 공개" data-en="Source Available">소스 공개</td>
+        <td data-ko="전체 소스 코드 열람 가능" data-en="Full source readable">소스 열람</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <tr data-cat="oss">
+        <td data-ko="자체 호스팅" data-en="Self-Hostable">자체 호스팅</td>
+        <td data-ko="자체 인프라에서 실행 가능" data-en="Run on own infrastructure">자체 인프라</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <tr data-cat="oss">
+        <td data-ko="포크 가능" data-en="Forkable">포크</td>
+        <td data-ko="합법적으로 포크·수정 가능" data-en="Can be legally forked">포크 가능 여부</td>
+        <td class="hcol win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+        <td class="lose"><span class="v ico-lose" data-ko="없음" data-en="No">없음</span></td>
+        <td class="win"><span class="v ico-win" data-ko="있음" data-en="Yes">있음</span></td>
+      </tr>
+
+      <!-- SCORE -->
+      <tr class="score-hd">
+        <td colspan="2" style="font-family:'Playfair Display',serif;font-style:italic;" data-ko="총점 (25개 기준)" data-en="Total Score (out of 25)">총점 (25개 기준)</td>
+        <td class="hcol"><span class="s-num">25</span><span class="s-lbl">hanimo</span></td>
+        <td><span class="s-num" style="color:#c0392b;">6</span><span class="s-lbl">Claude Code</span></td>
+        <td><span class="s-num" style="color:#c0392b;">7</span><span class="s-lbl">Cursor</span></td>
+        <td><span class="s-num" style="color:#6a9a6a;">15</span><span class="s-lbl">Aider</span></td>
+        <td><span class="s-num" style="color:#c0392b;">5</span><span class="s-lbl">Codex CLI</span></td>
+        <td><span class="s-num" style="color:#6a9a6a;">17</span><span class="s-lbl">opencode</span></td>
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+
+<!-- Bottom -->
+<div class="bottom">
+  <div class="panel">
+    <div class="panel-title" data-ko="터미널 미리보기" data-en="Terminal Preview">터미널 미리보기</div>
+    <div class="term">
+      <div><span class="tp">~/project $</span> hanimo --mode plan "auth refactor"</div>
+      <div class="ti">⚡ hanimo · PLAN mode · ollama/llama3.2</div>
+      <div class="to">  7 steps planned · 4 files</div>
+      <div class="th">  [HASH-ANCHOR] all targets verified</div>
+      <div class="ts">  ✓ no drift possible</div>
+      <div><span class="tp">~/project $</span> hanimo session fork auth-v2</div>
+      <div class="ts">  ✓ session forked → auth-v2</div>
+      <div><span class="tp">~/project $</span> <span class="tcur"></span></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-title" data-ko="14개+ 프로바이더" data-en="14+ Providers">14개+ 프로바이더</div>
+    <div class="prov-wrap" style="margin-bottom:0.9rem;">
+      <span class="prov">Anthropic</span><span class="prov">OpenAI</span><span class="prov">Gemini</span>
+      <span class="prov">Mistral</span><span class="prov">Ollama</span><span class="prov">vLLM</span>
+      <span class="prov">Groq</span><span class="prov">Cohere</span><span class="prov">Together AI</span>
+      <span class="prov">Fireworks</span><span class="prov">Perplexity</span><span class="prov">DeepSeek</span>
+      <span class="prov">xAI Grok</span><span class="prov">+ More</span>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;background:var(--paper);border:1px solid var(--rule);padding:0.75rem;line-height:1.8;">
+      <div style="color:var(--ink3)"># ~/.hanimo/config.toml</div>
+      <div style="color:var(--win-fg)">provider = "ollama"</div>
+      <div style="color:var(--win-fg)">model = "llama3.2"</div>
+      <div style="color:var(--ink3)" data-ko="# 비용: $0/월" data-en="# Cost: $0/month"># 비용: $0/월</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-in">
+    <div>
+      <div class="f-logo">hani<span>mo</span></div>
+      <div style="margin-top:0.25rem;" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding agent">오픈소스를 위한 AI 코딩 에이전트</div>
+    </div>
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+      <a href="https://hanimo.dev">hanimo.dev</a>
+      <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+      <span>Apache-2.0</span>
+    </div>
+    <div style="text-align:right;color:#666;" data-ko="2026년 4월 기준 · 수정 사항은 GitHub으로" data-en="Data as of April 2026 · Corrections via GitHub">2026년 4월 기준</div>
+  </div>
+</footer>
+
+<script>
+// LANG
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    const txt = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    if (txt !== undefined) el.innerHTML = txt;
+  });
+  const rc = document.getElementById('rcount');
+  const tpl = lang === 'ko' ? rc.dataset.koTpl : rc.dataset.enTpl;
+  const n = document.querySelectorAll('#mbody tr:not(.cat-hd):not(.score-hd):not(.hidden)').length;
+  rc.textContent = lang === 'ko' ? n + '개 기능' : n + ' features';
+}
+
+// FILTER
+(function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+const fbns = document.querySelectorAll('.f-btn');
+const rows = document.querySelectorAll('#mbody tr:not(.score-hd)');
+const rc = document.getElementById('rcount');
+function updateCount() {
+  const lang = document.documentElement.lang || 'ko';
+  const n = document.querySelectorAll('#mbody tr:not(.cat-hd):not(.score-hd):not(.hidden)').length;
+  rc.textContent = lang === 'ko' ? n + '개 기능' : n + ' features';
+}
+fbns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    fbns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+    rows.forEach(row => {
+      const cats = row.dataset.cat || '';
+      row.classList.toggle('hidden', f !== 'all' && !cats.includes(f));
+    });
+    updateCount();
+  });
+});
+
+// INSTALL COPY
+document.getElementById('ibtn').addEventListener('click', function() {
+  navigator.clipboard.writeText('curl -sSL https://hanimo.dev/install | sh').then(() => {
+    const o = this.textContent;
+    this.textContent = '✓ Copied!';
+    this.style.color = '#5eff5e';
+    setTimeout(() => { this.textContent = o; this.style.color = ''; }, 1500);
+  });
+});
+</script>
+</body>
+</html>

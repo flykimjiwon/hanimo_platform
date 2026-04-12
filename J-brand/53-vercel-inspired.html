@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hanimo — The open-source AI coding platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #000000;
+    --white: #ffffff;
+    --gray-100: #fafafa;
+    --gray-200: #eaeaea;
+    --gray-300: #999999;
+    --gray-400: #666666;
+    --gray-500: #444444;
+    --gray-600: #111111;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    --r: 8px;
+    --r-lg: 12px;
+    --t-bg: #000000;
+    --t-bg2: #111111;
+    --t-bg3: #222222;
+    --t-border: #333333;
+    --t-text: #ffffff;
+    --t-text2: #999999;
+    --t-text3: #666666;
+    --t-accent: #ffffff;
+    --t-accent-fg: #000000;
+  }
+  [data-theme="light"] {
+    --t-bg: #ffffff;
+    --t-bg2: #fafafa;
+    --t-bg3: #eaeaea;
+    --t-border: #cccccc;
+    --t-text: #000000;
+    --t-text2: #444444;
+    --t-text3: #888888;
+    --t-accent: #000000;
+    --t-accent-fg: #ffffff;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* CTRL ROW */
+  .ctrl-row {
+    position: fixed;
+    top: 18px; right: 24px;
+    z-index: 300;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  /* LANG TOGGLE */
+  .lang-toggle {
+    display: flex;
+    background: var(--t-bg2);
+    border: 1px solid var(--t-border);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .lang-btn {
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--t-text2);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.1s;
+  }
+  .lang-btn.active {
+    background: var(--t-accent);
+    color: var(--t-accent-fg);
+  }
+  /* THEME TOGGLE */
+  .theme-toggle {
+    display: flex;
+    background: var(--t-bg2);
+    border: 1px solid var(--t-border);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .theme-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--t-text2);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.1s;
+  }
+  .theme-btn.active {
+    background: var(--t-accent);
+    color: var(--t-accent-fg);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    height: 64px;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(16px) saturate(180%);
+    border-bottom: 1px solid #222;
+  }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.04em;
+  }
+
+  /* Vercel-style triangle logo */
+  .nav-logo-triangle {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo-triangle svg { display: block; }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 0;
+  }
+  .nav-links a {
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--gray-300);
+    text-decoration: none;
+    transition: color 0.1s;
+    letter-spacing: -0.01em;
+  }
+  .nav-links a:hover { color: var(--white); }
+
+  .nav-right {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .btn-nav-ghost {
+    padding: 7px 16px;
+    border-radius: var(--r);
+    border: 1px solid #333;
+    background: transparent;
+    font-size: 13px; font-weight: 500;
+    color: var(--gray-300); cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.1s;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  .btn-nav-ghost:hover { border-color: #555; color: var(--white); }
+
+  .btn-nav-solid {
+    padding: 7px 16px;
+    border-radius: var(--r);
+    border: 1px solid var(--white);
+    background: var(--white);
+    font-size: 13px; font-weight: 600;
+    color: var(--black); cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.1s;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  .btn-nav-solid:hover { background: var(--gray-200); border-color: var(--gray-200); }
+
+  /* HERO */
+  .hero {
+    padding: 160px 24px 80px;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+  }
+
+  /* Subtle grid background */
+  .hero-grid {
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 100vw; height: 100%;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, black 30%, transparent 80%);
+  }
+
+  .hero-status {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 30px;
+    font-size: 12px; font-weight: 500;
+    color: var(--gray-300);
+    margin-bottom: 40px;
+    letter-spacing: -0.01em;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #50e3c2;
+    box-shadow: 0 0 6px rgba(80,227,194,0.6);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  h1 {
+    font-size: clamp(44px, 8vw, 88px);
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    line-height: 1.0;
+    color: var(--white);
+    margin-bottom: 28px;
+  }
+
+  h1 .dim { color: var(--gray-400); }
+
+  .hero-sub {
+    font-size: 18px;
+    color: var(--gray-300);
+    max-width: 480px;
+    margin: 0 auto 44px;
+    line-height: 1.6;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-actions {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 64px;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 24px;
+    background: var(--white);
+    border: 1px solid var(--white);
+    border-radius: var(--r);
+    font-size: 14px; font-weight: 600;
+    color: var(--black);
+    text-decoration: none;
+    transition: all 0.1s;
+    letter-spacing: -0.02em;
+  }
+  .btn-primary:hover { background: var(--gray-200); border-color: var(--gray-200); }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 24px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: var(--r);
+    font-size: 14px; font-weight: 500;
+    color: var(--gray-300);
+    text-decoration: none;
+    transition: all 0.1s;
+    letter-spacing: -0.02em;
+  }
+  .btn-secondary:hover { border-color: #555; color: var(--white); }
+
+  /* TERMINAL / DEPLOY PREVIEW */
+  .deploy-preview {
+    max-width: 720px;
+    margin: 0 auto;
+    background: #0a0a0a;
+    border: 1px solid #222;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 40px 80px rgba(0,0,0,0.8);
+  }
+
+  .deploy-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #1a1a1a;
+    background: #050505;
+  }
+
+  .deploy-header-left {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .deploy-dots { display: flex; gap: 5px; }
+  .deploy-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .deploy-dot:nth-child(1) { background: #333; }
+  .deploy-dot:nth-child(2) { background: #333; }
+  .deploy-dot:nth-child(3) { background: #333; }
+
+  .deploy-title {
+    font-size: 12px; font-weight: 500;
+    color: var(--gray-400);
+    font-family: var(--mono);
+    letter-spacing: -0.01em;
+  }
+
+  .deploy-status-badge {
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 8px;
+    background: rgba(80,227,194,0.08);
+    border: 1px solid rgba(80,227,194,0.2);
+    border-radius: 4px;
+    font-size: 10px; font-weight: 600;
+    color: #50e3c2;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .terminal-body {
+    padding: 20px 20px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.9;
+    color: var(--gray-300);
+  }
+
+  .t-p { color: #50e3c2; }
+  .t-w { color: var(--white); }
+  .t-g { color: var(--gray-400); }
+  .t-e { color: #f81ce5; }
+  .t-cursor {
+    display: inline-block;
+    width: 7px; height: 13px;
+    background: var(--white);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* SECTIONS */
+  .section {
+    padding: 100px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid #1a1a1a;
+    margin: 0;
+  }
+
+  .section-tag {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--gray-400);
+    margin-bottom: 16px;
+  }
+
+  .section-h {
+    font-size: clamp(30px, 4vw, 52px);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1.05;
+    color: var(--white);
+    margin-bottom: 60px;
+  }
+
+  .section-h .dim { color: var(--gray-400); }
+
+  /* FEATURES: Vercel-style bordered grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .feature-cell {
+    padding: 32px 28px;
+    border-right: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    transition: background 0.15s;
+  }
+  .feature-cell:nth-child(3n) { border-right: none; }
+  .feature-cell:nth-last-child(-n+3) { border-bottom: none; }
+  .feature-cell:hover { background: #0a0a0a; }
+
+  .feature-cell-icon {
+    width: 32px; height: 32px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .feature-cell-title {
+    font-size: 14px; font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .feature-cell-desc {
+    font-size: 13px;
+    color: var(--gray-400);
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+
+  /* PROVIDERS: mono list */
+  .providers-section {
+    padding: 0 24px 100px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .providers-list {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    border: 1px solid #1a1a1a;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-top: 40px;
+  }
+
+  .provider-cell {
+    padding: 16px 12px;
+    text-align: center;
+    border-right: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    font-size: 12px; font-weight: 500;
+    color: var(--gray-400);
+    font-family: var(--mono);
+    letter-spacing: -0.01em;
+    transition: all 0.1s;
+    cursor: default;
+  }
+  .provider-cell:hover { background: #0a0a0a; color: var(--white); }
+  .provider-cell:nth-child(7n) { border-right: none; }
+  .provider-cell:nth-last-child(-n+7) { border-bottom: none; }
+
+  /* MODES */
+  .modes-section {
+    padding: 0 24px 100px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .modes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid #1a1a1a;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-top: 40px;
+  }
+
+  .mode-cell {
+    padding: 36px 28px;
+    border-right: 1px solid #1a1a1a;
+    position: relative;
+    transition: background 0.1s;
+  }
+  .mode-cell:last-child { border-right: none; }
+  .mode-cell:hover { background: #0a0a0a; }
+
+  .mode-mono-label {
+    font-family: var(--mono);
+    font-size: 10px; font-weight: 500;
+    color: var(--gray-400);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .mode-cell-name {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  .mode-cell-desc {
+    font-size: 13px;
+    color: var(--gray-400);
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+
+  /* COMPARISON */
+  .comparison-section {
+    padding: 0 24px 100px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #1a1a1a;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-top: 40px;
+  }
+
+  .comparison-table th {
+    padding: 12px 20px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--gray-400);
+    background: #050505;
+    border-bottom: 1px solid #1a1a1a;
+    text-align: left;
+  }
+  .comparison-table th:not(:first-child) { text-align: center; }
+
+  .comparison-table td {
+    padding: 12px 20px;
+    font-size: 13px;
+    color: var(--gray-400);
+    border-bottom: 1px solid #1a1a1a;
+    letter-spacing: -0.01em;
+    transition: background 0.1s;
+  }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table td:not(:first-child) { text-align: center; }
+  .comparison-table tr:hover td { background: #0a0a0a; }
+
+  .check { color: #50e3c2; font-weight: 600; }
+  .cross { color: #333; font-size: 16px; }
+  .h-yes { color: var(--white); font-weight: 700; }
+
+  /* INSTALL */
+  .install-section {
+    padding: 0 24px 100px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .install-tabs {
+    display: flex; gap: 0;
+    border: 1px solid #222;
+    border-radius: var(--r);
+    overflow: hidden;
+    width: fit-content;
+    margin-bottom: 16px;
+  }
+
+  .install-tab {
+    padding: 8px 20px;
+    border: none;
+    border-right: 1px solid #222;
+    background: #050505;
+    font-size: 12px; font-weight: 500;
+    color: var(--gray-400); cursor: pointer;
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+    transition: all 0.1s;
+  }
+  .install-tab:last-child { border-right: none; }
+  .install-tab.active { background: #111; color: var(--white); }
+  .install-tab:hover:not(.active) { color: var(--gray-300); background: #0a0a0a; }
+
+  .install-block {
+    background: #050505;
+    border: 1px solid #1a1a1a;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    display: none;
+  }
+  .install-block.active { display: block; }
+
+  .install-block-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .install-block-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-400);
+    letter-spacing: 0.03em;
+  }
+
+  .copy-btn {
+    padding: 3px 10px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 5px;
+    font-size: 11px; font-weight: 500;
+    color: var(--gray-400); cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.1s;
+  }
+  .copy-btn:hover { color: var(--white); border-color: #555; }
+
+  .install-code {
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+    color: var(--gray-300);
+  }
+
+  .cmd-prompt { color: var(--gray-500); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid #1a1a1a;
+    padding: 40px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 20px;
+  }
+
+  .footer-left {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .footer-name {
+    font-size: 14px; font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--white);
+  }
+
+  .footer-sep { color: #333; }
+
+  .footer-license {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-400);
+    padding: 2px 7px;
+    border: 1px solid #222;
+    border-radius: 4px;
+  }
+
+  .footer-links {
+    display: flex; gap: 20px;
+  }
+  .footer-links a {
+    font-size: 13px;
+    color: var(--gray-400); text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.1s;
+  }
+  .footer-links a:hover { color: var(--gray-300); }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 16px; }
+    .nav-links { display: none; }
+    .hero { padding: 120px 16px 60px; }
+    .section, .providers-section, .modes-section,
+    .comparison-section, .install-section { padding-left: 16px; padding-right: 16px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .feature-cell { border-right: none; }
+    .feature-cell:nth-child(3n) { border-right: none; }
+    .feature-cell:nth-last-child(-n+3) { border-bottom: 1px solid #1a1a1a; }
+    .feature-cell:last-child { border-bottom: none; }
+    .modes-grid { grid-template-columns: 1fr; }
+    .mode-cell { border-right: none; border-bottom: 1px solid #1a1a1a; }
+    .mode-cell:last-child { border-bottom: none; }
+    .providers-list { grid-template-columns: repeat(3, 1fr); }
+    footer { padding: 32px 16px; }
+    .ctrl-row { top: 18px; right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Lang toggle -->
+<div class="ctrl-row">
+  <div class="theme-toggle">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('ko')">KO</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-triangle">
+      <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
+        <path d="M10 0L20 18H0L10 0Z" fill="white"/>
+      </svg>
+    </div>
+    hanimo
+  </a>
+  <div class="nav-links">
+    <a href="#features" data-ko="기능" data-en="Features">기능</a>
+    <a href="#install" data-ko="설치" data-en="Install">설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+    <a href="#" data-ko="문서" data-en="Docs">문서</a>
+  </div>
+  <div class="nav-right">
+    <a href="https://github.com/flykimjiwon/hanimo" class="btn-nav-ghost">GitHub</a>
+    <a href="#install" class="btn-nav-solid" data-ko="시작하기" data-en="Get Started">시작하기</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-grid"></div>
+
+  <div class="hero-status">
+    <span class="status-dot"></span>
+    <span data-ko="v0.1.0 출시 · Apache-2.0" data-en="v0.1.0 released · Apache-2.0">v0.1.0 출시 · Apache-2.0</span>
+  </div>
+
+  <h1 data-ko="오픈소스를 위한<br><span class='dim'>AI 코딩 플랫폼</span>" data-en="The open-source<br><span class='dim'>AI coding platform</span>">오픈소스를 위한<br><span class="dim">AI 코딩 플랫폼</span></h1>
+
+  <p class="hero-sub" data-ko="14개 이상의 LLM. 로컬 우선. Modol의 후계자." data-en="14+ LLMs. Local-first. Successor to Modol.">14개 이상의 LLM. 로컬 우선. Modol의 후계자.</p>
+
+  <div class="hero-actions">
+    <a href="#install" class="btn-primary" data-ko="지금 설치" data-en="Install now">지금 설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo" class="btn-secondary" data-ko="GitHub에서 보기" data-en="View on GitHub">GitHub에서 보기</a>
+  </div>
+
+  <!-- Deploy-style preview -->
+  <div class="deploy-preview">
+    <div class="deploy-header">
+      <div class="deploy-header-left">
+        <div class="deploy-dots">
+          <div class="deploy-dot"></div>
+          <div class="deploy-dot"></div>
+          <div class="deploy-dot"></div>
+        </div>
+        <div class="deploy-title">hanimo — ~/project</div>
+      </div>
+      <div class="deploy-status-badge">
+        <span class="status-dot"></span>
+        <span data-ko="실행 중" data-en="running">실행 중</span>
+      </div>
+    </div>
+    <div class="terminal-body">
+      <div><span class="t-g">$ </span><span class="t-w">hanimo --mode super</span></div>
+      <div><span class="t-g">  ▲ hanimo v0.1.0</span></div>
+      <div>&nbsp;</div>
+      <div><span class="t-g">  provider  </span><span class="t-w">anthropic/claude-opus-4</span></div>
+      <div><span class="t-g">  session   </span><span class="t-w">sqlite://~/.hanimo/sessions.db</span></div>
+      <div><span class="t-g">  mode      </span><span class="t-p">super</span></div>
+      <div>&nbsp;</div>
+      <div><span class="t-g">you › </span><span class="t-w" data-ko="auth 모듈 리팩터링" data-en="refactor auth module">auth 모듈 리팩터링</span></div>
+      <div><span class="t-g">  </span><span class="t-p">✓</span><span class="t-g"> </span><span class="t-w" data-ko="auth/handler.go 수정됨" data-en="auth/handler.go patched">auth/handler.go 수정됨</span><span class="t-g">  +42 -18</span></div>
+      <div><span class="t-g">  </span><span class="t-p">✓</span><span class="t-g"> </span><span class="t-w" data-ko="auth/middleware.go 수정됨" data-en="auth/middleware.go patched">auth/middleware.go 수정됨</span><span class="t-g">  +7 -3</span></div>
+      <div><span class="t-g">  </span><span class="t-e">⬡</span><span class="t-g"> </span><span data-ko="해시 앵커 #a3f9b2 저장됨" data-en="hash anchor #a3f9b2 saved">해시 앵커 #a3f9b2 저장됨</span></div>
+      <div><span class="t-g">you › </span><span class="t-cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- Features -->
+<section class="section" id="features">
+  <div class="section-tag" data-ko="기능" data-en="Features">기능</div>
+  <h2 class="section-h" data-ko="더 빠르게.<br><span class='dim'>더 정밀하게.</span>" data-en="Faster.<br><span class='dim'>More precise.</span>">더 빠르게.<br><span class="dim">더 정밀하게.</span></h2>
+  <div class="features-grid">
+    <div class="feature-cell">
+      <div class="feature-cell-icon">⚓</div>
+      <div class="feature-cell-title" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</div>
+      <p class="feature-cell-desc" data-ko="정밀 편집. 충돌 없음." data-en="Precise edits. No conflicts.">정밀 편집. 충돌 없음.</p>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-cell-icon">🔌</div>
+      <div class="feature-cell-title" data-ko="14개 이상의 LLM" data-en="14+ LLM Providers">14개 이상의 LLM</div>
+      <p class="feature-cell-desc" data-ko="로컬에서 클라우드까지." data-en="From local to cloud.">로컬에서 클라우드까지.</p>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-cell-icon">🗜</div>
+      <div class="feature-cell-title" data-ko="스마트 컴팩션" data-en="Smart Compaction">스마트 컴팩션</div>
+      <p class="feature-cell-desc" data-ko="컨텍스트 자동 압축." data-en="Auto context compression.">컨텍스트 자동 압축.</p>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-cell-icon">🤖</div>
+      <div class="feature-cell-title" data-ko="/auto 자율 모드" data-en="/auto Autonomous">/auto 자율 모드</div>
+      <p class="feature-cell-desc" data-ko="완전 자율. 개입 최소화." data-en="Fully autonomous. Less input.">완전 자율. 개입 최소화.</p>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-cell-icon">🗄</div>
+      <div class="feature-cell-title" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+      <p class="feature-cell-desc" data-ko="로컬 저장. 영구 기억." data-en="Local storage. Persistent.">로컬 저장. 영구 기억.</p>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-cell-icon">🔗</div>
+      <div class="feature-cell-title" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+      <p class="feature-cell-desc" data-ko="Model Context Protocol." data-en="Model Context Protocol.">Model Context Protocol.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- Providers -->
+<section class="providers-section">
+  <div class="section-tag" data-ko="지원 공급자" data-en="Supported Providers">지원 공급자</div>
+  <h2 class="section-h" data-ko="어떤 모델이든.<br><span class='dim'>어디서든.</span>" data-en="Any model.<br><span class='dim'>Anywhere.</span>">어떤 모델이든.<br><span class="dim">어디서든.</span></h2>
+  <div class="providers-list">
+    <div class="provider-cell">Ollama</div>
+    <div class="provider-cell">OpenAI</div>
+    <div class="provider-cell">Anthropic</div>
+    <div class="provider-cell">Google</div>
+    <div class="provider-cell">DeepSeek</div>
+    <div class="provider-cell">Groq</div>
+    <div class="provider-cell">Novita</div>
+    <div class="provider-cell">OpenRouter</div>
+    <div class="provider-cell">Mistral</div>
+    <div class="provider-cell">Fireworks</div>
+    <div class="provider-cell">vLLM</div>
+    <div class="provider-cell">LM Studio</div>
+    <div class="provider-cell">Together</div>
+    <div class="provider-cell" data-ko="커스텀" data-en="Custom">커스텀</div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- Modes -->
+<section class="modes-section">
+  <div class="section-tag" data-ko="실행 모드" data-en="Execution Modes">실행 모드</div>
+  <h2 class="section-h" data-ko="상황에 맞게.<br><span class='dim'>선택하세요.</span>" data-en="Choose the right<br><span class='dim'>mode.</span>">상황에 맞게.<br><span class="dim">선택하세요.</span></h2>
+  <div class="modes-grid">
+    <div class="mode-cell">
+      <div class="mode-mono-label">mode / super</div>
+      <div class="mode-cell-name" data-ko="전체 권한" data-en="Full Access">전체 권한</div>
+      <p class="mode-cell-desc" data-ko="파일 제한 없음. 최대 효율." data-en="No restrictions. Max efficiency.">파일 제한 없음. 최대 효율.</p>
+    </div>
+    <div class="mode-cell">
+      <div class="mode-mono-label">mode / dev</div>
+      <div class="mode-cell-name" data-ko="개발자 모드" data-en="Developer">개발자 모드</div>
+      <p class="mode-cell-desc" data-ko="균형잡힌 기본 모드." data-en="Balanced defaults.">균형잡힌 기본 모드.</p>
+    </div>
+    <div class="mode-cell">
+      <div class="mode-mono-label">mode / plan</div>
+      <div class="mode-cell-name" data-ko="계획 모드" data-en="Plan Mode">계획 모드</div>
+      <p class="mode-cell-desc" data-ko="실행 전 계획. 안전 우선." data-en="Plan before execute.">실행 전 계획. 안전 우선.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- Comparison -->
+<section class="comparison-section">
+  <div class="section-tag" data-ko="비교" data-en="Comparison">비교</div>
+  <h2 class="section-h" data-ko="왜 Hanimo인가." data-en="Why Hanimo.">왜 Hanimo인가.</h2>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th data-ko="기능" data-en="Feature">기능</th>
+        <th>Hanimo</th>
+        <th>Claude Code</th>
+        <th>Cursor</th>
+        <th>Aider</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-ko="오픈소스" data-en="Open source">오픈소스</td>
+        <td class="h-yes">✓</td>
+        <td class="cross">—</td>
+        <td class="cross">—</td>
+        <td class="check">✓</td>
+      </tr>
+      <tr>
+        <td data-ko="로컬 LLM" data-en="Local LLM">로컬 LLM</td>
+        <td class="h-yes">✓</td>
+        <td class="cross">—</td>
+        <td class="cross">—</td>
+        <td class="check">✓</td>
+      </tr>
+      <tr>
+        <td data-ko="해시 앵커 편집" data-en="Hash-anchored editing">해시 앵커 편집</td>
+        <td class="h-yes">✓</td>
+        <td class="cross">—</td>
+        <td class="cross">—</td>
+        <td class="cross">—</td>
+      </tr>
+      <tr>
+        <td data-ko="SQLite 세션" data-en="SQLite sessions">SQLite 세션</td>
+        <td class="h-yes">✓</td>
+        <td class="cross">—</td>
+        <td class="cross">—</td>
+        <td class="cross">—</td>
+      </tr>
+      <tr>
+        <td data-ko="MCP 지원" data-en="MCP support">MCP 지원</td>
+        <td class="h-yes">✓</td>
+        <td class="check">✓</td>
+        <td class="cross">—</td>
+        <td class="cross">—</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="section-divider" />
+
+<!-- Install -->
+<section class="install-section" id="install">
+  <div class="section-tag" data-ko="설치" data-en="Installation">설치</div>
+  <h2 class="section-h" data-ko="바로 시작하세요." data-en="Start immediately.">바로 시작하세요.</h2>
+
+  <div class="install-tabs">
+    <button class="install-tab active" onclick="switchTab('curl', event)">curl</button>
+    <button class="install-tab" onclick="switchTab('brew', event)">brew</button>
+    <button class="install-tab" onclick="switchTab('go', event)">go build</button>
+  </div>
+
+  <div class="install-block active" id="t-curl">
+    <div class="install-block-head">
+      <span class="install-block-label">terminal</span>
+      <button class="copy-btn" onclick="doCopy(this)">copy</button>
+    </div>
+    <div class="install-code">
+      <div><span class="cmd-prompt">$ </span>curl -L https://hanimo.dev/install/hanimo-darwin-arm64 -o hanimo</div>
+      <div><span class="cmd-prompt">$ </span>chmod +x hanimo &amp;&amp; mv hanimo /usr/local/bin/</div>
+      <div><span class="cmd-prompt">$ </span>hanimo</div>
+    </div>
+  </div>
+  <div class="install-block" id="t-brew">
+    <div class="install-block-head">
+      <span class="install-block-label">terminal</span>
+      <button class="copy-btn" onclick="doCopy(this)">copy</button>
+    </div>
+    <div class="install-code">
+      <div><span class="cmd-prompt">$ </span>brew install hanimo</div>
+      <div><span class="cmd-prompt">$ </span>hanimo</div>
+    </div>
+  </div>
+  <div class="install-block" id="t-go">
+    <div class="install-block-head">
+      <span class="install-block-label">terminal</span>
+      <button class="copy-btn" onclick="doCopy(this)">copy</button>
+    </div>
+    <div class="install-code">
+      <div><span class="cmd-prompt">$ </span>git clone https://github.com/flykimjiwon/hanimo</div>
+      <div><span class="cmd-prompt">$ </span>cd hanimo &amp;&amp; go build ./cmd/hanimo</div>
+      <div><span class="cmd-prompt">$ </span>./hanimo</div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<div style="border-top: 1px solid #1a1a1a;"></div>
+<footer>
+  <div class="footer-left">
+    <svg width="16" height="14" viewBox="0 0 20 18" fill="none" style="opacity:0.6">
+      <path d="M10 0L20 18H0L10 0Z" fill="white"/>
+    </svg>
+    <span class="footer-name">hanimo</span>
+    <span class="footer-sep">·</span>
+    <span class="footer-license">Apache-2.0</span>
+  </div>
+  <div class="footer-links">
+    <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+    <a href="https://hanimo.dev" data-ko="문서" data-en="Docs">문서</a>
+    <a href="https://hanimo.dev">hanimo.dev</a>
+  </div>
+</footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+  (function() { setTheme(localStorage.getItem('hanimo-theme') || 'dark'); })();
+
+  let currentLang = 'ko';
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      const text = el.getAttribute('data-' + lang);
+      if (text) el.innerHTML = text;
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+    });
+  }
+
+  function switchTab(tab, e) {
+    document.querySelectorAll('.install-block').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.install-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('t-' + tab).classList.add('active');
+    e.target.classList.add('active');
+  }
+
+  function doCopy(btn) {
+    const code = btn.closest('.install-block').querySelector('.install-code');
+    const text = Array.from(code.querySelectorAll('div')).map(d => d.textContent.replace(/^\$\s*/, '')).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = 'copy', 1500);
+    });
+  }
+</script>
+</body>
+</html>

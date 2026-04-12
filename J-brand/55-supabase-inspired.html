@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hanimo — The open-source AI coding platform</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1c1c1c;
+    --bg-2: #242424;
+    --bg-3: #2a2a2a;
+    --bg-4: #313131;
+    --bg-overlay: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.07);
+    --border-2: rgba(255,255,255,0.11);
+    --border-green: rgba(62,207,142,0.3);
+    --green: #3ECF8E;
+    --green-2: #2DB87A;
+    --green-3: #4ADE9E;
+    --green-dim: rgba(62,207,142,0.12);
+    --green-glow: rgba(62,207,142,0.15);
+    --text: #EDEDED;
+    --text-2: #9B9B9B;
+    --text-3: #555555;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    --r: 8px;
+    --r-lg: 12px;
+    --t-bg: #1c1c1c;
+    --t-bg2: #242424;
+    --t-bg3: #2a2a2a;
+    --t-border: rgba(255,255,255,0.07);
+    --t-text: #EDEDED;
+    --t-text2: #9B9B9B;
+    --t-text3: #555555;
+    --t-accent: #3ECF8E;
+    --t-accent-fg: #0a0a0a;
+  }
+  [data-theme="light"] {
+    --t-bg: #f8faf9;
+    --t-bg2: #ffffff;
+    --t-bg3: #edf2ee;
+    --t-border: #d0ddd4;
+    --t-text: #1c2a22;
+    --t-text2: #3d5445;
+    --t-text3: #7a9a85;
+    --t-accent: #3ECF8E;
+    --t-accent-fg: #0a0a0a;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* CTRL ROW */
+  .ctrl-row {
+    position: fixed;
+    top: 16px; right: 24px;
+    z-index: 300;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  /* LANG TOGGLE */
+  .lang-toggle {
+    display: flex;
+    background: var(--t-bg3);
+    border: 1px solid var(--t-border);
+    border-radius: 7px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .lang-btn {
+    padding: 4px 12px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--t-text3);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .lang-btn.active {
+    background: var(--t-accent);
+    color: var(--t-accent-fg);
+  }
+  /* THEME TOGGLE */
+  .theme-toggle {
+    display: flex;
+    background: var(--t-bg3);
+    border: 1px solid var(--t-border);
+    border-radius: 7px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .theme-btn {
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--t-text3);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .theme-btn.active {
+    background: var(--t-accent);
+    color: var(--t-accent-fg);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+    height: 62px;
+    background: rgba(28,28,28,0.88);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.025em;
+  }
+
+  .nav-logo-mark {
+    width: 26px; height: 26px;
+    background: var(--green);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    font-size: 12px;
+    color: #0a0a0a;
+    flex-shrink: 0;
+  }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .nav-links a {
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 450;
+    color: var(--text-2);
+    text-decoration: none;
+    border-radius: var(--r);
+    transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--bg-overlay); }
+
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+
+  .btn-nav-ghost {
+    padding: 7px 14px;
+    border-radius: var(--r);
+    border: 1px solid var(--border-2);
+    background: transparent;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-2); cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn-nav-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  .btn-nav-green {
+    padding: 7px 16px;
+    border-radius: var(--r);
+    border: none;
+    background: var(--green);
+    font-size: 13px; font-weight: 700;
+    color: #0a0a0a; cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    text-decoration: none;
+    box-shadow: 0 0 16px rgba(62,207,142,0.25);
+  }
+  .btn-nav-green:hover { background: var(--green-3); box-shadow: 0 0 24px rgba(62,207,142,0.4); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    padding: 150px 32px 100px;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* Green glow at top center */
+  .hero-glow {
+    position: absolute;
+    top: 80px; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 400px;
+    background: radial-gradient(ellipse at center top, rgba(62,207,142,0.1) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 14px;
+    background: var(--green-dim);
+    border: 1px solid var(--border-green);
+    border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    color: var(--green);
+    margin-bottom: 24px;
+    letter-spacing: 0.01em;
+  }
+
+  .eyebrow-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  h1 {
+    font-size: clamp(36px, 4.5vw, 58px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  h1 .green { color: var(--green); }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text-2);
+    line-height: 1.7;
+    margin-bottom: 36px;
+    letter-spacing: -0.01em;
+    max-width: 420px;
+  }
+
+  .hero-ctas {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 11px 22px;
+    background: var(--green);
+    border: none; border-radius: var(--r);
+    font-size: 14px; font-weight: 700;
+    color: #0a0a0a;
+    text-decoration: none;
+    box-shadow: 0 0 20px rgba(62,207,142,0.3);
+    transition: all 0.15s;
+  }
+  .btn-primary:hover { background: var(--green-3); transform: translateY(-1px); box-shadow: 0 0 30px rgba(62,207,142,0.45); }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 11px 22px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: var(--r);
+    font-size: 14px; font-weight: 500;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { background: var(--bg-4); color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+  /* TERMINAL */
+  .hero-terminal {
+    background: #111111;
+    border: 1px solid var(--border-2);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 32px 64px rgba(0,0,0,0.6), 0 0 60px rgba(62,207,142,0.05);
+    position: relative;
+  }
+
+  .hero-terminal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    opacity: 0.5;
+  }
+
+  .term-bar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 11px 14px;
+    background: #1a1a1a;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .term-dot:nth-child(1) { background: #FF5F57; }
+  .term-dot:nth-child(2) { background: #FEBC2E; }
+  .term-dot:nth-child(3) { background: #28C840; }
+
+  .term-title {
+    margin-left: 6px;
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+
+  .term-body {
+    padding: 18px 18px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.85;
+  }
+
+  .tp { color: var(--green); }
+  .tw { color: var(--text); }
+  .td { color: var(--text-3); }
+  .ti { color: #60A5FA; }
+  .ts { color: var(--green); }
+  .tc {
+    display: inline-block;
+    width: 7px; height: 13px;
+    background: var(--green);
+    vertical-align: middle;
+    animation: blink 1.1s step-end infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* SECTIONS */
+  .section {
+    padding: 88px 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-sep {
+    height: 1px;
+    background: var(--border);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 14px;
+  }
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 16px; height: 1px;
+    background: var(--green);
+  }
+
+  .section-title {
+    font-size: clamp(26px, 3.5vw, 44px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 52px;
+  }
+
+  /* FEATURES: Supabase-style card grid with green hover accent */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .feature-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+    cursor: default;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--green-2), var(--green-3));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .feature-card:hover {
+    border-color: var(--border-green);
+    background: var(--bg-3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(62,207,142,0.08);
+  }
+  .feature-card:hover::before { opacity: 1; }
+
+  .feat-icon {
+    width: 38px; height: 38px;
+    background: var(--green-dim);
+    border: 1px solid var(--border-green);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    margin-bottom: 16px;
+  }
+
+  .feat-name {
+    font-size: 14px; font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .feat-desc {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  /* PROVIDERS: table-style (Supabase has database DNA) */
+  .providers-section { padding: 0 32px 88px; max-width: 1100px; margin: 0 auto; }
+
+  .providers-table {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-top: 32px;
+  }
+
+  .providers-table-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pt-header {
+    padding: 10px 16px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-3);
+    border-right: 1px solid var(--border);
+    font-family: var(--mono);
+  }
+  .pt-header:last-child { border-right: none; }
+
+  .providers-table-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .pt-row {
+    display: contents;
+  }
+
+  .pt-cell {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 16px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 450;
+    color: var(--text-2);
+    font-family: var(--mono);
+    transition: all 0.12s;
+    cursor: default;
+  }
+  .pt-cell:nth-child(3n) { border-right: none; }
+  .pt-cell:nth-last-child(-n+3) { border-bottom: none; }
+  .pt-cell:hover { background: var(--bg-2); color: var(--green); }
+
+  .pt-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+  .pt-cell:hover .pt-dot { opacity: 1; }
+
+  /* MODES */
+  .modes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 40px;
+  }
+
+  .mode-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+  .mode-card:hover {
+    border-color: var(--border-green);
+    background: var(--bg-3);
+  }
+
+  .mode-tag {
+    font-family: var(--mono);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .mode-tag::before {
+    content: '';
+    display: block;
+    width: 12px; height: 1px;
+    background: var(--green);
+  }
+
+  .mode-name {
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .mode-desc {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  /* COMPARISON: Supabase-style database table aesthetic */
+  .comparison-section { padding: 0 32px 88px; max-width: 1000px; margin: 0 auto; }
+
+  .comparison-table-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-top: 40px;
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .comparison-table thead tr {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparison-table th {
+    padding: 11px 18px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-3);
+    font-family: var(--mono);
+    text-align: left;
+    border-right: 1px solid var(--border);
+  }
+  .comparison-table th:last-child { border-right: none; }
+  .comparison-table th:not(:first-child) { text-align: center; }
+  .comparison-table th.green-col { color: var(--green); }
+
+  .comparison-table td {
+    padding: 11px 18px;
+    font-size: 13px;
+    color: var(--text-2);
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .comparison-table td:last-child { border-right: none; }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table td:not(:first-child) { text-align: center; }
+  .comparison-table tbody tr:hover td { background: var(--bg-2); }
+
+  .check { color: var(--green); font-weight: 700; }
+  .cross { color: var(--text-3); font-size: 16px; }
+  .h-val { color: var(--green); font-weight: 700; }
+
+  /* INSTALL */
+  .install-section { padding: 0 32px 88px; max-width: 900px; margin: 0 auto; }
+
+  .install-tabs {
+    display: flex; gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+    width: fit-content;
+    margin-bottom: 14px;
+  }
+
+  .install-tab {
+    padding: 7px 18px;
+    border: none; border-right: 1px solid var(--border);
+    background: var(--bg-2);
+    font-size: 12px; font-weight: 600;
+    color: var(--text-3); cursor: pointer;
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+    transition: all 0.12s;
+  }
+  .install-tab:last-child { border-right: none; }
+  .install-tab.active { background: var(--bg-3); color: var(--green); }
+  .install-tab:hover:not(.active) { color: var(--text-2); }
+
+  .install-panel {
+    background: #111111;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    display: none;
+    position: relative;
+  }
+  .install-panel::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    opacity: 0.4;
+  }
+  .install-panel.active { display: block; }
+
+  .install-panel-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: #1a1a1a;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .install-panel-dots { display: flex; gap: 5px; }
+  .ip-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .ip-dot:nth-child(1) { background: #FF5F57; }
+  .ip-dot:nth-child(2) { background: #FEBC2E; }
+  .ip-dot:nth-child(3) { background: #28C840; }
+
+  .install-copy-btn {
+    padding: 3px 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 5px;
+    font-size: 11px; font-weight: 500;
+    color: var(--text-3); cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.12s;
+  }
+  .install-copy-btn:hover { color: var(--green); border-color: var(--border-green); }
+
+  .install-code {
+    padding: 20px 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+    color: var(--text);
+  }
+
+  .ip { color: var(--green); }
+  .ic { color: var(--text-3); }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-top: 56px;
+  }
+
+  .stat-cell {
+    background: var(--bg);
+    padding: 32px 28px;
+    transition: background 0.15s;
+  }
+  .stat-cell:hover { background: var(--bg-2); }
+
+  .stat-num {
+    font-size: 36px; font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--green);
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--text-2);
+    letter-spacing: -0.01em;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 44px 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 20px;
+  }
+
+  .footer-left {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .footer-name {
+    font-size: 15px; font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--text);
+  }
+
+  .footer-sep { color: var(--text-3); }
+
+  .footer-license {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    background: var(--green-dim);
+    border: 1px solid var(--border-green);
+    border-radius: 4px;
+    color: var(--green);
+  }
+
+  .footer-links {
+    display: flex; gap: 20px;
+  }
+  .footer-links a {
+    font-size: 13px;
+    color: var(--text-3); text-decoration: none;
+    transition: color 0.12s;
+    letter-spacing: -0.01em;
+  }
+  .footer-links a:hover { color: var(--text-2); }
+
+  /* THEME TOGGLE */
+  .ctrl-row {
+    position: fixed;
+    top: 16px; right: 24px;
+    z-index: 300;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .theme-toggle {
+    display: flex;
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 7px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .theme-btn {
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-3);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .theme-btn.active {
+    background: var(--green);
+    color: #0a0a0a;
+  }
+  [data-theme="light"] body { background: #f8faf8; color: #1a2e1a; }
+  [data-theme="light"] nav { background: rgba(248,250,248,0.92); border-color: rgba(0,0,0,0.08); }
+  [data-theme="light"] .feature-card { background: #fff; border-color: rgba(0,0,0,0.08); }
+  [data-theme="light"] .feat-name { color: #1a2e1a; }
+  [data-theme="light"] .feat-desc { color: #4a6a4a; }
+  [data-theme="light"] .section-h { color: #1a2e1a; }
+  [data-theme="light"] .providers-table { border-color: rgba(0,0,0,0.08); }
+  [data-theme="light"] .providers-table th { background: #f0f4f0; color: #4a6a4a; border-color: rgba(0,0,0,0.08); }
+  [data-theme="light"] .providers-table td { color: #2a4a2a; border-color: rgba(0,0,0,0.06); }
+  [data-theme="light"] footer { background: #f0f4f0; border-color: rgba(0,0,0,0.08); color: #4a6a4a; }
+  [data-theme="light"] .ctrl-row .theme-toggle { background: #e8f0e8; border-color: rgba(62,207,142,0.3); }
+  [data-theme="light"] .ctrl-row .theme-btn { color: #2a4a2a; }
+  [data-theme="light"] .ctrl-row .lang-toggle { background: #e8f0e8; border-color: rgba(62,207,142,0.3); }
+  [data-theme="light"] .ctrl-row .lang-btn { color: #2a4a2a; }
+  [data-theme="light"] .ctrl-row .lang-btn.active { background: var(--green); color: #0a0a0a; }
+
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; }
+    .hero-terminal { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 16px; }
+    .nav-links { display: none; }
+    .hero, .section, .providers-section,
+    .comparison-section, .install-section { padding-left: 16px; padding-right: 16px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .modes-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr; }
+    .providers-table-head { grid-template-columns: 1fr 1fr; }
+    .providers-table-body { grid-template-columns: 1fr 1fr; }
+    footer { padding: 32px 16px; }
+    .ctrl-row { top: 16px; right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Lang toggle -->
+<div class="ctrl-row">
+  <div class="theme-toggle">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('ko')">KO</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">H</div>
+    hanimo
+  </a>
+  <div class="nav-links">
+    <a href="#features" data-ko="기능" data-en="Features">기능</a>
+    <a href="#install" data-ko="설치" data-en="Install">설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+    <a href="#" data-ko="문서" data-en="Docs">문서</a>
+  </div>
+  <div class="nav-right">
+    <a href="https://github.com/flykimjiwon/hanimo" class="btn-nav-ghost">GitHub</a>
+    <a href="#install" class="btn-nav-green" data-ko="시작하기" data-en="Get started">시작하기</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        <span data-ko="오픈소스 · Apache-2.0 · Go 기반" data-en="Open source · Apache-2.0 · Built in Go">오픈소스 · Apache-2.0 · Go 기반</span>
+      </div>
+      <h1 data-ko="오픈소스를 위한<br><span class='green'>AI 코딩</span><br>에이전트" data-en="The open-source<br><span class='green'>AI coding</span><br>platform">오픈소스를 위한<br><span class="green">AI 코딩</span><br>에이전트</h1>
+      <p class="hero-sub" data-ko="Modol의 후계자. 14개 이상의 LLM 공급자. 로컬 우선. 해시 앵커 편집. SQLite 세션." data-en="Successor to Modol. 14+ LLM providers. Local-first. Hash-anchored editing. SQLite sessions.">Modol의 후계자. 14개 이상의 LLM 공급자. 로컬 우선. 해시 앵커 편집. SQLite 세션.</p>
+      <div class="hero-ctas">
+        <a href="#install" class="btn-primary" data-ko="지금 설치" data-en="Install now">지금 설치</a>
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-secondary" data-ko="GitHub에서 보기" data-en="View on GitHub">GitHub에서 보기</a>
+      </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="hero-terminal">
+      <div class="term-bar">
+        <div class="term-dot"></div>
+        <div class="term-dot"></div>
+        <div class="term-dot"></div>
+        <span class="term-title">hanimo — ~/project</span>
+      </div>
+      <div class="term-body">
+        <div><span class="td">$ </span><span class="tw">hanimo --mode super</span></div>
+        <div><span class="tp">  ✦ hanimo v0.1.0 · Apache-2.0</span></div>
+        <div><span class="td">  ─────────────────────────</span></div>
+        <div><span class="td">  provider  </span><span class="tw">anthropic/claude-opus-4</span></div>
+        <div><span class="td">  session   </span><span class="td">~/.hanimo/sessions.db</span></div>
+        <div><span class="td">  mode      </span><span class="tp">super</span></div>
+        <br>
+        <div><span class="tp">you › </span><span class="tw" data-ko="auth 모듈 리팩터링해줘" data-en="refactor the auth module">auth 모듈 리팩터링해줘</span></div>
+        <div><span class="td">  ⠿ </span><span data-ko="파일 분석 중..." data-en="analyzing files...">파일 분석 중...</span></div>
+        <div><span class="ts">  ✓ </span><span class="tw" data-ko="auth/handler.go 수정" data-en="auth/handler.go patched">auth/handler.go 수정</span></div>
+        <div><span class="ts">  ✓ </span><span class="tw" data-ko="auth/middleware.go 수정" data-en="auth/middleware.go patched">auth/middleware.go 수정</span></div>
+        <div><span class="ti">  ⚓ </span><span data-ko="해시 앵커 #a3f9b2 저장됨" data-en="hash anchor #a3f9b2 saved">해시 앵커 #a3f9b2 저장됨</span></div>
+        <div><span class="tp">you › </span><span class="tc"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-cell">
+      <div class="stat-num">14+</div>
+      <div class="stat-label" data-ko="LLM 공급자 지원" data-en="LLM providers supported">LLM 공급자 지원</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">3</div>
+      <div class="stat-label" data-ko="실행 모드 (Super/Dev/Plan)" data-en="Execution modes (Super/Dev/Plan)">실행 모드 (Super/Dev/Plan)</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">100%</div>
+      <div class="stat-label" data-ko="오픈소스 · Apache-2.0" data-en="Open source · Apache-2.0">오픈소스 · Apache-2.0</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- Features -->
+<section class="section" id="features">
+  <div class="section-label" data-ko="핵심 기능" data-en="Core Features">핵심 기능</div>
+  <h2 class="section-title" data-ko="개발자를 위한<br>모든 것이 담겨 있습니다" data-en="Everything built<br>for developers">개발자를 위한<br>모든 것이 담겨 있습니다</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feat-icon">⚓</div>
+      <div class="feat-name" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</div>
+      <p class="feat-desc" data-ko="해시 기반 정밀 파일 편집. 충돌 없음." data-en="Hash-based precise file edits. No conflicts.">해시 기반 정밀 파일 편집. 충돌 없음.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon">🔌</div>
+      <div class="feat-name" data-ko="14개 이상의 LLM" data-en="14+ LLM Providers">14개 이상의 LLM</div>
+      <p class="feat-desc" data-ko="Ollama, OpenAI, Anthropic 외 다수." data-en="Ollama, OpenAI, Anthropic and more.">Ollama, OpenAI, Anthropic 외 다수.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon">🗜</div>
+      <div class="feat-name" data-ko="스마트 컴팩션" data-en="Smart Compaction">스마트 컴팩션</div>
+      <p class="feat-desc" data-ko="자동 컨텍스트 압축. API 비용 절감." data-en="Auto context compression. Cuts API cost.">자동 컨텍스트 압축. API 비용 절감.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon">🤖</div>
+      <div class="feat-name" data-ko="/auto 자율 모드" data-en="/auto Autonomous">/auto 자율 모드</div>
+      <p class="feat-desc" data-ko="완전 자율 코딩. 개입 최소화." data-en="Fully autonomous. Minimal intervention.">완전 자율 코딩. 개입 최소화.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon">🗄</div>
+      <div class="feat-name" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+      <p class="feat-desc" data-ko="모든 대화 로컬 저장. 영구 기억." data-en="All sessions local. Persistent memory.">모든 대화 로컬 저장. 영구 기억.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon">🔗</div>
+      <div class="feat-name" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+      <p class="feat-desc" data-ko="Model Context Protocol 완전 지원." data-en="Full Model Context Protocol support.">Model Context Protocol 완전 지원.</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- Providers: table aesthetic -->
+<section class="providers-section">
+  <div class="section-label" data-ko="지원 공급자" data-en="Supported Providers">지원 공급자</div>
+  <h2 class="section-title" data-ko="어떤 모델이든 연결하세요" data-en="Connect any model">어떤 모델이든 연결하세요</h2>
+  <div class="providers-table">
+    <div class="providers-table-head">
+      <div class="pt-header" data-ko="공급자 이름" data-en="Provider name">공급자 이름</div>
+      <div class="pt-header" data-ko="공급자 이름" data-en="Provider name">공급자 이름</div>
+      <div class="pt-header" data-ko="공급자 이름" data-en="Provider name">공급자 이름</div>
+    </div>
+    <div class="providers-table-body">
+      <div class="pt-cell"><span class="pt-dot"></span>Ollama</div>
+      <div class="pt-cell"><span class="pt-dot"></span>OpenAI</div>
+      <div class="pt-cell"><span class="pt-dot"></span>Anthropic</div>
+      <div class="pt-cell"><span class="pt-dot"></span>Google</div>
+      <div class="pt-cell"><span class="pt-dot"></span>DeepSeek</div>
+      <div class="pt-cell"><span class="pt-dot"></span>Groq</div>
+      <div class="pt-cell"><span class="pt-dot"></span>Novita</div>
+      <div class="pt-cell"><span class="pt-dot"></span>OpenRouter</div>
+      <div class="pt-cell"><span class="pt-dot"></span>Mistral</div>
+      <div class="pt-cell"><span class="pt-dot"></span>Fireworks</div>
+      <div class="pt-cell"><span class="pt-dot"></span>vLLM</div>
+      <div class="pt-cell"><span class="pt-dot"></span>LM Studio</div>
+      <div class="pt-cell"><span class="pt-dot"></span>Together</div>
+      <div class="pt-cell"><span class="pt-dot"></span><span data-ko="커스텀 엔드포인트" data-en="Custom endpoint">커스텀 엔드포인트</span></div>
+      <div class="pt-cell" style="color:var(--text-3);font-size:11px;" data-ko="+ 더 많은 공급자 추가 예정" data-en="+ more coming soon">+ 더 많은 공급자 추가 예정</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- Modes -->
+<section class="section">
+  <div class="section-label" data-ko="실행 모드" data-en="Execution Modes">실행 모드</div>
+  <h2 class="section-title" data-ko="작업에 맞는 모드를 선택하세요" data-en="Choose the right mode">작업에 맞는 모드를 선택하세요</h2>
+  <div class="modes-grid">
+    <div class="mode-card">
+      <div class="mode-tag">super</div>
+      <div class="mode-name" data-ko="전체 권한" data-en="Full Access">전체 권한</div>
+      <p class="mode-desc" data-ko="파일 제한 없음. 최대 효율." data-en="No file restrictions. Maximum efficiency.">파일 제한 없음. 최대 효율.</p>
+    </div>
+    <div class="mode-card">
+      <div class="mode-tag">dev</div>
+      <div class="mode-name" data-ko="개발자 모드" data-en="Developer">개발자 모드</div>
+      <p class="mode-desc" data-ko="균형잡힌 기본 모드. 매일 사용에 최적." data-en="Balanced defaults. Optimal for daily use.">균형잡힌 기본 모드. 매일 사용에 최적.</p>
+    </div>
+    <div class="mode-card">
+      <div class="mode-tag">plan</div>
+      <div class="mode-name" data-ko="계획 모드" data-en="Plan Mode">계획 모드</div>
+      <p class="mode-desc" data-ko="실행 전 계획. 안전하고 신중한 변경." data-en="Plan before execution. Safe changes.">실행 전 계획. 안전하고 신중한 변경.</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- Comparison -->
+<section class="comparison-section">
+  <div class="section-label" data-ko="비교" data-en="Comparison">비교</div>
+  <h2 class="section-title" data-ko="왜 Hanimo인가" data-en="Why Hanimo">왜 Hanimo인가</h2>
+  <div class="comparison-table-wrap">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th data-ko="기능" data-en="Feature">기능</th>
+          <th class="green-col">Hanimo</th>
+          <th>Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-ko="오픈소스" data-en="Open source">오픈소스</td>
+          <td class="h-val">✓</td>
+          <td class="cross">—</td>
+          <td class="cross">—</td>
+          <td class="check">✓</td>
+        </tr>
+        <tr>
+          <td data-ko="로컬 LLM 지원" data-en="Local LLM support">로컬 LLM 지원</td>
+          <td class="h-val">✓</td>
+          <td class="cross">—</td>
+          <td class="cross">—</td>
+          <td class="check">✓</td>
+        </tr>
+        <tr>
+          <td data-ko="해시 앵커 편집" data-en="Hash-anchored editing">해시 앵커 편집</td>
+          <td class="h-val">✓</td>
+          <td class="cross">—</td>
+          <td class="cross">—</td>
+          <td class="cross">—</td>
+        </tr>
+        <tr>
+          <td data-ko="SQLite 세션" data-en="SQLite sessions">SQLite 세션</td>
+          <td class="h-val">✓</td>
+          <td class="cross">—</td>
+          <td class="cross">—</td>
+          <td class="cross">—</td>
+        </tr>
+        <tr>
+          <td data-ko="MCP 지원" data-en="MCP support">MCP 지원</td>
+          <td class="h-val">✓</td>
+          <td class="check">✓</td>
+          <td class="cross">—</td>
+          <td class="cross">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- Install -->
+<section class="install-section" id="install">
+  <div class="section-label" data-ko="설치" data-en="Installation">설치</div>
+  <h2 class="section-title" data-ko="바로 시작하세요" data-en="Start immediately">바로 시작하세요</h2>
+
+  <div class="install-tabs">
+    <button class="install-tab active" onclick="switchTab('curl', event)">curl</button>
+    <button class="install-tab" onclick="switchTab('brew', event)">brew</button>
+    <button class="install-tab" onclick="switchTab('go', event)">go build</button>
+  </div>
+
+  <div class="install-panel active" id="ip-curl">
+    <div class="install-panel-bar">
+      <div class="install-panel-dots">
+        <div class="ip-dot"></div>
+        <div class="ip-dot"></div>
+        <div class="ip-dot"></div>
+      </div>
+      <button class="install-copy-btn" onclick="doCopy(this)">copy</button>
+    </div>
+    <div class="install-code">
+      <div><span class="ip">$ </span>curl -L https://hanimo.dev/install/hanimo-darwin-arm64 -o hanimo</div>
+      <div><span class="ip">$ </span>chmod +x hanimo &amp;&amp; mv hanimo /usr/local/bin/</div>
+      <div><span class="ip">$ </span>hanimo</div>
+    </div>
+  </div>
+
+  <div class="install-panel" id="ip-brew">
+    <div class="install-panel-bar">
+      <div class="install-panel-dots">
+        <div class="ip-dot"></div><div class="ip-dot"></div><div class="ip-dot"></div>
+      </div>
+      <button class="install-copy-btn" onclick="doCopy(this)">copy</button>
+    </div>
+    <div class="install-code">
+      <div><span class="ic"># macOS / Linux via Homebrew</span></div>
+      <div><span class="ip">$ </span>brew install hanimo</div>
+      <div><span class="ip">$ </span>hanimo</div>
+    </div>
+  </div>
+
+  <div class="install-panel" id="ip-go">
+    <div class="install-panel-bar">
+      <div class="install-panel-dots">
+        <div class="ip-dot"></div><div class="ip-dot"></div><div class="ip-dot"></div>
+      </div>
+      <button class="install-copy-btn" onclick="doCopy(this)">copy</button>
+    </div>
+    <div class="install-code">
+      <div><span class="ic"># Build from source (requires Go 1.22+)</span></div>
+      <div><span class="ip">$ </span>git clone https://github.com/flykimjiwon/hanimo</div>
+      <div><span class="ip">$ </span>cd hanimo &amp;&amp; go build ./cmd/hanimo</div>
+      <div><span class="ip">$ </span>./hanimo</div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-left">
+    <div class="nav-logo-mark" style="width:22px;height:22px;font-size:10px;">H</div>
+    <span class="footer-name">hanimo</span>
+    <span class="footer-sep">·</span>
+    <span class="footer-license">Apache-2.0</span>
+  </div>
+  <div class="footer-links">
+    <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+    <a href="https://hanimo.dev" data-ko="문서" data-en="Docs">문서</a>
+    <a href="https://hanimo.dev">hanimo.dev</a>
+  </div>
+</footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+  (function() { setTheme(localStorage.getItem('hanimo-theme') || 'dark'); })();
+
+  let currentLang = 'ko';
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      const text = el.getAttribute('data-' + lang);
+      if (text) el.innerHTML = text;
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+    });
+  }
+
+  function switchTab(tab, e) {
+    document.querySelectorAll('.install-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.install-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('ip-' + tab).classList.add('active');
+    e.target.classList.add('active');
+  }
+
+  function doCopy(btn) {
+    const code = btn.closest('.install-panel').querySelector('.install-code');
+    const lines = Array.from(code.querySelectorAll('div'))
+      .map(d => d.textContent.replace(/^\$\s*/, '').replace(/^#.*/, '').trim())
+      .filter(Boolean);
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = 'copy', 1500);
+    });
+  }
+</script>
+</body>
+</html>

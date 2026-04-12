@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo Mockup Viewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111113;
+    --surface-2: #18181b;
+    --border: #27272a;
+    --text: #fafafa;
+    --muted: #a1a1aa;
+    --accent: #F9E2AF;
+    --violet: #8b5cf6;
+  }
+  [data-theme="light"] {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-2: #f4f4f5;
+    --border: #e4e4e7;
+    --text: #18181b;
+    --muted: #52525b;
+    --accent: #d97706;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    z-index: 10;
+  }
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+  .brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    flex: 0 0 auto;
+  }
+  .title-block {
+    min-width: 0;
+  }
+  .title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    display: flex;
+    gap: 10px;
+  }
+  .meta b { color: var(--text); font-weight: 600; }
+  .skills { display: flex; gap: 4px; flex-wrap: wrap; }
+  .skill-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(139, 92, 246, 0.12);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+  .skill-tag.tui { background: rgba(249, 226, 175, 0.12); color: var(--accent); border-color: rgba(249, 226, 175, 0.3); }
+  .skill-tag.brand { background: rgba(56, 189, 248, 0.12); color: #7dd3fc; border-color: rgba(56, 189, 248, 0.25); }
+  .skill-tag.guide { background: rgba(244, 114, 182, 0.12); color: #f9a8d4; border-color: rgba(244, 114, 182, 0.25); }
+
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    background: var(--surface);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary {
+    background: var(--accent);
+    color: #0a0a0b;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  [data-theme="light"] .btn.primary { color: #fafafa; }
+  .btn.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .seg .btn { border: none; border-radius: 0; }
+  .seg .btn + .btn { border-left: 1px solid var(--border); }
+  .counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 0 8px;
+  }
+  .counter b { color: var(--text); }
+
+  main {
+    flex: 1 1 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+  .frame-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  iframe.main-frame {
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  [data-theme="light"] iframe.main-frame { box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+
+  .nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.15s;
+    z-index: 5;
+  }
+  .nav-arrow:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-50%) scale(1.08); }
+  .nav-arrow.prev { left: 28px; }
+  .nav-arrow.next { right: 28px; }
+
+  footer {
+    flex: 0 0 auto;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 0 14px;
+  }
+  .thumb-strip {
+    display: flex;
+    gap: 8px;
+    padding: 0 24px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .thumb-strip::-webkit-scrollbar { height: 6px; }
+  .thumb-strip::-webkit-scrollbar-track { background: transparent; }
+  .thumb-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .thumb {
+    flex: 0 0 auto;
+    width: 132px;
+    cursor: pointer;
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    transition: all 0.15s;
+    background: #000;
+  }
+  .thumb:hover { border-color: var(--accent); }
+  .thumb.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(249, 226, 175, 0.2);
+  }
+  .thumb-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/10;
+    overflow: hidden;
+    background: #000;
+  }
+  .thumb-preview iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1440px;
+    height: 900px;
+    border: 0;
+    transform-origin: top left;
+    transform: scale(0.091);
+    pointer-events: none;
+  }
+  .thumb-label {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+  .thumb-title {
+    padding: 4px 6px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .group-sep {
+    flex: 0 0 auto;
+    width: 1px;
+    background: var(--border);
+    margin: 0 4px;
+    align-self: stretch;
+  }
+  .kbd {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    color: var(--muted);
+    background: var(--surface-2);
+  }
+  .hint {
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 6px 0 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="left">
+    <div class="brand">hanimo / viewer</div>
+    <div class="title-block">
+      <div class="title" id="current-title">—</div>
+      <div class="meta">
+        <span><b id="current-num">#01</b> / 70</span>
+        <span id="current-group">—</span>
+        <span class="skills" id="current-skills"></span>
+      </div>
+    </div>
+  </div>
+  <div class="right">
+    <span class="counter"><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd></span>
+    <div class="seg">
+      <button class="btn active" id="theme-dark" data-ko="다크" data-en="DARK">DARK</button>
+      <button class="btn" id="theme-light" data-ko="라이트" data-en="LIGHT">LIGHT</button>
+    </div>
+    <div class="seg">
+      <button class="btn active" id="lang-ko" data-ko="한국어" data-en="KO">KO</button>
+      <button class="btn" id="lang-en" data-ko="English" data-en="EN">EN</button>
+    </div>
+    <a class="btn primary" id="open-btn" target="_blank" href="#" data-ko="새 탭" data-en="OPEN ↗">OPEN ↗</a>
+  </div>
+</header>
+
+<main>
+  <button class="nav-arrow prev" id="prev-btn" aria-label="Previous">‹</button>
+  <div class="frame-wrap">
+    <iframe class="main-frame" id="main-frame" src="A-tui/01-crt-phosphor.html" loading="eager"></iframe>
+  </div>
+  <button class="nav-arrow next" id="next-btn" aria-label="Next">›</button>
+</main>
+
+<footer>
+  <div class="thumb-strip" id="thumb-strip"></div>
+  <div class="hint">
+    <span data-ko="방향키로 탐색 · 썸네일 클릭으로 이동 · D 다크/라이트 · L 한/영" data-en="ARROW KEYS TO NAVIGATE · CLICK THUMBNAILS · D DARK/LIGHT · L KO/EN">방향키로 탐색 · 썸네일 클릭으로 이동 · D 다크/라이트 · L 한/영</span>
+  </div>
+</footer>
+
+<script>
+const mockups = [
+  // [num, title, group, href, skills[]]
+  ['01','CRT Phosphor','A · TUI','A-tui/01-crt-phosphor.html',['tui-designer']],
+  ['02','Cyberpunk Neon','A · TUI','A-tui/02-cyberpunk-neon.html',['tui-designer']],
+  ['03','ASCII Art Heavy','A · TUI','A-tui/03-ascii-art-heavy.html',['tui-designer']],
+  ['04','Hacker Matrix','A · TUI','A-tui/04-hacker-matrix.html',['tui-designer']],
+  ['05','BBS Retro','A · TUI','A-tui/05-bbs-retro.html',['tui-designer']],
+  ['06','Glassmorphism','B · SaaS','B-saas/06-glassmorphism-dark.html',['frontend-design']],
+  ['07','Bento Grid','B · SaaS','B-saas/07-bento-grid.html',['frontend-design']],
+  ['08','Gradient Glow','B · SaaS','B-saas/08-gradient-glow.html',['frontend-design']],
+  ['09','Editorial','B · SaaS','B-saas/09-editorial-magazine.html',['frontend-design']],
+  ['10','Premium Dark','B · SaaS','B-saas/10-premium-dark.html',['frontend-design']],
+  ['11','Swiss Minimal','C · Docs','C-docs/11-swiss-minimal.html',['frontend-design','web-design-guidelines']],
+  ['12','Brutalist Mono','C · Docs','C-docs/12-brutalist-mono.html',['frontend-design','web-design-guidelines']],
+  ['13','Comparison Matrix','C · Docs','C-docs/13-comparison-matrix.html',['frontend-design','web-design-guidelines']],
+  ['14','GitHub Style','C · Docs','C-docs/14-github-style.html',['frontend-design','web-design-guidelines']],
+  ['15','Linear Docs','C · Docs','C-docs/15-linear-docs.html',['frontend-design','web-design-guidelines']],
+  ['16','Honey','D · Themed','D-themed/16-honey.html',['frontend-design']],
+  ['17','Ocean','D · Themed','D-themed/17-ocean.html',['frontend-design']],
+  ['18','Dracula','D · Themed','D-themed/18-dracula.html',['frontend-design']],
+  ['19','Nord','D · Themed','D-themed/19-nord.html',['frontend-design']],
+  ['20','Forest','D · Themed','D-themed/20-forest.html',['frontend-design']],
+  ['21','Tmux Split','E · TUI2','E-tui2/21-tmux-split.html',['tui-designer']],
+  ['22','Rainbow ANSI','E · TUI2','E-tui2/22-rainbow-ansi.html',['tui-designer']],
+  ['23','ncurses Classic','E · TUI2','E-tui2/23-ncurses-classic.html',['tui-designer']],
+  ['24','Synthwave','E · TUI2','E-tui2/24-synthwave.html',['tui-designer']],
+  ['25','Zen Matrix','E · TUI2','E-tui2/25-zen-matrix.html',['tui-designer']],
+  ['26','Pastel Cream','F · Palettes','F-palettes/26-pastel-cream.html',['frontend-design']],
+  ['27','Sunset Gradient','F · Palettes','F-palettes/27-sunset-gradient.html',['frontend-design']],
+  ['28','Tropical Mint','F · Palettes','F-palettes/28-tropical-mint.html',['frontend-design']],
+  ['29','Lofi Brown','F · Palettes','F-palettes/29-lofi-brown.html',['frontend-design']],
+  ['30','Vaporwave','F · Palettes','F-palettes/30-vaporwave.html',['frontend-design']],
+  ['31','Kawaii Pastel','G · Cute','G-cute/31-kawaii-pastel.html',['frontend-design']],
+  ['32','Pixel Art','G · Cute','G-cute/32-pixel-art.html',['frontend-design']],
+  ['33','Sticker Collage','G · Cute','G-cute/33-sticker-collage.html',['frontend-design']],
+  ['34','Duolingo Bright','G · Cute','G-cute/34-duolingo-bright.html',['frontend-design']],
+  ['35','Bubble Candy','G · Cute','G-cute/35-bubble-candy.html',['frontend-design']],
+  ['36','vs Claude Code','H · Compare','H-compare/36-vs-claude-code.html',['frontend-design']],
+  ['37','Feature Matrix','H · Compare','H-compare/37-feature-matrix-pro.html',['frontend-design']],
+  ['38','Pricing Calc','H · Compare','H-compare/38-pricing-calculator.html',['frontend-design']],
+  ['39','Migration Guide','H · Compare','H-compare/39-migration-guide.html',['frontend-design']],
+  ['40','Benchmark','H · Compare','H-compare/40-benchmark-scores.html',['frontend-design']],
+  ['41','Honey × CRT','I · Fusion','I-fusion/41-honey-crt.html',['tui-designer']],
+  ['42','Ocean × Cyberpunk','I · Fusion','I-fusion/42-ocean-cyberpunk.html',['tui-designer']],
+  ['43','Dracula × Matrix','I · Fusion','I-fusion/43-dracula-matrix.html',['tui-designer']],
+  ['44','Nord × ASCII','I · Fusion','I-fusion/44-nord-ascii.html',['tui-designer']],
+  ['45','Forest × BBS','I · Fusion','I-fusion/45-forest-bbs.html',['tui-designer']],
+  ['46','Honey × tmux','I · Fusion','I-fusion/46-honey-tmux.html',['tui-designer']],
+  ['47','Ocean × Synthwave','I · Fusion','I-fusion/47-ocean-synthwave.html',['tui-designer']],
+  ['48','Dracula × ncurses','I · Fusion','I-fusion/48-dracula-ncurses.html',['tui-designer']],
+  ['49','Nord × Zen','I · Fusion','I-fusion/49-nord-zen.html',['tui-designer']],
+  ['50','Forest × Boot','I · Fusion','I-fusion/50-forest-boot.html',['tui-designer']],
+  ['51','Linear','J · Brand','J-brand/51-linear-inspired.html',['frontend-design','awesome-design-md']],
+  ['52','Raycast','J · Brand','J-brand/52-raycast-inspired.html',['frontend-design','awesome-design-md']],
+  ['53','Vercel','J · Brand','J-brand/53-vercel-inspired.html',['frontend-design','awesome-design-md']],
+  ['54','Stripe','J · Brand','J-brand/54-stripe-inspired.html',['frontend-design','awesome-design-md']],
+  ['55','Supabase','J · Brand','J-brand/55-supabase-inspired.html',['frontend-design','awesome-design-md']],
+  ['56','Claude','J · Brand','J-brand/56-claude-inspired.html',['frontend-design','awesome-design-md']],
+  ['57','Cursor','J · Brand','J-brand/57-cursor-inspired.html',['frontend-design','awesome-design-md']],
+  ['58','Mistral','J · Brand','J-brand/58-mistral-inspired.html',['frontend-design','awesome-design-md']],
+  ['59','Cohere','J · Brand','J-brand/59-cohere-inspired.html',['frontend-design','awesome-design-md']],
+  ['60','x.ai / Grok','J · Brand','J-brand/60-xai-inspired.html',['frontend-design','awesome-design-md']],
+  ['61','Ollama','J · Brand','J-brand/61-ollama-inspired.html',['frontend-design','awesome-design-md']],
+  ['62','opencode','J · Brand','J-brand/62-opencode-inspired.html',['frontend-design','awesome-design-md']],
+  ['63','Warp','J · Brand','J-brand/63-warp-inspired.html',['frontend-design','awesome-design-md']],
+  ['64','VoltAgent','J · Brand','J-brand/64-voltagent-inspired.html',['frontend-design','awesome-design-md']],
+  ['65','Replicate','J · Brand','J-brand/65-replicate-inspired.html',['frontend-design','awesome-design-md']],
+  ['66','Mintlify','J · Brand','J-brand/66-mintlify-inspired.html',['frontend-design','awesome-design-md']],
+  ['67','Sentry','J · Brand','J-brand/67-sentry-inspired.html',['frontend-design','awesome-design-md']],
+  ['68','Notion','J · Brand','J-brand/68-notion-inspired.html',['frontend-design','awesome-design-md']],
+  ['69','Resend','J · Brand','J-brand/69-resend-inspired.html',['frontend-design','awesome-design-md']],
+  ['70','Figma','J · Brand','J-brand/70-figma-inspired.html',['frontend-design','awesome-design-md']],
+];
+
+let currentIdx = 0;
+
+function skillClass(s) {
+  if (s.includes('awesome') || s.includes('brand')) return 'brand';
+  if (s.includes('tui')) return 'tui';
+  if (s.includes('frontend')) return 'design';
+  if (s.includes('guidelines')) return 'guide';
+  return '';
+}
+
+function renderThumbs() {
+  const strip = document.getElementById('thumb-strip');
+  let lastGroup = '';
+  strip.innerHTML = '';
+  mockups.forEach((m, i) => {
+    const [num, title, group, href] = m;
+    if (lastGroup && lastGroup !== group) {
+      const sep = document.createElement('div');
+      sep.className = 'group-sep';
+      strip.appendChild(sep);
+    }
+    lastGroup = group;
+    const t = document.createElement('div');
+    t.className = 'thumb';
+    t.dataset.idx = i;
+    t.innerHTML = `
+      <div class="thumb-preview">
+        <iframe src="${href}" loading="lazy" scrolling="no"></iframe>
+        <div class="thumb-label">#${num}</div>
+      </div>
+      <div class="thumb-title">${title}</div>
+    `;
+    t.addEventListener('click', () => goTo(i));
+    strip.appendChild(t);
+  });
+}
+
+function update() {
+  const [num, title, group, href, skills] = mockups[currentIdx];
+  document.getElementById('current-num').textContent = '#' + num;
+  document.getElementById('current-title').textContent = title;
+  document.getElementById('current-group').textContent = group;
+  document.getElementById('current-skills').innerHTML = skills
+    .map(s => `<span class="skill-tag ${skillClass(s)}">${s}</span>`).join('');
+  document.getElementById('main-frame').src = href;
+  document.getElementById('open-btn').href = href;
+
+  document.querySelectorAll('.thumb').forEach((el, i) => {
+    el.classList.toggle('active', i === currentIdx);
+    if (i === currentIdx) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  });
+}
+
+function goTo(i) {
+  currentIdx = (i + mockups.length) % mockups.length;
+  update();
+}
+
+document.getElementById('prev-btn').addEventListener('click', () => goTo(currentIdx - 1));
+document.getElementById('next-btn').addEventListener('click', () => goTo(currentIdx + 1));
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(currentIdx - 1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); goTo(currentIdx + 1); }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End') { e.preventDefault(); goTo(mockups.length - 1); }
+  if (e.key.toLowerCase() === 'd') toggleTheme();
+  if (e.key.toLowerCase() === 'l') toggleLang();
+});
+
+// Theme toggle
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  document.getElementById('theme-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('theme-light').classList.toggle('active', t === 'light');
+  localStorage.setItem('hanimo-viewer-theme', t);
+}
+function toggleTheme() {
+  setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+}
+document.getElementById('theme-dark').addEventListener('click', () => setTheme('dark'));
+document.getElementById('theme-light').addEventListener('click', () => setTheme('light'));
+
+// Lang toggle
+function setLang(l) {
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+    el.textContent = l === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('lang-ko').classList.toggle('active', l === 'ko');
+  document.getElementById('lang-en').classList.toggle('active', l === 'en');
+  localStorage.setItem('hanimo-viewer-lang', l);
+}
+function toggleLang() {
+  setLang(document.documentElement.lang === 'ko' ? 'en' : 'ko');
+}
+document.getElementById('lang-ko').addEventListener('click', () => setLang('ko'));
+document.getElementById('lang-en').addEventListener('click', () => setLang('en'));
+
+// Init
+setTheme(localStorage.getItem('hanimo-viewer-theme') || 'dark');
+setLang(localStorage.getItem('hanimo-viewer-lang') || 'ko');
+renderThumbs();
+update();
+</script>
+
+</body>
+</html>

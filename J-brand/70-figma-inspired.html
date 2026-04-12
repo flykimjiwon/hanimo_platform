@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Open-Source AI Coding Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #1e1e1e;
+      --bg2: #2c2c2c;
+      --bg3: #383838;
+      --bg4: #444444;
+      --border: #3c3c3c;
+      --border2: #4a4a4a;
+      --text: #ffffff;
+      --text2: #b3b3b3;
+      --text3: #787878;
+      /* Figma 4-color palette */
+      --f-purple: #a259ff;
+      --f-red: #f24e1e;
+      --f-blue: #1abcfe;
+      --f-green: #0acf83;
+      /* Dims */
+      --f-purple-dim: rgba(162,89,255,0.12);
+      --f-red-dim: rgba(242,78,30,0.12);
+      --f-blue-dim: rgba(26,188,254,0.12);
+      --f-green-dim: rgba(10,207,131,0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Figtree', 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Figma-style toolbar nav */
+    nav {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Figma-esque 4-color mark */
+    .figma-mark {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 2px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .figma-mark span {
+      display: block;
+    }
+    .logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+    }
+    .nav-tab {
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      text-decoration: none;
+      border-radius: 5px;
+      transition: all 0.15s;
+    }
+    .nav-tab:hover { color: var(--text); background: var(--bg3); }
+    .nav-tab.active { color: var(--text); background: var(--bg3); }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .lang-toggle {
+      display: flex;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .lang-btn {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text3);
+      transition: all 0.15s;
+    }
+    .lang-btn.active { background: var(--f-purple); color: white; }
+    /* Light theme override */
+    [data-theme="light"] {
+      --bg: #fcfcfc;
+      --bg2: #f5f5f5;
+      --bg3: #ebebeb;
+      --bg4: #e0e0e0;
+      --border: #d4d4d4;
+      --border2: #c0c0c0;
+      --text: #1e1e1e;
+      --text2: #555555;
+      --text3: #888888;
+      --f-purple-dim: rgba(162,89,255,0.1);
+      --f-red-dim: rgba(242,78,30,0.1);
+      --f-blue-dim: rgba(26,188,254,0.1);
+      --f-green-dim: rgba(10,207,131,0.1);
+    }
+    [data-theme="light"] body { background: var(--bg); color: var(--text); }
+    [data-theme="light"] nav { background: var(--bg2); border-color: var(--border); }
+    [data-theme="light"] .nav-tab { color: var(--text2); }
+    [data-theme="light"] .nav-tab:hover { color: var(--text); background: var(--bg3); }
+    [data-theme="light"] .lang-toggle { background: var(--bg3); }
+    [data-theme="light"] .lang-btn { color: var(--text2); }
+    [data-theme="light"] .logo { color: var(--text); }
+    [data-theme="light"] .logo-text { color: var(--text); }
+    .btn-primary {
+      background: var(--f-purple);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text3); }
+    /* Hero — Figma canvas aesthetic */
+    .hero-wrap {
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    /* Canvas grid */
+    .canvas-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 24px 64px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    @media (max-width: 768px) { .hero-grid { grid-template-columns: 1fr; } }
+    .hero-left {}
+    .hero-frame-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 28px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .frame-icon {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--f-purple);
+      border-radius: 2px;
+      display: inline-flex;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 4.5vw, 58px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.0;
+      margin-bottom: 20px;
+    }
+    .hero h1 .col-purple { color: var(--f-purple); }
+    .hero h1 .col-blue { color: var(--f-blue); }
+    .hero-sub {
+      font-size: 16px;
+      color: var(--text2);
+      line-height: 1.65;
+      margin-bottom: 36px;
+      font-weight: 400;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .hero-actions .btn-primary { padding: 11px 24px; font-size: 14px; }
+    .hero-actions .btn-ghost { padding: 10px 20px; font-size: 14px; }
+    /* Figma-style component card panel */
+    .component-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .panel-titlebar {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .panel-dots {
+      display: flex;
+      gap: 5px;
+    }
+    .pdot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .panel-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .comp-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .comp-row:hover { border-color: var(--border2); }
+    .comp-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .comp-info { flex: 1; }
+    .comp-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .comp-desc { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .comp-tag {
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 3px;
+      padding: 2px 7px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.03em;
+    }
+    /* Section */
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 72px 24px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: clamp(26px, 3vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.1;
+    }
+    .section-sub {
+      font-size: 15px;
+      color: var(--text2);
+      line-height: 1.6;
+      max-width: 500px;
+    }
+    .section-header { margin-bottom: 48px; }
+    /* Divider */
+    hr.div { border: none; border-top: 1px solid var(--border); margin: 0; }
+    /* Terminal — Figma dark frame */
+    .terminal-frame {
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .terminal-header {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28ca41; }
+    .t-label {
+      margin-left: 8px;
+      font-size: 12px;
+      color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .terminal-body {
+      background: #111111;
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+    .t-p { color: var(--f-purple); }
+    .t-b { color: var(--f-blue); }
+    .t-g { color: var(--f-green); }
+    .t-r { color: var(--f-red); }
+    .t-dim { color: var(--text3); }
+    .t-txt { color: var(--text); }
+    /* Features — Figma component grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .features-grid { grid-template-columns: 1fr; } }
+    .feat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.15s, transform 0.15s;
+      cursor: default;
+    }
+    .feat-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-2px);
+    }
+    .feat-color-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .feat-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+    .feat-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    .feat-desc {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+    /* Providers — Figma-style asset panel */
+    .providers-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .providers-header {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .providers-header-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .prov-count {
+      font-size: 11px;
+      background: var(--bg4);
+      color: var(--text3);
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .providers-grid-inner {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+    @media (max-width: 640px) { .providers-grid-inner { grid-template-columns: repeat(2, 1fr); } }
+    .prov-cell {
+      background: var(--bg2);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .prov-cell:hover { background: var(--bg3); }
+    .prov-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .prov-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      text-align: center;
+    }
+    .prov-type {
+      font-size: 10px;
+      color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Modes — Figma frames layout */
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 640px) { .modes-grid { grid-template-columns: 1fr; } }
+    .mode-frame {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 32px 24px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .mode-frame:hover { border-color: var(--f-purple); }
+    .frame-corner {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--bg);
+      border: 1.5px solid var(--f-purple);
+      border-radius: 1px;
+    }
+    .frame-corner.tl { top: -4px; left: -4px; }
+    .frame-corner.tr { top: -4px; right: -4px; }
+    .frame-corner.bl { bottom: -4px; left: -4px; }
+    .frame-corner.br { bottom: -4px; right: -4px; }
+    .mode-frame-label {
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text3);
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+    .mode-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+    .mode-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    /* Comparison */
+    .cmp-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 520px;
+    }
+    th {
+      text-align: left;
+      padding: 11px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border2);
+      background: var(--bg3);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    th.hm { color: var(--f-purple); }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    td:first-child { color: var(--text); font-family: 'Figtree', sans-serif; font-size: 13px; font-weight: 500; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+    .yes { color: var(--f-green); font-weight: 700; }
+    .no { color: var(--text3); }
+    .maybe { color: #f5a623; }
+    /* Install */
+    .install-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    .install-frame {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .install-frame-header {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .install-frame-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .install-frame-rec {
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--f-purple-dim);
+      color: var(--f-purple);
+      border-radius: 3px;
+      padding: 2px 7px;
+    }
+    .install-code {
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--text);
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+    .install-code .c-p { color: var(--f-purple); }
+    .install-code .c-g { color: var(--f-green); }
+    .install-code .c-dim { color: var(--text3); }
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 24px 32px;
+    }
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 32px;
+    }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+      text-decoration: none;
+    }
+    .footer-desc { font-size: 13px; color: var(--text3); max-width: 200px; }
+    .footer-links { display: flex; gap: 48px; flex-wrap: wrap; }
+    .footer-col h4 {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text2);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 8px; }
+    .footer-col ul li a { font-size: 13px; color: var(--text3); text-decoration: none; transition: color 0.15s; }
+    .footer-col ul li a:hover { color: var(--text2); }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-bottom p { font-size: 12px; color: var(--text3); }
+    .color-dots {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .color-dot { width: 10px; height: 10px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="figma-mark">
+          <span style="background:var(--f-red);border-radius:3px 0 0 0;"></span>
+          <span style="background:var(--f-blue);border-radius:0 3px 0 0;"></span>
+          <span style="background:var(--f-green);border-radius:0 0 0 3px;"></span>
+          <span style="background:var(--f-purple);border-radius:0 0 3px 0;"></span>
+        </div>
+        <span class="logo-text">hanimo</span>
+      </a>
+      <div class="nav-tabs">
+        <a href="#terminal" class="nav-tab" data-ko="미리보기" data-en="Preview">미리보기</a>
+        <a href="#features" class="nav-tab" data-ko="기능" data-en="Features">기능</a>
+        <a href="#providers" class="nav-tab" data-ko="공급자" data-en="Providers">공급자</a>
+        <a href="#install" class="nav-tab" data-ko="설치" data-en="Install">설치</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle" style="margin-right:4px;">
+          <button class="lang-btn active" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+          <button class="lang-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+        </div>
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+          <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+        </div>
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-ghost">GitHub</a>
+        <a href="#install" class="btn-primary" data-ko="시작하기" data-en="Get started">시작하기</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero-wrap">
+    <div class="canvas-bg"></div>
+    <div class="hero">
+      <div class="hero-grid">
+        <div class="hero-left">
+          <div class="hero-frame-label">
+            <span class="frame-icon"></span>
+            <span data-ko="Frame / hanimo · Apache-2.0" data-en="Frame / hanimo · Apache-2.0">Frame / hanimo · Apache-2.0</span>
+          </div>
+          <h1>
+            <span data-ko="오픈소스" data-en="Open-source">오픈소스</span><br/>
+            <span class="col-purple" data-ko="AI 코딩" data-en="AI coding">AI 코딩</span><br/>
+            <span class="col-blue" data-ko="에이전트" data-en="agent">에이전트</span>
+          </h1>
+          <p class="hero-sub" data-ko="Modol의 후계자. 터미널에서 실행되는 Go 기반 AI 코딩 에이전트. 14개 LLM 공급자, 로컬 우선, SQLite 세션." data-en="Successor to Modol. A Go AI coding agent for your terminal. 14+ LLM providers, local-first, SQLite sessions.">Modol의 후계자. 터미널에서 실행되는 Go 기반 AI 코딩 에이전트. 14개 LLM 공급자, 로컬 우선, SQLite 세션.</p>
+          <div class="hero-actions">
+            <a href="#install" class="btn-primary" data-ko="지금 설치 →" data-en="Install now →">지금 설치 →</a>
+            <a href="https://github.com/flykimjiwon/hanimo" class="btn-ghost">GitHub ↗</a>
+          </div>
+        </div>
+        <!-- Component panel -->
+        <div>
+          <div class="component-panel">
+            <div class="panel-titlebar">
+              <span class="panel-title">components / hanimo</span>
+              <div class="panel-dots">
+                <div class="pdot" style="background:var(--f-red);"></div>
+                <div class="pdot" style="background:var(--f-blue);"></div>
+                <div class="pdot" style="background:var(--f-green);"></div>
+                <div class="pdot" style="background:var(--f-purple);"></div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="comp-row">
+                <div class="comp-icon" style="background:var(--f-purple-dim);">⚓</div>
+                <div class="comp-info">
+                  <div class="comp-name" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</div>
+                  <div class="comp-desc" data-ko="콘텐츠 해시 기반 정밀 편집" data-en="Precision edits via content hash">콘텐츠 해시 기반 정밀 편집</div>
+                </div>
+                <span class="comp-tag" style="background:var(--f-purple-dim);color:var(--f-purple);">core</span>
+              </div>
+              <div class="comp-row">
+                <div class="comp-icon" style="background:var(--f-blue-dim);">🔌</div>
+                <div class="comp-info">
+                  <div class="comp-name" data-ko="14개 LLM 공급자" data-en="14+ LLM Providers">14개 LLM 공급자</div>
+                  <div class="comp-desc" data-ko="로컬부터 클라우드까지" data-en="Local to cloud">로컬부터 클라우드까지</div>
+                </div>
+                <span class="comp-tag" style="background:var(--f-blue-dim);color:var(--f-blue);">multi</span>
+              </div>
+              <div class="comp-row">
+                <div class="comp-icon" style="background:var(--f-green-dim);">💾</div>
+                <div class="comp-info">
+                  <div class="comp-name" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+                  <div class="comp-desc" data-ko="로컬 영구 저장" data-en="Local persistent storage">로컬 영구 저장</div>
+                </div>
+                <span class="comp-tag" style="background:var(--f-green-dim);color:var(--f-green);">local</span>
+              </div>
+              <div class="comp-row">
+                <div class="comp-icon" style="background:var(--f-red-dim);">⚡</div>
+                <div class="comp-info">
+                  <div class="comp-name" data-ko="/auto 자율 모드" data-en="/auto Autonomous">/auto 자율 모드</div>
+                  <div class="comp-desc" data-ko="멀티스텝 자율 실행" data-en="Multi-step autonomous execution">멀티스텝 자율 실행</div>
+                </div>
+                <span class="comp-tag" style="background:var(--f-red-dim);color:var(--f-red);">auto</span>
+              </div>
+              <div class="comp-row">
+                <div class="comp-icon" style="background:var(--f-purple-dim);">🔗</div>
+                <div class="comp-info">
+                  <div class="comp-name" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+                  <div class="comp-desc" data-ko="외부 도구 프로토콜" data-en="External tool protocol">외부 도구 프로토콜</div>
+                </div>
+                <span class="comp-tag" style="background:var(--f-purple-dim);color:var(--f-purple);">ext</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal -->
+  <section class="section" id="terminal">
+    <div class="section-header">
+      <div class="section-label" data-ko="미리보기" data-en="Preview">미리보기</div>
+      <h2 class="section-title" data-ko="실제 동작" data-en="In action">실제 동작</h2>
+      <p class="section-sub" data-ko="설치하고 바로 코딩하세요." data-en="Install and start coding immediately.">설치하고 바로 코딩하세요.</p>
+    </div>
+    <div style="max-width:760px;">
+      <div class="terminal-frame">
+        <div class="terminal-header">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+          <span class="t-label">hanimo · session #7</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-dim">$</span> <span class="t-txt">curl -fsSL https://hanimo.dev/install.sh | sh</span></div>
+          <div><span class="t-g">✓</span> <span class="t-dim">hanimo v1.0.0 installed</span></div>
+          <br/>
+          <div><span class="t-dim">$</span> <span class="t-txt">hanimo --mode super</span></div>
+          <div><span class="t-p">◆</span> <span class="t-dim">Session #7 · SQLite · context: 4096 tok</span></div>
+          <br/>
+          <div><span class="t-dim">&gt;</span> <span class="t-txt">Fix the race condition in worker.go</span></div>
+          <div><span class="t-dim">  reading worker.go ···</span></div>
+          <div><span class="t-b">  ⚓ hash-anchor #c3a8f2 → lines 88–113</span></div>
+          <div><span class="t-g">  ✓ patch applied · 24/24 tests pass</span></div>
+          <br/>
+          <div><span class="t-dim">&gt;</span> <span class="t-txt">/auto refactor to use errgroup</span></div>
+          <div><span class="t-r">  ⚡ autonomous · planning 3 steps ···</span></div>
+          <div><span class="t-g">  [1/3] analysis → [2/3] edits → [3/3] done</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div" />
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="section-header">
+      <div class="section-label" data-ko="컴포넌트" data-en="Components">컴포넌트</div>
+      <h2 class="section-title" data-ko="여섯 가지 핵심 기능" data-en="Six core components">여섯 가지 핵심 기능</h2>
+      <p class="section-sub" data-ko="개발자를 위해 설계된 기능들." data-en="Built for developers who live in the terminal.">개발자를 위해 설계된 기능들.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-color-bar" style="background:var(--f-purple);"></div>
+        <div class="feat-icon-wrap" style="background:var(--f-purple-dim);">⚓</div>
+        <div class="feat-title" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</div>
+        <p class="feat-desc" data-ko="줄 번호 대신 콘텐츠 해시로 정밀 편집. 드리프트 없음." data-en="Edit by content hash, not line number. No drift.">줄 번호 대신 콘텐츠 해시로 정밀 편집. 드리프트 없음.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-color-bar" style="background:var(--f-blue);"></div>
+        <div class="feat-icon-wrap" style="background:var(--f-blue-dim);">🔌</div>
+        <div class="feat-title" data-ko="14개 LLM 공급자" data-en="14+ LLM Providers">14개 LLM 공급자</div>
+        <p class="feat-desc" data-ko="Ollama, OpenAI, Anthropic, Google, DeepSeek 외 9개 더. 단일 인터페이스." data-en="Ollama, OpenAI, Anthropic, Google, DeepSeek + 9 more. One interface.">Ollama, OpenAI, Anthropic, Google, DeepSeek 외 9개 더.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-color-bar" style="background:var(--f-green);"></div>
+        <div class="feat-icon-wrap" style="background:var(--f-green-dim);">🗜️</div>
+        <div class="feat-title" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</div>
+        <p class="feat-desc" data-ko="컨텍스트 창 자동 관리 — 긴 세션도 저비용." data-en="Auto context management — long sessions, low cost.">컨텍스트 창 자동 관리 — 긴 세션도 저비용.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-color-bar" style="background:var(--f-red);"></div>
+        <div class="feat-icon-wrap" style="background:var(--f-red-dim);">⚡</div>
+        <div class="feat-title" data-ko="/auto 자율 모드" data-en="/auto Autonomous">/auto 자율 모드</div>
+        <p class="feat-desc" data-ko="단일 명령으로 멀티스텝 자율 실행." data-en="One command, full autonomous multi-step execution.">단일 명령으로 멀티스텝 자율 실행.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-color-bar" style="background:var(--f-green);"></div>
+        <div class="feat-icon-wrap" style="background:var(--f-green-dim);">💾</div>
+        <div class="feat-title" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+        <p class="feat-desc" data-ko="로컬 SQLite에 영구 저장. 클라우드 불필요." data-en="Persistent local SQLite storage. No cloud.">로컬 SQLite에 영구 저장. 클라우드 불필요.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-color-bar" style="background:var(--f-purple);"></div>
+        <div class="feat-icon-wrap" style="background:var(--f-purple-dim);">🔗</div>
+        <div class="feat-title" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+        <p class="feat-desc" data-ko="Model Context Protocol로 외부 도구 연결." data-en="Connect external tools via Model Context Protocol.">Model Context Protocol로 외부 도구 연결.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div" />
+
+  <!-- Providers -->
+  <section class="section" id="providers">
+    <div class="section-header">
+      <div class="section-label" data-ko="에셋" data-en="Assets">에셋</div>
+      <h2 class="section-title" data-ko="14개 LLM 공급자" data-en="14+ LLM Providers">14개 LLM 공급자</h2>
+      <p class="section-sub" data-ko="로컬 모델, 클라우드 API, 게이트웨이 모두 지원." data-en="Local models, cloud APIs, gateways — all supported.">로컬 모델, 클라우드 API, 게이트웨이 모두 지원.</p>
+    </div>
+    <div class="providers-panel">
+      <div class="providers-header">
+        <span class="providers-header-title">providers</span>
+        <span class="prov-count">14</span>
+      </div>
+      <div class="providers-grid-inner">
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-green-dim);">🟢</div>
+          <div class="prov-name">Ollama</div>
+          <div class="prov-type" data-ko="로컬" data-en="local">로컬</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:rgba(255,255,255,0.05);">⚫</div>
+          <div class="prov-name">OpenAI</div>
+          <div class="prov-type" data-ko="클라우드" data-en="cloud">클라우드</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-red-dim);">🟠</div>
+          <div class="prov-name">Anthropic</div>
+          <div class="prov-type" data-ko="클라우드" data-en="cloud">클라우드</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-blue-dim);">🔵</div>
+          <div class="prov-name">Google</div>
+          <div class="prov-type" data-ko="클라우드" data-en="cloud">클라우드</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-blue-dim);">🐋</div>
+          <div class="prov-name">DeepSeek</div>
+          <div class="prov-type" data-ko="클라우드" data-en="cloud">클라우드</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-red-dim);">⚡</div>
+          <div class="prov-name">Groq</div>
+          <div class="prov-type" data-ko="클라우드" data-en="cloud">클라우드</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-purple-dim);">🌐</div>
+          <div class="prov-name">OpenRouter</div>
+          <div class="prov-type" data-ko="게이트웨이" data-en="gateway">게이트웨이</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-red-dim);">🔥</div>
+          <div class="prov-name">Mistral</div>
+          <div class="prov-type" data-ko="클라우드" data-en="cloud">클라우드</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-blue-dim);">✨</div>
+          <div class="prov-name">Fireworks</div>
+          <div class="prov-type" data-ko="클라우드" data-en="cloud">클라우드</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-green-dim);">🔧</div>
+          <div class="prov-name">vLLM</div>
+          <div class="prov-type" data-ko="로컬" data-en="local">로컬</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-green-dim);">🎨</div>
+          <div class="prov-name">LM Studio</div>
+          <div class="prov-type" data-ko="로컬" data-en="local">로컬</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-blue-dim);">🤝</div>
+          <div class="prov-name">Together</div>
+          <div class="prov-type" data-ko="클라우드" data-en="cloud">클라우드</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:var(--f-purple-dim);">💫</div>
+          <div class="prov-name">Novita</div>
+          <div class="prov-type" data-ko="게이트웨이" data-en="gateway">게이트웨이</div>
+        </div>
+        <div class="prov-cell">
+          <div class="prov-icon" style="background:rgba(255,255,255,0.04);">⚙️</div>
+          <div class="prov-name">Custom</div>
+          <div class="prov-type" data-ko="커스텀" data-en="custom">커스텀</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div" />
+
+  <!-- Modes -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-label" data-ko="프레임" data-en="Frames">프레임</div>
+      <h2 class="section-title" data-ko="세 가지 실행 모드" data-en="Three execution modes">세 가지 실행 모드</h2>
+    </div>
+    <div class="modes-grid">
+      <div class="mode-frame">
+        <div class="frame-corner tl"></div>
+        <div class="frame-corner tr"></div>
+        <div class="frame-corner bl"></div>
+        <div class="frame-corner br"></div>
+        <div class="mode-frame-label">--mode super</div>
+        <div class="mode-title" style="color:var(--f-purple);">Super</div>
+        <p class="mode-desc" data-ko="최대 도구 접근. 모든 권한 활성화." data-en="Maximum tool access. All permissions enabled.">최대 도구 접근. 모든 권한 활성화.</p>
+      </div>
+      <div class="mode-frame" style="border-color:var(--border);">
+        <div class="frame-corner tl" style="border-color:var(--f-green);"></div>
+        <div class="frame-corner tr" style="border-color:var(--f-green);"></div>
+        <div class="frame-corner bl" style="border-color:var(--f-green);"></div>
+        <div class="frame-corner br" style="border-color:var(--f-green);"></div>
+        <div class="mode-frame-label">--mode dev</div>
+        <div class="mode-title" style="color:var(--f-green);">Dev</div>
+        <p class="mode-desc" data-ko="일반 개발 모드. 안전하고 빠른 반복." data-en="Standard dev mode. Safe, fast iteration.">일반 개발 모드. 안전하고 빠른 반복.</p>
+      </div>
+      <div class="mode-frame" style="border-color:var(--border);">
+        <div class="frame-corner tl" style="border-color:var(--f-blue);"></div>
+        <div class="frame-corner tr" style="border-color:var(--f-blue);"></div>
+        <div class="frame-corner bl" style="border-color:var(--f-blue);"></div>
+        <div class="frame-corner br" style="border-color:var(--f-blue);"></div>
+        <div class="mode-frame-label">--mode plan</div>
+        <div class="mode-title" style="color:var(--f-blue);">Plan</div>
+        <p class="mode-desc" data-ko="계획 후 실행. 적용 전 변경사항 검토." data-en="Plan then execute. Review before apply.">계획 후 실행. 적용 전 변경사항 검토.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div" />
+
+  <!-- Comparison -->
+  <section class="section" id="compare">
+    <div class="section-header">
+      <div class="section-label" data-ko="비교" data-en="Compare">비교</div>
+      <h2 class="section-title" data-ko="hanimo vs 다른 도구들" data-en="hanimo vs alternatives">hanimo vs 다른 도구들</h2>
+    </div>
+    <div class="cmp-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-ko="기능" data-en="Feature">기능</th>
+            <th class="hm">hanimo</th>
+            <th>Claude Code</th>
+            <th>Cursor</th>
+            <th>Aider</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-ko="오픈소스" data-en="Open-source">오픈소스</td>
+            <td><span class="yes">✓ yes</span></td>
+            <td><span class="no">no</span></td>
+            <td><span class="no">no</span></td>
+            <td><span class="yes">✓ yes</span></td>
+          </tr>
+          <tr>
+            <td data-ko="로컬 LLM" data-en="Local LLM">로컬 LLM</td>
+            <td><span class="yes">✓ yes</span></td>
+            <td><span class="no">no</span></td>
+            <td><span class="maybe">△ partial</span></td>
+            <td><span class="yes">✓ yes</span></td>
+          </tr>
+          <tr>
+            <td data-ko="SQLite 세션" data-en="SQLite sessions">SQLite 세션</td>
+            <td><span class="yes">✓ yes</span></td>
+            <td><span class="no">no</span></td>
+            <td><span class="no">no</span></td>
+            <td><span class="no">no</span></td>
+          </tr>
+          <tr>
+            <td data-ko="MCP 지원" data-en="MCP support">MCP 지원</td>
+            <td><span class="yes">✓ yes</span></td>
+            <td><span class="yes">✓ yes</span></td>
+            <td><span class="no">no</span></td>
+            <td><span class="no">no</span></td>
+          </tr>
+          <tr>
+            <td data-ko="자율 모드" data-en="Autonomous">자율 모드</td>
+            <td><span class="yes">✓ /auto</span></td>
+            <td><span class="maybe">△</span></td>
+            <td><span class="maybe">△</span></td>
+            <td><span class="maybe">△</span></td>
+          </tr>
+          <tr>
+            <td data-ko="라이선스" data-en="License">라이선스</td>
+            <td><span class="yes">Apache-2.0</span></td>
+            <td><span class="no">Proprietary</span></td>
+            <td><span class="no">Proprietary</span></td>
+            <td><span class="yes">MIT</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="div" />
+
+  <!-- Install -->
+  <section class="section" id="install">
+    <div class="section-header">
+      <div class="section-label" data-ko="설치" data-en="Install">설치</div>
+      <h2 class="section-title" data-ko="30초면 시작됩니다" data-en="30 seconds to start">30초면 시작됩니다</h2>
+      <p class="section-sub" data-ko="세 가지 설치 방법." data-en="Three install methods.">세 가지 설치 방법.</p>
+    </div>
+    <div class="install-grid">
+      <div class="install-frame">
+        <div class="install-frame-header">
+          <span class="install-frame-title">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--f-purple);display:inline-block;"></span>
+            <span data-ko="curl 설치" data-en="curl install">curl 설치</span>
+          </span>
+          <span class="install-frame-rec" data-ko="추천" data-en="recommended">추천</span>
+        </div>
+        <div class="install-code">
+          <span class="c-dim"># one-liner</span><br/>
+          curl -fsSL hanimo.dev/install.sh <span class="c-p">|</span> sh
+        </div>
+      </div>
+      <div class="install-frame">
+        <div class="install-frame-header">
+          <span class="install-frame-title">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--f-blue);display:inline-block;"></span>
+            Homebrew
+          </span>
+        </div>
+        <div class="install-code">
+          brew tap flykimjiwon/hanimo<br/>
+          brew install hanimo
+        </div>
+      </div>
+      <div class="install-frame">
+        <div class="install-frame-header">
+          <span class="install-frame-title">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--f-green);display:inline-block;"></span>
+            <span data-ko="소스 빌드" data-en="Build from source">소스 빌드</span>
+          </span>
+        </div>
+        <div class="install-code">
+          git clone github.com/flykimjiwon/hanimo<br/>
+          <span class="c-g">go build</span> ./cmd/hanimo
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div>
+          <a href="#" class="footer-logo">
+            <div class="figma-mark" style="width:18px;height:18px;">
+              <span style="background:var(--f-red);border-radius:2px 0 0 0;"></span>
+              <span style="background:var(--f-blue);border-radius:0 2px 0 0;"></span>
+              <span style="background:var(--f-green);border-radius:0 0 0 2px;"></span>
+              <span style="background:var(--f-purple);border-radius:0 0 2px 0;"></span>
+            </div>
+            hanimo
+          </a>
+          <p class="footer-desc" data-ko="오픈소스 Go AI 코딩 에이전트. Modol의 후계자." data-en="Open-source Go AI coding agent. Successor to Modol.">오픈소스 Go AI 코딩 에이전트. Modol의 후계자.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4 data-ko="프로젝트" data-en="Project">프로젝트</h4>
+            <ul>
+              <li><a href="https://github.com/flykimjiwon/hanimo">GitHub</a></li>
+              <li><a href="https://hanimo.dev">hanimo.dev</a></li>
+              <li><a href="#" data-ko="문서" data-en="Docs">문서</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4 data-ko="커뮤니티" data-en="Community">커뮤니티</h4>
+            <ul>
+              <li><a href="#" data-ko="이슈" data-en="Issues">이슈</a></li>
+              <li><a href="#" data-ko="토론" data-en="Discussions">토론</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p data-ko="© 2025 flykimjiwon. Apache-2.0 라이선스." data-en="© 2025 flykimjiwon. Apache-2.0 licensed.">© 2025 flykimjiwon. Apache-2.0 라이선스.</p>
+        <div class="color-dots">
+          <div class="color-dot" style="background:var(--f-purple);"></div>
+          <div class="color-dot" style="background:var(--f-red);"></div>
+          <div class="color-dot" style="background:var(--f-blue);"></div>
+          <div class="color-dot" style="background:var(--f-green);"></div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let currentLang = 'ko';
+    let currentTheme = 'dark';
+
+    function setTheme(t) {
+      currentTheme = t;
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('hanimo-theme', t);
+      document.getElementById('btn-light').classList.toggle('active', t === 'light');
+      document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+      setLang(currentLang);
+    }
+
+    function setLang(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-ko]').forEach(el => {
+        el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+      });
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+
+    (function() {
+      const saved = localStorage.getItem('hanimo-theme') || 'dark';
+      setTheme(saved);
+    })();
+    setLang('ko');
+  </script>
+</body>
+</html>

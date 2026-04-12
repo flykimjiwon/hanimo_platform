@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Bento Grid</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #F9E2AF;
+      --gold-dim: #c9b080;
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+      --bg: #0d0d0e;
+      --surface: #141415;
+      --surface-2: #1a1a1c;
+      --border: rgba(255,255,255,0.07);
+      --text: #f5f5f0;
+      --muted: #52525b;
+      --accent: #F9E2AF;
+    }
+
+    [data-theme="light"] {
+      --bg: #fafaf8;
+      --surface: #f2f2ee;
+      --surface-2: #e8e8e4;
+      --border: rgba(0,0,0,0.08);
+      --text: #111110;
+      --muted: #6b7280;
+      --gold: #c8820a;
+      --gold-dim: #a06808;
+    }
+    [data-theme="light"] body { background: #fafaf8; color: #111110; }
+    [data-theme="light"] nav { background: rgba(250,250,248,0.92); border-color: rgba(0,0,0,0.08); }
+    [data-theme="light"] .tile { background: #f2f2ee; border-color: rgba(0,0,0,0.08); }
+
+    /* ── TOGGLE CONTROLS ── */
+    .ctl-group {
+      position: fixed; top: 70px; right: 16px; z-index: 10000;
+      display: flex; flex-direction: column; gap: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    }
+    .ctl-row { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+    .ctl-btn {
+      background: transparent; border: none; color: var(--muted);
+      padding: 5px 12px; cursor: pointer; font-family: inherit;
+      font-size: 10px; letter-spacing: 0.08em; transition: all 0.15s;
+    }
+    .ctl-btn + .ctl-btn { border-left: 1px solid var(--border); }
+    .ctl-btn.active { background: rgba(249,226,175,0.12); color: var(--gold); }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .serif { font-family: 'Instrument Serif', serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .cabinet { font-family: 'Cabinet Grotesk', sans-serif; }
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13,13,14,0.92);
+      backdrop-filter: blur(20px);
+    }
+    .nav-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { font-weight: 900; font-size: 20px; letter-spacing: -0.03em; }
+    .logo span { color: var(--gold); }
+
+    /* Gold badge */
+    .gold-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(249,226,175,0.08);
+      border: 1px solid rgba(249,226,175,0.2);
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--gold);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Bento grid */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: auto;
+      gap: 16px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Bento tile base */
+    .tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      transition: border-color 0.3s ease, transform 0.3s ease;
+    }
+    .tile:hover {
+      border-color: rgba(249,226,175,0.15);
+      transform: translateY(-2px);
+    }
+    .tile-inner { padding: 32px; height: 100%; display: flex; flex-direction: column; }
+
+    /* Tile spans */
+    .col-8 { grid-column: span 8; }
+    .col-4 { grid-column: span 4; }
+    .col-6 { grid-column: span 6; }
+    .col-3 { grid-column: span 3; }
+    .col-5 { grid-column: span 5; }
+    .col-7 { grid-column: span 7; }
+    .col-12 { grid-column: span 12; }
+
+    @media (max-width: 1024px) {
+      .col-8, .col-7, .col-5, .col-6, .col-4, .col-3 { grid-column: span 12; }
+    }
+    @media (max-width: 640px) {
+      .bento-grid { gap: 12px; padding: 0 16px; }
+    }
+
+    /* Hero tile */
+    .tile-hero {
+      background: linear-gradient(135deg, #141415 0%, #1a1218 50%, #0f1a14 100%);
+      min-height: 460px;
+    }
+    .tile-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(249,226,175,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 80%, rgba(16,185,129,0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* Gold glow effect */
+    .gold-glow {
+      text-shadow: 0 0 40px rgba(249,226,175,0.3);
+    }
+
+    /* CTA buttons */
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      background: var(--gold);
+      color: #0d0d0e;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+      text-decoration: none;
+    }
+    .btn-gold:hover {
+      background: #fff3d0;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(249,226,175,0.25);
+    }
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: 1px solid var(--border);
+      text-decoration: none;
+    }
+    .btn-ghost:hover {
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* Terminal in bento */
+    .mini-terminal {
+      background: rgba(0,0,0,0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.06);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      padding: 16px;
+      overflow: hidden;
+    }
+    .t-p { color: #8b5cf6; }
+    .t-s { color: #10b981; }
+    .t-g { color: #F9E2AF; }
+    .t-m { color: #64748b; }
+    .t-w { color: #f5f5f0; }
+
+    /* Number decoration */
+    .tile-number {
+      font-family: 'Instrument Serif', serif;
+      font-size: 80px;
+      line-height: 1;
+      color: rgba(249,226,175,0.06);
+      position: absolute;
+      top: 16px;
+      right: 24px;
+      font-style: italic;
+      user-select: none;
+    }
+
+    /* Feature icon */
+    .feat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* Comparison bento */
+    .compare-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 13px;
+    }
+    .compare-row:last-child { border-bottom: none; }
+    .win { color: var(--gold); font-weight: 700; }
+    .lose { color: var(--muted); }
+
+    /* Provider pill */
+    .p-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .p-pill:hover { border-color: rgba(249,226,175,0.2); background: rgba(249,226,175,0.04); }
+
+    /* Install code block */
+    .code-block {
+      background: rgba(0,0,0,0.7);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 14px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+    .code-block .prompt { color: #10b981; margin-right: 8px; }
+    .code-block .cmd { color: var(--gold); }
+
+    /* Mode badges */
+    .mode-badge {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    /* Animated bar */
+    @keyframes fillBar { from { width: 0; } to { width: var(--w); } }
+    .bar-fill { height: 4px; border-radius: 2px; animation: fillBar 1.5s ease forwards; background: linear-gradient(90deg, var(--violet), var(--gold)); }
+
+    /* Cursor blink */
+    .cursor { display: inline-block; width: 7px; height: 13px; background: #8b5cf6; animation: blink 1.2s step-end infinite; vertical-align: middle; margin-left: 2px; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Scroll animation */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- TOGGLE CONTROLS -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <div class="logo">han<span>imo</span></div>
+      <div class="flex items-center gap-4">
+        <div class="gold-badge">v0.1 · Apache-2.0</div>
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-ghost py-1.5 px-4 text-sm">GitHub ↗</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main layout -->
+  <main style="padding-top: 76px; padding-bottom: 60px;">
+
+    <!-- Hero row -->
+    <div class="bento-grid" style="margin-bottom: 16px; margin-top: 24px;">
+
+      <!-- Hero tile -->
+      <div class="tile tile-hero col-8 reveal">
+        <div class="tile-inner" style="justify-content: space-between;">
+          <div>
+            <div class="gold-badge" style="margin-bottom: 28px;">
+              <span style="color: #10b981;">●</span> Open-Source AI Coding Agent
+            </div>
+            <h1 class="cabinet" style="font-size: clamp(38px, 4.5vw, 64px); font-weight: 900; letter-spacing: -0.04em; line-height: 1.0; margin-bottom: 16px;" data-ko="오픈소스 AI 코딩 플랫폼." data-en="Open-source AI coding platform.">
+              오픈소스 AI<br/>코딩 플랫폼.<br/>
+              <span class="serif" style="color: var(--gold); font-style: italic; font-size: 0.9em;" data-ko="Modol의 후계자." data-en="Successor to Modol.">Modol의 후계자.</span>
+            </h1>
+            <p class="mono" style="font-size: 13px; color: var(--violet); margin-bottom: 8px; opacity: 0.9;" data-ko="오픈소스 AI 코딩 에이전트" data-en="Open-source AI coding agent">오픈소스 AI 코딩 에이전트</p>
+            <p style="color: var(--muted); font-size: 15px; max-width: 440px; line-height: 1.6; margin-bottom: 32px;" data-ko="Go로 제작. 14+ LLM. 해시 기반 안전성." data-en="Built in Go. 14+ LLMs. Hash-anchored safety.">Go로 제작. 14+ LLM. 해시 기반 안전성.</p>
+            <div class="flex flex-wrap gap-3">
+              <a href="#install" class="btn-gold" data-ko="hanimo 설치 →" data-en="Install hanimo →">hanimo 설치 →</a>
+              <a href="https://github.com/flykimjiwon/hanimo" class="btn-ghost" data-ko="소스 보기" data-en="View Source">소스 보기</a>
+            </div>
+          </div>
+          <div class="mono text-xs" style="color: var(--muted); padding-top: 32px; padding-bottom: 4px;">
+            github.com/flykimjiwon/hanimo · hanimo.dev
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal tile -->
+      <div class="tile col-4 reveal" style="min-height: 460px; background: #0e0e10;">
+        <div class="tile-inner">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#ff5f57;"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#febc2e;"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#28c840;"></div>
+            <span class="mono text-xs" style="color:var(--muted);margin-left:8px;">hanimo session</span>
+          </div>
+          <div class="mini-terminal" style="flex: 1; background: transparent; border: none; padding: 0;">
+            <div><span class="t-p">~/proj</span> <span class="t-m">$</span> <span class="t-w">hanimo</span></div>
+            <div><span class="t-s">✓</span> <span class="t-g">v0.1.0</span> <span class="t-m">initialized</span></div>
+            <div><span class="t-m">  Provider: ollama/mistral</span></div>
+            <div style="height:12px;"></div>
+            <div><span class="t-p">hanimo</span><span class="t-m"> &gt; </span><span class="t-g">/auto</span></div>
+            <div><span class="t-m">  refactor auth → JWT</span></div>
+            <div><span class="t-s">◆</span> <span class="t-m">Autonomous mode</span></div>
+            <div><span class="t-m">  max 20 iterations</span></div>
+            <div style="height:6px;"></div>
+            <div><span class="t-s">[1/20]</span> <span class="t-w">Reading</span></div>
+            <div><span class="t-m">  auth/handler.go</span></div>
+            <div><span class="t-m">  hash: a3f7d2 ✓</span></div>
+            <div><span class="t-s">[2/20]</span> <span class="t-w">Analyzing</span></div>
+            <div><span class="t-s">[3/20]</span> <span class="t-w">Editing</span></div>
+            <div><span class="t-m">  ↔ hash-anchored</span></div>
+            <div><span class="t-g">✦</span> <span class="t-m">/diagnostics</span></div>
+            <div><span class="t-m">  0 errors · 0 warnings</span></div>
+            <div><span class="t-s">✓ Done.</span> <span class="t-m">3 files</span></div>
+            <div><span class="t-p">hanimo</span><span class="t-m"> &gt; </span><span class="cursor"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features row 1 -->
+    <div class="bento-grid" style="margin-bottom: 16px;">
+
+      <!-- Hash-anchored — big feature -->
+      <div class="tile col-5 reveal" style="background: linear-gradient(135deg, #1a1218 0%, #0d0d0e 100%); border-color: rgba(139,92,246,0.2);">
+        <div class="tile-inner" style="min-height: 280px;">
+          <div class="tile-number">1</div>
+          <div class="feat-icon" style="background: rgba(139,92,246,0.15); margin-bottom: 20px;">🔐</div>
+          <div class="gold-badge" style="margin-bottom: 16px; color: #a78bfa; background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.25);">UNIQUE FEATURE</div>
+          <h3 class="cabinet" style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px;">Hash-Anchored Editing</h3>
+          <p style="color: var(--muted); font-size: 14px; line-height: 1.65; margin-bottom: 20px;">
+            Every file edit is cryptographically anchored. The AI verifies content hash before modifying — zero stale-state corruption, mathematically guaranteed.
+          </p>
+          <div class="code-block">
+            <span class="t-m"># Before edit</span><br/>
+            <span style="color:#a78bfa;">hash:</span> <span style="color:var(--gold);">a3f7d2b1</span> → <span style="color:var(--emerald);">verified ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- /auto mode -->
+      <div class="tile col-4 reveal" style="background: linear-gradient(135deg, #0f1a14 0%, #0d0d0e 100%); border-color: rgba(16,185,129,0.15);">
+        <div class="tile-inner" style="min-height: 280px;">
+          <div class="tile-number">2</div>
+          <div class="feat-icon" style="background: rgba(16,185,129,0.12); margin-bottom: 20px;">⚡</div>
+          <h3 class="cabinet" style="font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px;">/auto Autonomous Mode</h3>
+          <p style="color: var(--muted); font-size: 14px; line-height: 1.65; margin-bottom: 20px;">
+            Full autonomy — up to 20 self-directed iterations. Reads, writes, runs diagnostics, self-corrects without human intervention.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:var(--w,80%);--w:80%;" class="bar-fill"></div>
+              <span class="mono text-xs" style="color:var(--muted);">16/20</span>
+            </div>
+            <span class="mono text-xs" style="color:#10b981;">Iteration 16 of 20 · running</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Modes -->
+      <div class="tile col-3 reveal" style="border-color: rgba(249,226,175,0.1);">
+        <div class="tile-inner" style="min-height: 280px;">
+          <div class="tile-number">3</div>
+          <div class="feat-icon" style="background: rgba(249,226,175,0.08); margin-bottom: 20px;">🎯</div>
+          <h3 class="cabinet" style="font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px;">3 Modes</h3>
+          <div class="flex flex-col gap-3">
+            <div class="mode-badge" style="background:rgba(139,92,246,0.12);color:#a78bfa;border:1px solid rgba(139,92,246,0.2);">Super</div>
+            <div class="mode-badge" style="background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2);">Dev</div>
+            <div class="mode-badge" style="background:rgba(249,226,175,0.08);color:var(--gold);border:1px solid rgba(249,226,175,0.2);">Plan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features row 2 -->
+    <div class="bento-grid" style="margin-bottom: 16px;">
+
+      <!-- 14+ Providers -->
+      <div class="tile col-4 reveal">
+        <div class="tile-inner" style="min-height: 240px;">
+          <div class="feat-icon" style="background:rgba(249,226,175,0.08);margin-bottom:16px;">🌐</div>
+          <h3 class="cabinet" style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px;">14+ LLM Providers</h3>
+          <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">Truly model-agnostic. Run locally with Ollama or connect to any cloud provider.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="p-pill"><span style="color:#10b981;">●</span>Ollama</span>
+            <span class="p-pill"><span style="color:#74aa9c;">●</span>OpenAI</span>
+            <span class="p-pill"><span style="color:#d97706;">●</span>Anthropic</span>
+            <span class="p-pill"><span style="color:#4285f4;">●</span>Google</span>
+            <span class="p-pill"><span style="color:#a78bfa;">●</span>DeepSeek</span>
+            <span class="p-pill"><span style="color:#f97316;">●</span>Groq</span>
+            <span class="p-pill"><span style="color:#ec4899;">●</span>Mistral</span>
+            <span class="p-pill" style="color:var(--muted);">+7 more</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SQLite Sessions -->
+      <div class="tile col-4 reveal">
+        <div class="tile-inner" style="min-height: 240px;">
+          <div class="feat-icon" style="background:rgba(16,185,129,0.1);margin-bottom:16px;">💾</div>
+          <h3 class="cabinet" style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px;">SQLite Sessions</h3>
+          <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">Persistent local session history. Resume any conversation, search past work, export logs. Fully offline.</p>
+          <div class="code-block">
+            <span class="t-m">/save</span> <span class="t-g">session-name</span><br/>
+            <span class="t-m">/remember</span> <span style="color:#fff;">auth refactor notes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Compaction + MCP -->
+      <div class="tile col-4 reveal">
+        <div class="tile-inner" style="min-height: 240px;">
+          <div style="display:flex;gap:16px;margin-bottom:16px;">
+            <div class="feat-icon" style="background:rgba(139,92,246,0.1);">🧠</div>
+            <div class="feat-icon" style="background:rgba(249,226,175,0.08);">🔌</div>
+          </div>
+          <h3 class="cabinet" style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px;">Compaction + MCP</h3>
+          <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">
+            Smart 3-stage compaction keeps long sessions sharp. Full MCP protocol support for infinite extensibility.
+          </p>
+          <div style="display:flex;gap:8px;">
+            <div class="mode-badge" style="background:rgba(139,92,246,0.1);color:#a78bfa;border:1px solid rgba(139,92,246,0.2);font-size:11px;">3-Stage</div>
+            <div class="mode-badge" style="background:rgba(249,226,175,0.08);color:var(--gold);border:1px solid rgba(249,226,175,0.2);font-size:11px;">MCP</div>
+            <div class="mode-badge" style="background:rgba(16,185,129,0.08);color:#10b981;border:1px solid rgba(16,185,129,0.2);font-size:11px;">Go Binary</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison row -->
+    <div class="bento-grid" style="margin-bottom: 16px;" id="compare">
+      <div class="tile col-6 reveal" style="border-color: rgba(249,226,175,0.12);">
+        <div class="tile-inner">
+          <div class="gold-badge" style="margin-bottom: 20px;">Comparison</div>
+          <h3 class="cabinet" style="font-size: 28px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 24px;">
+            Why choose <span style="color:var(--gold);">hanimo</span>?
+          </h3>
+          <div>
+            <div class="compare-row">
+              <span style="color:rgba(255,255,255,0.6);">Open Source</span>
+              <div style="display:flex;gap:32px;">
+                <span class="win">✓ hanimo</span>
+                <span class="lose">✗ Claude Code</span>
+                <span class="lose">✗ Cursor</span>
+              </div>
+            </div>
+            <div class="compare-row">
+              <span style="color:rgba(255,255,255,0.6);">Local-First</span>
+              <div style="display:flex;gap:32px;">
+                <span class="win">✓ hanimo</span>
+                <span class="lose">✗ Cloud only</span>
+                <span style="color:var(--muted);">~ Partial</span>
+              </div>
+            </div>
+            <div class="compare-row">
+              <span style="color:rgba(255,255,255,0.6);">Model-Agnostic</span>
+              <div style="display:flex;gap:32px;">
+                <span class="win">✓ 14+ LLMs</span>
+                <span class="lose">✗ Claude only</span>
+                <span class="lose">✗ Limited</span>
+              </div>
+            </div>
+            <div class="compare-row">
+              <span style="color:rgba(255,255,255,0.6);">Hash-Anchored Safety</span>
+              <div style="display:flex;gap:32px;">
+                <span class="win">✓ Unique</span>
+                <span class="lose">✗ None</span>
+                <span class="lose">✗ None</span>
+              </div>
+            </div>
+            <div class="compare-row">
+              <span style="color:rgba(255,255,255,0.6);">Single Go Binary</span>
+              <div style="display:flex;gap:32px;">
+                <span class="win">✓ hanimo</span>
+                <span class="lose">Node.js</span>
+                <span class="lose">Electron</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Install tile -->
+      <div class="tile col-6 reveal" id="install" style="background: linear-gradient(135deg, #141510 0%, #0d0d0e 100%); border-color: rgba(249,226,175,0.1);">
+        <div class="tile-inner">
+          <div class="gold-badge" style="margin-bottom: 20px; color:#10b981; background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.2);">Install in seconds</div>
+          <h3 class="cabinet" style="font-size: 28px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 24px;">
+            Get started<br/><span style="color:var(--gold);">right now.</span>
+          </h3>
+          <div class="flex flex-col gap-4">
+            <div>
+              <p class="mono text-xs" style="color:var(--muted);margin-bottom:6px;">curl</p>
+              <div class="code-block">
+                <span class="prompt">$</span><span class="cmd">curl -fsSL https://hanimo.dev/install | sh</span>
+              </div>
+            </div>
+            <div>
+              <p class="mono text-xs" style="color:var(--muted);margin-bottom:6px;">homebrew</p>
+              <div class="code-block">
+                <span class="prompt">$</span><span class="cmd">brew install flykimjiwon/tap/hanimo</span>
+              </div>
+            </div>
+            <div>
+              <p class="mono text-xs" style="color:var(--muted);margin-bottom:6px;">go build</p>
+              <div class="code-block">
+                <span class="prompt">$</span><span class="cmd">go install github.com/flykimjiwon/hanimo@latest</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:auto;padding-top:24px;">
+            <a href="https://github.com/flykimjiwon/hanimo" class="btn-gold w-full justify-center" style="width:100%;">
+              Star on GitHub ★
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer style="border-top: 1px solid var(--border); padding: 32px 24px;">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <div class="logo" style="margin-bottom: 4px;">han<span>imo</span></div>
+        <p class="mono text-xs" style="color:var(--muted);" data-ko="오픈소스 AI 코딩 에이전트" data-en="Open-source AI coding agent">오픈소스 AI 코딩 에이전트</p>
+      </div>
+      <div class="flex gap-6 text-sm" style="color:var(--muted);">
+        <a href="https://github.com/flykimjiwon/hanimo" class="hover:text-white transition-colors">github.com/flykimjiwon/hanimo</a>
+        <a href="https://hanimo.dev" class="hover:text-white transition-colors">hanimo.dev</a>
+        <span class="mono text-xs">Apache-2.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => io.observe(el));
+
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      localStorage.setItem('hanimo-theme', t);
+      document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+      document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    }
+    function setLang(lang) {
+      document.documentElement.lang = lang;
+      localStorage.setItem('hanimo-lang', lang);
+      document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+        el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+      });
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+    (function init() {
+      const theme = localStorage.getItem('hanimo-theme') || 'dark';
+      const lang = localStorage.getItem('hanimo-lang') || 'ko';
+      setTheme(theme);
+      setLang(lang);
+    })();
+  </script>
+</body>
+</html>

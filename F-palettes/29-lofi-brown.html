@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hanimo — 오픈소스 AI 코딩 에이전트</title>
+  <script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lora:ital,wght@0,400;0,500;1,400&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --espresso: #2a1810;
+      --dark-brown: #3d2415;
+      --mid-brown: #6b3d2a;
+      --caramel: #c89b7b;
+      --latte: #e8d5b7;
+      --cream: #f5e6d3;
+      --matcha: #7a8c5c;
+      --matcha-dark: #5a6b42;
+      --warm-white: #fdf8f3;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--espresso);
+      color: var(--latte);
+      font-family: 'Lora', Georgia, serif;
+      overflow-x: hidden;
+    }
+
+    /* Paper grain texture */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .font-display { font-family: 'Playfair Display', Georgia, serif; }
+    .font-mono { font-family: 'Inconsolata', monospace; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(42, 24, 16, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(200, 155, 123, 0.2);
+    }
+
+    /* Window-sill warmth: subtle warm gradient on hero */
+    .hero-section {
+      background: linear-gradient(180deg, #2a1810 0%, #3d2415 60%, #2a1810 100%);
+      position: relative;
+    }
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse 70% 50% at 70% 40%, rgba(200,155,123,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Steam animation for coffeehouse vibe */
+    @keyframes steam {
+      0% { opacity: 0; transform: translateY(0) scaleX(1); }
+      30% { opacity: 0.6; }
+      100% { opacity: 0; transform: translateY(-28px) scaleX(1.4); }
+    }
+    .steam-line {
+      position: absolute;
+      width: 2px;
+      background: linear-gradient(to top, rgba(232,213,183,0.5), transparent);
+      border-radius: 2px;
+      animation: steam 2.4s ease-in-out infinite;
+    }
+
+    /* Terminal: dark espresso with warm accents */
+    .terminal {
+      background: #1a0e08;
+      border: 1px solid rgba(200,155,123,0.3);
+      border-radius: 14px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(200,155,123,0.1);
+    }
+    .terminal-bar {
+      background: #220f08;
+      border-radius: 14px 14px 0 0;
+      padding: 12px 18px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid rgba(200,155,123,0.2);
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #c89b7b; } .dot-y { background: #e8d5b7; } .dot-g { background: #7a8c5c; }
+    .terminal-body {
+      padding: 20px 24px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 13.5px; line-height: 1.75;
+    }
+    .t-prompt { color: #c89b7b; }
+    .t-cmd { color: #e8d5b7; }
+    .t-out { color: rgba(232,213,183,0.38); }
+    .t-ok { color: #7a8c5c; }
+    .t-cursor {
+      display: inline-block; width: 7px; height: 13px;
+      background: #c89b7b;
+      animation: blink 1.3s ease-in-out infinite;
+      vertical-align: middle;
+    }
+    @keyframes blink { 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
+
+    /* Feature cards — warm parchment */
+    .feature-card {
+      background: #3d2415;
+      border: 1px solid rgba(200,155,123,0.25);
+      border-radius: 16px;
+      padding: 24px;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(200,155,123,0.3), transparent);
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(200,155,123,0.45);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+
+    /* Icon chips */
+    .icon-chip {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    /* Provider pills */
+    .provider-pill {
+      background: rgba(200,155,123,0.1);
+      border: 1px solid rgba(200,155,123,0.2);
+      border-radius: 6px;
+      padding: 5px 13px;
+      font-size: 12px;
+      font-family: 'Inconsolata', monospace;
+      color: var(--caramel);
+      transition: all .15s;
+      cursor: default;
+    }
+    .provider-pill:hover {
+      background: rgba(200,155,123,0.18);
+      border-color: rgba(200,155,123,0.4);
+      color: var(--latte);
+    }
+
+    /* Compare */
+    .compare-table {
+      border: 1px solid rgba(200,155,123,0.2);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .compare-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(200,155,123,0.1);
+      font-size: 14px;
+    }
+    .compare-row:last-child { border-bottom: none; }
+    .compare-row.header {
+      background: rgba(200,155,123,0.08);
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(200,155,123,0.6);
+    }
+    .check { color: #7a8c5c; text-align: center; }
+    .cross { color: rgba(200,155,123,0.2); text-align: center; }
+    .partial { color: #c89b7b; text-align: center; font-size: 12px; }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--caramel);
+      color: var(--espresso);
+      padding: 13px 28px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      font-family: 'Lora', serif;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .15s, transform .1s;
+    }
+    .btn-primary:hover { background: #d4a98a; transform: translateY(-1px); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--caramel);
+      padding: 13px 24px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'Lora', serif;
+      border: 1px solid rgba(200,155,123,0.35);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .15s;
+    }
+    .btn-secondary:hover { border-color: var(--caramel); color: var(--latte); }
+
+    /* Install block */
+    .install-block {
+      background: #1a0e08;
+      border: 1px solid rgba(200,155,123,0.2);
+      border-radius: 10px;
+      padding: 13px 18px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 13.5px;
+      color: var(--latte);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .prompt-c { color: #c89b7b; margin-right: 4px; }
+
+    /* Section label */
+    .label {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(200,155,123,0.6);
+      margin-bottom: 12px;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(200,155,123,0.25), transparent);
+      margin: 72px 0;
+    }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(18px);} to{opacity:1;transform:translateY(0);} }
+    .fu { opacity:0; animation: fadeUp .6s ease forwards; }
+    .fu1{animation-delay:.08s;} .fu2{animation-delay:.2s;} .fu3{animation-delay:.34s;} .fu4{animation-delay:.48s;} .fu5{animation-delay:.6s;}
+
+    /* i18n toggle */
+    /* light theme */
+    [data-theme="light"] body{background:var(--warm-white);color:var(--espresso);}
+    [data-theme="light"] nav{background:rgba(253,248,243,0.94);}
+    [data-theme="light"] .hero-section{background:linear-gradient(180deg,#fdf8f3 0%,#f5e6d3 60%,#fdf8f3 100%);}
+    [data-theme="light"] .terminal{background:#2a1810;border-color:rgba(200,155,123,0.4);}
+    /* i18n + theme toggle */
+    .ctrl-row{display:flex;gap:8px;align-items:center;}
+    .lang-toggle { display:flex; background:rgba(200,155,123,0.1); border:1px solid rgba(200,155,123,0.25); border-radius:7px; overflow:hidden; }
+    .theme-toggle { display:flex; background:rgba(200,155,123,0.1); border:1px solid rgba(200,155,123,0.25); border-radius:7px; overflow:hidden; }
+    [data-theme="light"] .lang-toggle,[data-theme="light"] .theme-toggle{background:rgba(200,155,123,0.08);border-color:rgba(200,155,123,0.3);}
+    .lang-btn,.theme-btn { padding:5px 12px; font-family:'Inconsolata',monospace; font-size:12px; background:none; border:none; cursor:pointer; color:rgba(200,155,123,0.55); transition:all .15s; }
+    .lang-btn.active,.theme-btn.active { background:var(--caramel); color:var(--espresso); font-weight:700; }
+
+    /* Section backgrounds */
+    .s-dark { background: var(--espresso); }
+    .s-mid { background: var(--dark-brown); }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div style="max-width:1100px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="font-display" style="font-size:21px;font-weight:500;color:var(--caramel);letter-spacing:-.01em;">hanimo</span>
+        <span style="font-family:'Inconsolata',monospace;font-size:10px;background:rgba(200,155,123,0.15);border:1px solid rgba(200,155,123,0.25);color:var(--caramel);padding:2px 8px;border-radius:4px;">v0.9.1</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px;font-size:14px;color:rgba(232,213,183,0.6);">
+        <a href="#features" style="text-decoration:none;color:inherit;" data-ko="기능" data-en="Features">기능</a>
+        <a href="#install" style="text-decoration:none;color:inherit;" data-ko="설치" data-en="Install">설치</a>
+        <a href="#compare" style="text-decoration:none;color:inherit;" data-ko="비교" data-en="Compare">비교</a>
+        <div class="ctrl-row">
+          <div class="theme-toggle">
+            <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+            <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+          </div>
+          <div class="lang-toggle">
+            <button class="lang-btn active" onclick="setLang('ko')" id="btn-ko">KO</button>
+            <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+          </div>
+        </div>
+        <a href="https://github.com/flykimjiwon/hanimo" style="text-decoration:none;background:rgba(200,155,123,0.12);border:1px solid rgba(200,155,123,0.25);color:var(--caramel);padding:7px 14px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:6px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero-section" style="padding:100px 24px 80px;min-height:80vh;display:flex;align-items:center;">
+    <div style="max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:2;">
+      <div class="label fu fu1" data-ko="오픈소스 AI 코딩 에이전트" data-en="Open Source AI Coding Agent">오픈소스 AI 코딩 에이전트</div>
+
+      <h1 class="font-display fu fu2" style="font-size:clamp(46px,6.5vw,84px);line-height:1.06;font-weight:400;color:var(--cream);max-width:780px;margin-bottom:20px;letter-spacing:-.025em;">
+        <span data-ko="오픈소스<br><em style='font-style:italic;color:var(--caramel);'>AI 코딩</em><br>플랫폼" data-en="The <em style='font-style:italic;color:var(--caramel);'>open-source</em><br>AI coding platform">오픈소스<br><em style="font-style:italic;color:var(--caramel);">AI 코딩</em><br>플랫폼</span>
+      </h1>
+
+      <p class="fu fu3" style="font-size:16px;color:rgba(232,213,183,0.6);max-width:440px;line-height:1.65;margin-bottom:44px;font-weight:400;"
+         data-ko="Go 기반 터미널 AI 에이전트. 구독 없이 14+ LLM 지원."
+         data-en="Terminal AI agent in Go. 14+ LLMs, no subscription.">Go 기반 터미널 AI 에이전트. 구독 없이 14+ LLM 지원.</p>
+
+      <div class="fu fu4" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:32px;align-items:center;">
+        <div class="install-block" style="min-width:300px;">
+          <span><span class="prompt-c">$</span> curl -fsSL hanimo.dev/install | sh</span>
+          <button onclick="navigator.clipboard.writeText('curl -fsSL hanimo.dev/install | sh')" style="background:none;border:none;cursor:pointer;color:rgba(200,155,123,0.4);" title="Copy">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="fu fu5" style="display:flex;flex-wrap:wrap;gap:12px;">
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-primary" data-ko="GitHub에서 보기" data-en="Star on GitHub">GitHub에서 보기</a>
+        <a href="https://hanimo.dev" class="btn-secondary" data-ko="문서 보기 →" data-en="Read the docs →">문서 보기 →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Terminal -->
+  <section class="s-mid" style="padding:60px 24px;">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="terminal" style="max-width:660px;margin:0 auto;">
+        <div class="terminal-bar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <span style="font-family:'Inconsolata',monospace;font-size:12px;color:rgba(200,155,123,0.35);margin-left:8px;">hanimo — ~/project</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-prompt">❯</span> <span class="t-cmd">hanimo --model mistral-large</span></div>
+          <div class="t-out" style="margin:4px 0 12px 14px;">Session #8 · hanimo v0.9.1</div>
+          <div><span class="t-prompt">hanimo›</span> <span class="t-cmd">extract database layer from handlers</span></div>
+          <div class="t-out" style="margin:4px 0 2px 14px;">Reading 6 handler files...</div>
+          <div class="t-out" style="margin:2px 0 2px 14px;">Planning hash-anchored refactor...</div>
+          <div class="t-ok" style="margin:2px 0 2px 14px;">✓ db/repository.go [hash:f2a1c3]</div>
+          <div class="t-ok" style="margin:2px 0 2px 14px;">✓ handlers/user.go [hash:e9b4d1]</div>
+          <div class="t-ok" style="margin:2px 0 12px 14px;">✓ handlers/post.go [hash:a7c2f8]</div>
+          <div><span class="t-prompt">hanimo›</span> <span class="t-cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1100px;margin:0 auto;padding:0 24px;"><div class="divider"></div></div>
+
+  <!-- Features -->
+  <section id="features" class="s-dark" style="padding:0 24px 80px;">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="label" data-ko="주요 기능" data-en="Features">주요 기능</div>
+      <h2 class="font-display" style="font-size:clamp(28px,3.8vw,48px);font-weight:400;color:var(--cream);margin-bottom:44px;letter-spacing:-.02em;"
+          data-ko="핵심만, 구독 없이" data-en="Essential tools. No subscription.">핵심만, 구독 없이</h2>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:16px;">
+        <div class="feature-card">
+          <div class="icon-chip" style="background:rgba(200,155,123,0.15);">⚓</div>
+          <h3 class="font-display" style="font-size:17px;font-weight:500;color:var(--cream);margin-bottom:6px;" data-ko="해시 기반 편집" data-en="Hash-Anchored Editing">해시 기반 편집</h3>
+          <p style="font-size:13.5px;color:rgba(232,213,183,0.55);line-height:1.55;" data-ko="라인별 MD5. 수정 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 수정 충돌 없음.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon-chip" style="background:rgba(122,140,92,0.2);">🧠</div>
+          <h3 class="font-display" style="font-size:17px;font-weight:500;color:var(--cream);margin-bottom:6px;" data-ko="14+ LLM 지원" data-en="14+ LLM Providers">14+ LLM 지원</h3>
+          <p style="font-size:13.5px;color:rgba(232,213,183,0.55);line-height:1.55;" data-ko="Claude, GPT, Gemini. 세션 중 전환 가능." data-en="Claude, GPT, Gemini. Switch mid-session.">Claude, GPT, Gemini. 세션 중 전환 가능.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon-chip" style="background:rgba(200,155,123,0.15);">📦</div>
+          <h3 class="font-display" style="font-size:17px;font-weight:500;color:var(--cream);margin-bottom:6px;" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</h3>
+          <p style="font-size:13.5px;color:rgba(232,213,183,0.55);line-height:1.55;" data-ko="컨텍스트 자동 요약. 중요 정보 유지." data-en="Auto-summarize context. Key info stays.">컨텍스트 자동 요약. 중요 정보 유지.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon-chip" style="background:rgba(122,140,92,0.2);">🤖</div>
+          <h3 class="font-display" style="font-size:17px;font-weight:500;color:var(--cream);margin-bottom:6px;" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</h3>
+          <p style="font-size:13.5px;color:rgba(232,213,183,0.55);line-height:1.55;" data-ko="계획 확인 후 자동 실행." data-en="Plan, approve, execute automatically.">계획 확인 후 자동 실행.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon-chip" style="background:rgba(200,155,123,0.15);">🗄️</div>
+          <h3 class="font-display" style="font-size:17px;font-weight:500;color:var(--cream);margin-bottom:6px;" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</h3>
+          <p style="font-size:13.5px;color:rgba(232,213,183,0.55);line-height:1.55;" data-ko="전체 대화 로컬 저장. 재개 가능." data-en="Full history, local. Resume anytime.">전체 대화 로컬 저장. 재개 가능.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon-chip" style="background:rgba(122,140,92,0.2);">🔌</div>
+          <h3 class="font-display" style="font-size:17px;font-weight:500;color:var(--cream);margin-bottom:6px;" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</h3>
+          <p style="font-size:13.5px;color:rgba(232,213,183,0.55);line-height:1.55;" data-ko="커스텀 도구 연결. 자유로운 확장." data-en="Connect custom tools. Extend freely.">커스텀 도구 연결. 자유로운 확장.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1100px;margin:0 auto;padding:0 24px;"><div class="divider"></div></div>
+
+  <!-- Providers -->
+  <section class="s-dark" style="padding:0 24px 80px;">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="label" data-ko="지원 LLM" data-en="LLM Providers">지원 LLM</div>
+      <h2 class="font-display" style="font-size:clamp(24px,3.2vw,40px);font-weight:400;color:var(--cream);margin-bottom:26px;letter-spacing:-.02em;"
+          data-ko="내 모델, 내 선택" data-en="Your model, your choice">내 모델, 내 선택</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <span class="provider-pill">claude-3-5-sonnet</span><span class="provider-pill">claude-3-opus</span>
+        <span class="provider-pill">gpt-4o</span><span class="provider-pill">gpt-4-turbo</span>
+        <span class="provider-pill">gemini-1.5-pro</span><span class="provider-pill">gemini-flash</span>
+        <span class="provider-pill">mistral-large</span><span class="provider-pill">codestral</span>
+        <span class="provider-pill">ollama/llama3</span><span class="provider-pill">ollama/codellama</span>
+        <span class="provider-pill">deepseek-coder</span><span class="provider-pill">groq/mixtral</span>
+        <span class="provider-pill">cohere-command</span><span class="provider-pill">perplexity-sonar</span>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1100px;margin:0 auto;padding:0 24px;"><div class="divider"></div></div>
+
+  <!-- Compare -->
+  <section id="compare" class="s-dark" style="padding:0 24px 80px;">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="label" data-ko="비교" data-en="Compare">비교</div>
+      <h2 class="font-display" style="font-size:clamp(24px,3.2vw,40px);font-weight:400;color:var(--cream);margin-bottom:26px;letter-spacing:-.02em;"
+          data-ko="hanimo vs 다른 도구" data-en="hanimo vs the rest">hanimo vs 다른 도구</h2>
+      <div class="compare-table">
+        <div class="compare-row header">
+          <span data-ko="기능" data-en="Feature">기능</span>
+          <span style="text-align:center;color:var(--caramel);">hanimo</span>
+          <span style="text-align:center;">Claude Code</span>
+          <span style="text-align:center;">Cursor</span>
+          <span style="text-align:center;">Aider</span>
+        </div>
+        <div class="compare-row"><span data-ko="오픈소스" data-en="Open Source">오픈소스</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span><span class="check">✓</span></div>
+        <div class="compare-row"><span data-ko="해시 기반 편집" data-en="Hash-Anchored Edits">해시 기반 편집</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span><span class="cross">✗</span></div>
+        <div class="compare-row"><span data-ko="14+ LLM" data-en="14+ LLM Providers">14+ LLM</span><span class="check">✓</span><span class="cross">✗</span><span class="partial" data-ko="일부" data-en="partial">일부</span><span class="check">✓</span></div>
+        <div class="compare-row"><span data-ko="터미널 기반" data-en="Terminal-native">터미널 기반</span><span class="check">✓</span><span class="check">✓</span><span class="cross">✗</span><span class="check">✓</span></div>
+        <div class="compare-row"><span data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span><span class="cross">✗</span></div>
+        <div class="compare-row"><span data-ko="구독 불필요" data-en="No subscription">구독 불필요</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span><span class="check">✓</span></div>
+        <div class="compare-row" style="border-bottom:none;"><span data-ko="MCP 지원" data-en="MCP Support">MCP 지원</span><span class="check">✓</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1100px;margin:0 auto;padding:0 24px;"><div class="divider"></div></div>
+
+  <!-- Install -->
+  <section id="install" class="s-dark" style="padding:0 24px 80px;">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="label" data-ko="설치" data-en="Installation">설치</div>
+      <h2 class="font-display" style="font-size:clamp(24px,3.2vw,40px);font-weight:400;color:var(--cream);margin-bottom:28px;letter-spacing:-.02em;"
+          data-ko="바로 시작하기" data-en="Get started now">바로 시작하기</h2>
+      <div style="background:#3d2415;border:1px solid rgba(200,155,123,0.2);border-radius:14px;padding:28px;max-width:580px;">
+        <div style="margin-bottom:20px;">
+          <div class="label" style="margin-bottom:8px;">curl</div>
+          <div class="install-block">
+            <span><span class="prompt-c">$</span> curl -fsSL hanimo.dev/install | sh</span>
+            <button onclick="navigator.clipboard.writeText('curl -fsSL hanimo.dev/install | sh')" style="background:none;border:none;cursor:pointer;color:rgba(200,155,123,0.35);" title="Copy">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div style="margin-bottom:20px;">
+          <div class="label" style="margin-bottom:8px;">homebrew</div>
+          <div class="install-block">
+            <span><span class="prompt-c">$</span> brew install flykimjiwon/tap/hanimo</span>
+            <button onclick="navigator.clipboard.writeText('brew install flykimjiwon/tap/hanimo')" style="background:none;border:none;cursor:pointer;color:rgba(200,155,123,0.35);" title="Copy">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom:8px;">go build</div>
+          <div class="install-block" style="flex-direction:column;align-items:flex-start;gap:5px;">
+            <span><span class="prompt-c">$</span> git clone https://github.com/flykimjiwon/hanimo</span>
+            <span><span class="prompt-c">$</span> cd hanimo &amp;&amp; go build -o hanimo ./cmd/hanimo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="border-top:1px solid rgba(200,155,123,0.15);padding:36px 24px;max-width:1100px;margin:0 auto;">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;">
+      <div>
+        <span class="font-display" style="font-size:18px;font-weight:400;color:var(--caramel);">hanimo</span>
+        <span style="font-family:'Inconsolata',monospace;font-size:11px;color:rgba(200,155,123,0.4);margin-left:10px;">Apache-2.0</span>
+      </div>
+      <div style="display:flex;gap:20px;font-size:13px;color:rgba(200,155,123,0.4);">
+        <a href="https://github.com/flykimjiwon/hanimo" style="text-decoration:none;color:inherit;">flykimjiwon/hanimo</a>
+        <a href="https://hanimo.dev" style="text-decoration:none;color:inherit;">hanimo.dev</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      localStorage.setItem('hanimo-theme', t);
+      document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+      document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    }
+    function setLang(lang) {
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.querySelectorAll('[data-ko],[data-en]').forEach(el => {
+        const txt = el.getAttribute('data-' + lang);
+        if (txt) el.innerHTML = txt;
+      });
+    }
+    (function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Dracula Theme</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#282a36',
+            surface: '#44475a',
+            surfaceHigh: '#6272a4',
+            purple: '#bd93f9',
+            pink: '#ff79c6',
+            green: '#50fa7b',
+            yellow: '#f1fa8c',
+            orange: '#ffb86c',
+            red: '#ff5555',
+            cyan: '#8be9fd',
+            text: '#f8f8f2',
+            subtext: '#bfc7d5',
+            muted: '#6272a4',
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'monospace'],
+            display: ['Playfair Display', 'serif'],
+            sans: ['Outfit', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background-color: #282a36; color: #f8f8f2; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+
+    /* Dracula atmosphere */
+    .purple-glow {
+      position: fixed; top: -200px; left: -200px; width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(189,147,249,0.07) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .pink-glow {
+      position: fixed; bottom: -200px; right: -100px; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,121,198,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Theme switcher */
+    .theme-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      padding: 3px 10px; border-radius: 3px; border: 1px solid #44475a;
+      color: #6272a4; cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .theme-pill.active { background: #bd93f9; color: #282a36; border-color: #bd93f9; font-weight: 600; }
+    .theme-pill:hover:not(.active) { border-color: #6272a4; color: #bfc7d5; }
+
+    /* Terminal */
+    .terminal {
+      background: #21222c; border: 1px solid #44475a;
+      border-radius: 10px; overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(189,147,249,0.1), 0 40px 80px rgba(0,0,0,0.5);
+    }
+    .terminal-titlebar {
+      background: #44475a; padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .terminal-body { padding: 20px 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8; }
+
+    .c-purple { color: #bd93f9; }
+    .c-pink { color: #ff79c6; }
+    .c-green { color: #50fa7b; }
+    .c-yellow { color: #f1fa8c; }
+    .c-orange { color: #ffb86c; }
+    .c-cyan { color: #8be9fd; }
+    .c-red { color: #ff5555; }
+    .c-text { color: #f8f8f2; }
+    .c-muted { color: #6272a4; }
+
+    /* Feature card */
+    .feature-card {
+      background: #21222c; border: 1px solid #44475a; border-radius: 8px;
+      padding: 24px; transition: all 0.25s; position: relative; overflow: hidden;
+    }
+    .feature-card:hover {
+      border-color: rgba(189,147,249,0.5); background: #282a36;
+      transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(189,147,249,0.1);
+    }
+
+    .provider-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      background: #21222c; border: 1px solid #44475a;
+      padding: 5px 12px; border-radius: 4px; color: #bfc7d5;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .provider-pill:hover { border-color: #bd93f9; color: #bd93f9; }
+
+    .cursor { display: inline-block; width: 8px; height: 14px; background: #ff79c6; animation: blink 0.9s step-end infinite; vertical-align: middle; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.65s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #bd93f9 0%, #ff79c6 60%, #f1fa8c 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .theme-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      background: rgba(189,147,249,0.12); border: 1px solid rgba(189,147,249,0.3);
+      color: #bd93f9; padding: 3px 10px; border-radius: 3px; letter-spacing: 0.05em;
+    }
+
+    .dracula-divider { height: 1px; background: linear-gradient(90deg, transparent, #44475a, transparent); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #bd93f9, #ff79c6);
+      color: #282a36; font-weight: 700; padding: 12px 28px; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 20px rgba(189,147,249,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(189,147,249,0.4); }
+
+    .btn-secondary {
+      background: transparent; border: 1px solid #44475a;
+      color: #bfc7d5; padding: 12px 28px; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: #bd93f9; color: #bd93f9; }
+
+    /* Bat decoration */
+    .bat { position: absolute; font-size: 18px; opacity: 0.15; animation: float 3s ease-in-out infinite; }
+
+    .section { position: relative; z-index: 2; }
+    nav { position: relative; z-index: 10; }
+
+    /* Syntax highlight stripe */
+    .syntax-stripe {
+      display: flex; gap: 0; height: 3px; border-radius: 2px; overflow: hidden; margin-bottom: 16px;
+    }
+    .stripe { flex: 1; }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 12px; right: 16px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  }
+  .ctl-row { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: rgba(30,30,46,0.85); backdrop-filter: blur(10px); }
+  .ctl-btn {
+    background: transparent; border: none; color: rgba(205,214,244,0.5);
+    padding: 5px 12px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.08em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 1px solid rgba(255,255,255,0.1); }
+  .ctl-btn.active { background: rgba(205,214,244,0.15); color: #cdd6f4; }
+  [data-theme="light"] .ctl-row { background: rgba(239,241,245,0.9); border-color: rgba(76,79,105,0.2); }
+  [data-theme="light"] .ctl-btn { color: rgba(76,79,105,0.5); }
+  [data-theme="light"] .ctl-btn.active { background: rgba(76,79,105,0.12); color: #4c4f69; }
+
+  [data-theme="light"] body { background-color: #eff1f5 !important; color: #4c4f69 !important; }
+  [data-theme="light"] nav { background: rgba(239,241,245,0.95) !important; border-color: #ccd0da !important; }
+  [data-theme="light"] .bg-surface { background: #e6e9ef !important; }
+  [data-theme="light"] .bg-surface { background: #e6e9ef !important; }
+  [data-theme="light"] .border-surface { border-color: #ccd0da !important; }
+  [data-theme="light"] .border-surfaceHigh { border-color: #bcc0cc !important; }
+  [data-theme="light"] .text-text { color: #4c4f69 !important; }
+  [data-theme="light"] .text-subtext { color: #5c5f77 !important; }
+  [data-theme="light"] .text-muted { color: #7c7f93 !important; }
+  [data-theme="light"] footer { background: rgba(230,233,239,0.5) !important; border-color: #ccd0da !important; }
+
+  [data-theme="light"] .gradient-text { background: linear-gradient(135deg, #7c3aed, #a78bfa) !important; }
+  [data-theme="light"] .c-purple { color: #7c3aed !important; }
+  [data-theme="light"] .c-pink { color: #db2777 !important; }
+  [data-theme="light"] .c-green { color: #16a34a !important; }
+  </style>
+</head>
+<body>
+
+<!-- Toggle controls -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+  <div class="purple-glow"></div>
+  <div class="pink-glow"></div>
+
+  <!-- Nav -->
+  <nav class="border-b border-surface">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <span class="font-display text-2xl font-bold gradient-text italic">hanimo</span>
+        <span class="theme-badge">theme: dracula</span>
+      </div>
+      <div class="hidden md:flex gap-2">
+        <a href="16-honey.html" class="theme-pill">honey</a>
+        <a href="17-ocean.html" class="theme-pill">ocean</a>
+        <a href="18-dracula.html" class="theme-pill active">dracula</a>
+        <a href="19-nord.html" class="theme-pill">nord</a>
+        <a href="20-forest.html" class="theme-pill">forest</a>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="#features" class="text-sm text-muted hover:text-purple transition-colors" data-ko="기능" data-en="Features">기능</a>
+        <a href="#providers" class="text-sm text-muted hover:text-purple transition-colors" data-ko="프로바이더" data-en="Providers">프로바이더</a>
+        <a href="#docs" class="text-sm text-muted hover:text-purple transition-colors" data-ko="문서" data-en="Docs">문서</a>
+        <a href="https://github.com/flykimjiwon/hanimo" class="text-sm font-mono text-purple hover:text-pink transition-colors">GitHub →</a>
+      </div>
+    </div>
+    <div class="md:hidden px-6 pb-3 flex gap-2 overflow-x-auto">
+      <a href="16-honey.html" class="theme-pill">honey</a>
+      <a href="17-ocean.html" class="theme-pill">ocean</a>
+      <a href="18-dracula.html" class="theme-pill active">dracula</a>
+      <a href="19-nord.html" class="theme-pill">nord</a>
+      <a href="20-forest.html" class="theme-pill">forest</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="section max-w-6xl mx-auto px-6 pt-20 pb-16 relative">
+    <div class="bat" style="top:40px;right:120px;animation-delay:0s">🦇</div>
+    <div class="bat" style="top:100px;right:300px;animation-delay:1s;font-size:12px">🦇</div>
+    <div class="bat" style="top:60px;right:500px;animation-delay:2s;font-size:10px">🦇</div>
+
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <div class="fade-up mb-4">
+          <div class="syntax-stripe">
+            <div class="stripe" style="background:#bd93f9"></div>
+            <div class="stripe" style="background:#ff79c6"></div>
+            <div class="stripe" style="background:#50fa7b"></div>
+            <div class="stripe" style="background:#f1fa8c"></div>
+            <div class="stripe" style="background:#8be9fd"></div>
+          </div>
+          <span class="font-mono text-xs text-muted uppercase tracking-widest" data-ko="야간 · 창의적 · 오픈소스" data-en="nightfall · creative · open source">야간 · 창의적 · 오픈소스</span>
+        </div>
+        <h1 class="fade-up delay-1 font-display text-5xl lg:text-6xl font-black leading-tight mb-3">
+          <span data-ko="오픈소스" data-en="The open-source">오픈소스</span><br /><em class="gradient-text" data-ko="AI 코딩" data-en="AI coding">AI 코딩</em><br /><span data-ko="플랫폼" data-en="platform">플랫폼</span>
+        </h1>
+        <p class="fade-up delay-2 font-mono text-xs text-pink mb-2" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="AI coding agent for open-source">오픈소스를 위한 AI 코딩 에이전트</p>
+        <p class="fade-up delay-2 font-sans text-subtext text-base mb-8 max-w-md leading-relaxed" data-ko="야간 작업을 위해 만들어진 터미널 AI 코딩 에이전트. 14개 이상의 LLM 프로바이더, 해시 앵커 편집, /auto 자율 모드, 완전한 세션 지속성." data-en="A terminal AI coding agent built for the night shift. 14+ LLM providers, hash-anchored edits, /auto autonomous mode, and full session persistence.">
+          야간 작업을 위해 만들어진 터미널 AI 코딩 에이전트. 14개 이상의 LLM 프로바이더, 해시 앵커 편집, /auto 자율 모드, 완전한 세션 지속성.
+        </p>
+
+        <div class="fade-up delay-3 mb-8">
+          <div class="bg-surface border border-surfaceHigh rounded-lg p-4 inline-flex items-center gap-3 font-mono text-sm max-w-full">
+            <span class="c-muted">$</span>
+            <span class="c-purple">curl -fsSL https://hanimo.dev/install.sh | sh</span>
+            <button class="c-muted hover:text-purple transition-colors text-xs ml-2">⎘</button>
+          </div>
+        </div>
+
+        <div class="fade-up delay-4 flex items-center gap-4 flex-wrap">
+          <a href="#" class="btn-primary">Rise from the dark →</a>
+          <a href="https://github.com/flykimjiwon/hanimo" class="btn-secondary">⭐ GitHub</a>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="fade-up delay-3">
+        <div class="terminal">
+          <div class="terminal-titlebar">
+            <div class="dot" style="background:#ff5555"></div>
+            <div class="dot" style="background:#f1fa8c"></div>
+            <div class="dot" style="background:#50fa7b"></div>
+            <span class="ml-3 font-mono text-xs c-muted">hanimo — /auto mode — dracula theme</span>
+          </div>
+          <div class="terminal-body">
+            <div class="mb-2">
+              <span class="c-green">❯</span>
+              <span class="c-purple"> hanimo</span>
+              <span class="c-muted"> --provider openai --model gpt-4o</span>
+            </div>
+            <div class="c-muted mb-3 text-xs">☽ hanimo v0.4.1 · dracula theme · Super mode</div>
+
+            <div class="mb-1 text-xs"><span class="c-yellow">⚡</span> <span class="c-text">Session: component-redesign </span><span class="c-muted">(SQLite)</span></div>
+            <div class="mb-3 text-xs c-muted">└ 6 messages · 8.9k tokens</div>
+
+            <div class="mb-1"><span class="c-pink">you</span><span class="c-muted"> › </span><span class="c-text">/auto create a Dracula-themed design system</span></div>
+            <div class="mb-2 ml-4">
+              <div class="c-purple text-xs">✦ Autonomous mode · nightfall edition</div>
+            </div>
+
+            <div class="c-purple text-xs mb-1">→ Reading src/styles/tokens.css <span class="c-muted">[#1a2b3c]</span></div>
+            <div class="c-pink text-xs mb-1">→ Writing src/styles/dracula.css</div>
+            <div class="c-yellow text-xs mb-1">→ Updating 12 component files</div>
+            <div class="c-green text-xs mb-3">→ Tests passing: 47/47</div>
+
+            <div class="mb-1"><span class="c-green">✔</span> <span class="c-text text-xs">Design system complete · 892 lines written</span></div>
+
+            <div class="mt-3 c-muted text-xs">hanimo › <span class="cursor"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section class="section max-w-6xl mx-auto px-6 py-12">
+    <div class="dracula-divider mb-12"></div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-surface rounded-lg p-8 border border-surfaceHigh text-center">
+        <div class="text-2xl mb-3">🔓</div>
+        <h3 class="font-display text-lg font-bold text-purple mb-2">Open Source</h3>
+        <p class="text-subtext text-sm">Apache-2.0. Fork it. Own it. No hidden telemetry.</p>
+      </div>
+      <div class="bg-surface rounded-lg p-8 border border-surfaceHigh text-center">
+        <div class="text-2xl mb-3">🏠</div>
+        <h3 class="font-display text-lg font-bold text-pink mb-2">Local First</h3>
+        <p class="text-subtext text-sm">Ollama, LM Studio. Your code never leaves your machine.</p>
+      </div>
+      <div class="bg-surface rounded-lg p-8 border border-surfaceHigh text-center">
+        <div class="text-2xl mb-3">🔀</div>
+        <h3 class="font-display text-lg font-bold text-green mb-2">Model Agnostic</h3>
+        <p class="text-subtext text-sm">Switch providers mid-session. 14+ models. One syntax.</p>
+      </div>
+    </div>
+    <div class="dracula-divider mt-12"></div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="mb-12">
+      <span class="font-mono text-xs text-muted uppercase tracking-widest">Features</span>
+      <h2 class="font-display text-4xl font-black mt-2">Bite-sized power.<br /><span class="gradient-text">Massive fangs.</span></h2>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">01 · editing</div>
+        <div class="c-purple font-display text-xl font-bold mb-2">Hash-Anchored Editing</div>
+        <p class="text-subtext text-sm leading-relaxed">Content hashes anchor every edit. Stale file writes are impossible. Your codebase stays pristine.</p>
+        <div class="mt-4 font-mono text-xs c-muted">tokens.css <span class="c-purple">[#1a2b3c]</span></div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">02 · providers</div>
+        <div class="c-pink font-display text-xl font-bold mb-2">14+ LLM Providers</div>
+        <p class="text-subtext text-sm leading-relaxed">OpenAI, Anthropic, Google, Groq, Mistral, DeepSeek, Ollama. All models. One command.</p>
+        <div class="mt-4 font-mono text-xs"><span class="c-muted">--provider</span> <span class="c-pink">groq</span> <span class="c-muted">--model</span> <span class="c-pink">llama-3.3-70b</span></div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">03 · memory</div>
+        <div class="c-green font-display text-xl font-bold mb-2">Smart Compaction</div>
+        <p class="text-subtext text-sm leading-relaxed">Automatic context window management. Keeps you coding without hitting limits. Never lose context.</p>
+        <div class="mt-4 font-mono text-xs c-muted">Context: <span class="c-green">72%</span> · Compacting now</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">04 · autonomy</div>
+        <div class="c-yellow font-display text-xl font-bold mb-2">/auto Autonomous Mode</div>
+        <p class="text-subtext text-sm leading-relaxed">Fully autonomous execution. Plan, read, write, test, iterate — without manual intervention.</p>
+        <div class="mt-4 font-mono text-xs c-muted"><span class="c-yellow">/auto</span> redesign auth flow with OAuth2</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">05 · sessions</div>
+        <div class="c-cyan font-display text-xl font-bold mb-2">SQLite Sessions</div>
+        <p class="text-subtext text-sm leading-relaxed">Every conversation saved locally. Resume yesterday's coding session with complete context.</p>
+        <div class="mt-4 font-mono text-xs c-muted"><span class="c-cyan">/save</span> component-redesign · <span class="c-cyan">/remember</span></div>
+      </div>
+
+      <div class="feature-card">
+        <div class="font-mono text-xs c-muted mb-3">06 · tools</div>
+        <div class="c-orange font-display text-xl font-bold mb-2">MCP Support</div>
+        <p class="text-subtext text-sm leading-relaxed">Model Context Protocol. Attach databases, browsers, custom tools to any MCP-compatible model.</p>
+        <div class="mt-4 font-mono text-xs c-muted">MCP: <span class="c-orange">supabase</span> · <span class="c-orange">playwright</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Providers -->
+  <section id="providers" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="dracula-divider mb-12"></div>
+    <div class="mb-8">
+      <span class="font-mono text-xs c-muted uppercase tracking-widest">Providers</span>
+      <h2 class="font-display text-3xl font-black mt-2">Every model. One agent.</h2>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <span class="provider-pill">Ollama</span>
+      <span class="provider-pill">OpenAI</span>
+      <span class="provider-pill">Anthropic</span>
+      <span class="provider-pill">Google</span>
+      <span class="provider-pill">DeepSeek</span>
+      <span class="provider-pill">Groq</span>
+      <span class="provider-pill">Mistral</span>
+      <span class="provider-pill">Novita</span>
+      <span class="provider-pill">OpenRouter</span>
+      <span class="provider-pill">vLLM</span>
+      <span class="provider-pill">LM Studio</span>
+      <span class="provider-pill">Together</span>
+      <span class="provider-pill">Fireworks</span>
+      <span class="provider-pill">Custom OpenAI</span>
+    </div>
+    <div class="dracula-divider mt-12"></div>
+  </section>
+
+  <!-- Install -->
+  <section id="docs" class="section max-w-6xl mx-auto px-6 py-16">
+    <div class="mb-8">
+      <span class="font-mono text-xs c-muted uppercase tracking-widest">Install</span>
+      <h2 class="font-display text-3xl font-black mt-2">Rise from the crypt.</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5 mb-10">
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#ff5555"></div><div class="dot" style="background:#f1fa8c"></div><div class="dot" style="background:#50fa7b"></div><span class="ml-2 font-mono text-xs c-muted">curl</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># Linux / macOS</div>
+          <div><span class="c-muted">$ </span><span class="c-purple">curl -fsSL</span> <span class="c-cyan">https://hanimo.dev/install.sh</span> <span class="c-purple">| sh</span></div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#ff5555"></div><div class="dot" style="background:#f1fa8c"></div><div class="dot" style="background:#50fa7b"></div><span class="ml-2 font-mono text-xs c-muted">homebrew</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># macOS</div>
+          <div><span class="c-muted">$ </span><span class="c-pink">brew tap</span> <span class="c-yellow">flykimjiwon/tap</span></div>
+          <div class="mt-1"><span class="c-muted">$ </span><span class="c-pink">brew install hanimo</span></div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-titlebar"><div class="dot" style="background:#ff5555"></div><div class="dot" style="background:#f1fa8c"></div><div class="dot" style="background:#50fa7b"></div><span class="ml-2 font-mono text-xs c-muted">go build</span></div>
+        <div class="terminal-body text-xs">
+          <div class="c-muted mb-1"># From source</div>
+          <div><span class="c-muted">$ </span><span class="c-green">git clone</span> <span class="c-yellow">github.com/flykimjiwon/hanimo</span></div>
+          <div class="mt-1"><span class="c-muted">$ </span><span class="c-green">go build ./...</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="bg-surface rounded-lg p-5 border border-surfaceHigh">
+        <div class="font-mono text-xs c-purple mb-2">Super mode</div>
+        <div class="text-subtext text-sm">Full tool access. Read, write, execute. Maximum power.</div>
+      </div>
+      <div class="bg-surface rounded-lg p-5 border border-surfaceHigh">
+        <div class="font-mono text-xs c-pink mb-2">Dev mode</div>
+        <div class="text-subtext text-sm">Code editing and diagnostics. No shell execution.</div>
+      </div>
+      <div class="bg-surface rounded-lg p-5 border border-surfaceHigh">
+        <div class="font-mono text-xs c-green mb-2">Plan mode</div>
+        <div class="text-subtext text-sm">Read-only analysis. Proposes without executing.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="section border-t border-surface">
+    <div class="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between items-start gap-6">
+      <div>
+        <div class="font-display text-xl font-black gradient-text italic mb-1">hanimo</div>
+        <div class="font-mono text-xs c-muted">Apache-2.0 · Built with Go</div>
+        <div class="font-mono text-xs c-muted mt-1">theme: <span class="c-purple">dracula</span></div>
+      </div>
+      <div class="flex gap-8 text-sm text-subtext">
+        <div>
+          <div class="font-mono text-xs c-muted mb-2">Links</div>
+          <div class="space-y-1">
+            <div><a href="https://github.com/flykimjiwon/hanimo" class="hover:text-purple transition-colors">GitHub</a></div>
+            <div><a href="https://hanimo.dev" class="hover:text-purple transition-colors">hanimo.dev</a></div>
+          </div>
+        </div>
+        <div>
+          <div class="font-mono text-xs c-muted mb-2">Commands</div>
+          <div class="space-y-1 font-mono text-xs c-muted">
+            <div><span class="c-purple">/auto</span> · /save · /remember</div>
+            <div><span class="c-pink">/diagnostics</span> · /theme</div>
+            <div><span class="c-green">/theme dracula</span> ← you are here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('hanimo-theme', t);
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+  }
+  (function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+
+  function setLang(lang) {
+    document.documentElement.lang = lang;
+    localStorage.setItem('hanimo-lang', lang);
+    document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+    document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  }
+  (function init() {
+    const theme = localStorage.getItem('hanimo-theme') || 'dark';
+    const lang = localStorage.getItem('hanimo-lang') || 'ko';
+    setTheme(theme);
+    setLang(lang);
+  })();
+</script>
+
+</body>
+</html>

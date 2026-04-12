@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo ♥ kawaii AI coding agent</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'light';document.documentElement.dataset.theme=t;})();</script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #ffd6e0; --mint: #d4f1e8; --sky: #c5e1f0;
+    --butter: #fff4c4; --cream: #fef9f3;
+    --pink-dark: #ffb3c6; --mint-dark: #a8e6cf;
+    --sky-dark: #93c6e7; --butter-dark: #ffe88a;
+    --text: #5a4a6a; --text-light: #8a7a9a;
+    --accent: #ff85a1; --accent2: #7ec8a4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', cursive; background: var(--cream); color: var(--text); overflow-x: hidden; }
+
+  .bg-blob { position: fixed; border-radius: 50%; opacity: 0.3; pointer-events: none; animation: floatBlob 8s ease-in-out infinite; z-index: 0; }
+  .bg-blob:nth-child(1) { width: 380px; height: 380px; background: var(--pink); top: -80px; left: -80px; }
+  .bg-blob:nth-child(2) { width: 280px; height: 280px; background: var(--mint); top: 35%; right: -60px; animation-delay: 2s; }
+  .bg-blob:nth-child(3) { width: 220px; height: 220px; background: var(--sky); bottom: 20%; left: 8%; animation-delay: 4s; }
+  .bg-blob:nth-child(4) { width: 180px; height: 180px; background: var(--butter); bottom: 8%; right: 12%; animation-delay: 1s; }
+  @keyframes floatBlob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+
+  /* dark theme */
+  [data-theme="dark"] body { background: #2d1f3a; color: #e8d5f0; }
+  [data-theme="dark"] nav { background: rgba(45,31,58,0.92); border-bottom-color: var(--pink-dark); }
+  [data-theme="dark"] .bg-blob:nth-child(1) { background: #5a2040; }
+  [data-theme="dark"] .bg-blob:nth-child(2) { background: #1f4030; }
+  [data-theme="dark"] .bg-blob:nth-child(3) { background: #20304a; }
+  [data-theme="dark"] .bg-blob:nth-child(4) { background: #3a3015; }
+  /* Lang + theme toggle */
+  .ctrl-bar {
+    position: fixed; top: 18px; right: 12px; z-index: 200;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .lang-toggle {
+    display: flex; gap: 0; border-radius: 999px; overflow: hidden;
+    border: 2px solid var(--pink-dark);
+    box-shadow: 3px 3px 0 var(--pink);
+  }
+  .theme-toggle {
+    display: flex; gap: 0; border-radius: 999px; overflow: hidden;
+    border: 2px solid var(--pink-dark);
+    box-shadow: 3px 3px 0 var(--pink);
+  }
+  .lang-btn, .theme-btn {
+    font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 800;
+    padding: 6px 14px; border: none; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lang-btn.active, .theme-btn.active { background: var(--accent); color: white; }
+  .lang-btn:not(.active), .theme-btn:not(.active) { background: white; color: var(--text-light); }
+  .lang-btn:hover:not(.active), .theme-btn:hover:not(.active) { background: var(--pink); }
+  [data-theme="dark"] .lang-btn:not(.active), [data-theme="dark"] .theme-btn:not(.active) { background: #3d2050; color: #c8a0d8; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(254,249,243,0.88); backdrop-filter: blur(12px);
+    border-bottom: 3px dashed var(--pink-dark);
+    padding: 12px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-size: 1.5rem; font-weight: 900; color: var(--accent); text-decoration: none; }
+  .nav-links { display: flex; gap: 16px; align-items: center; }
+  .nav-links a { font-weight: 700; color: var(--text); text-decoration: none; padding: 5px 14px; border-radius: 999px; transition: all 0.15s; font-size: 0.88rem; }
+  .nav-links a:hover { background: var(--pink); }
+  .nav-gh { background: var(--pink) !important; color: var(--accent) !important; border: 2px solid var(--accent) !important; }
+  .nav-gh:hover { background: var(--accent) !important; color: white !important; }
+
+  main { position: relative; z-index: 1; padding-top: 80px; }
+
+  /* Hero */
+  .hero { min-height: 92vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 24px 40px; }
+  .hero-badge {
+    background: var(--butter); border: 2px dashed var(--butter-dark);
+    border-radius: 999px; padding: 7px 18px;
+    font-size: 0.82rem; font-weight: 700; color: #9a6f00;
+    margin-bottom: 20px; display: inline-block;
+    animation: wiggle 3s ease-in-out infinite;
+  }
+  @keyframes wiggle { 0%,100%{transform:rotate(-1deg)} 50%{transform:rotate(1deg)} }
+  .hero-ascii { font-size: 1.4rem; margin-bottom: 16px; letter-spacing: 4px; animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .hero h1 {
+    font-size: clamp(2.8rem, 7vw, 5.5rem); font-weight: 900; line-height: 1.1; margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 50%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero-sub { font-size: 1.15rem; color: var(--text-light); margin-bottom: 28px; font-weight: 600; }
+
+  .install-box {
+    background: white; border: 3px solid var(--pink-dark); border-radius: 22px;
+    padding: 18px 28px; margin: 0 auto 28px; max-width: 500px;
+    box-shadow: 8px 8px 0 var(--pink); position: relative;
+  }
+  .install-box::before {
+    content: '✨ install ✨';
+    position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+    background: var(--butter); border: 2px solid var(--butter-dark);
+    border-radius: 999px; padding: 2px 12px; font-size: 0.72rem; font-weight: 700; color: #9a6f00;
+  }
+  .install-cmd {
+    font-family: 'Comic Neue', monospace; font-size: 0.92rem; color: var(--text);
+    background: var(--cream); border-radius: 10px; padding: 9px 14px; margin: 5px 0;
+    border: 1.5px dashed var(--sky-dark); display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .install-cmd span { word-break: break-all; }
+  .copy-btn {
+    font-size: 0.72rem; background: var(--sky); border: none; border-radius: 7px;
+    padding: 4px 9px; cursor: pointer; font-family: 'Nunito', sans-serif;
+    font-weight: 700; color: #2d6a8f; flex-shrink: 0; transition: all 0.15s;
+  }
+  .copy-btn:hover { background: var(--sky-dark); transform: scale(1.05); }
+
+  .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #f472b6); color: white;
+    border: none; border-radius: 999px; padding: 14px 36px; font-size: 1.05rem; font-weight: 800;
+    font-family: 'Nunito', sans-serif; cursor: pointer;
+    box-shadow: 0 5px 0 #d63b6b; transition: all 0.15s; text-decoration: none; display: inline-block;
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 0 #d63b6b; }
+  .btn-primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #d63b6b; }
+  .btn-secondary {
+    background: white; color: var(--accent2); border: 3px solid var(--mint-dark);
+    border-radius: 999px; padding: 11px 32px; font-size: 1.05rem; font-weight: 800;
+    font-family: 'Nunito', sans-serif; cursor: pointer; box-shadow: 0 5px 0 var(--mint-dark);
+    transition: all 0.15s; text-decoration: none; display: inline-block;
+  }
+  .btn-secondary:hover { transform: translateY(-3px); background: var(--mint); }
+
+  /* Terminal */
+  .terminal-section { padding: 50px 24px; display: flex; justify-content: center; }
+  .terminal-window {
+    background: #1a1228; border-radius: 22px;
+    box-shadow: 0 0 0 4px var(--pink-dark), 10px 10px 0 var(--pink);
+    max-width: 660px; width: 100%; overflow: hidden;
+  }
+  .terminal-header {
+    background: #2d1f42; padding: 12px 18px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 2px dashed #3d2f52;
+  }
+  .tl { width: 13px; height: 13px; border-radius: 50%; }
+  .tl-r { background: #ff6b9d; } .tl-y { background: #ffe66d; } .tl-g { background: #4ecdc4; }
+  .terminal-title { flex: 1; text-align: center; font-size: 0.78rem; color: #8a7aaa; font-weight: 700; font-family: 'Comic Neue', monospace; }
+  .terminal-body { padding: 20px; font-family: 'Comic Neue', monospace; font-size: 0.92rem; line-height: 1.9; }
+  .t-prompt { color: #ff85a1; } .t-cmd { color: #e2d9f3; } .t-out { color: #a8e6cf; }
+  .t-dim { color: #5a4a7a; } .t-yellow { color: #ffe66d; }
+  .t-cursor { display: inline-block; width: 9px; height: 17px; background: var(--accent); border-radius: 2px; animation: blink 1.2s step-end infinite; vertical-align: middle; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* Features */
+  section { padding: 56px 24px; }
+  .section-title { text-align: center; font-size: 2rem; font-weight: 900; margin-bottom: 40px; }
+  .section-title span { color: var(--accent); }
+
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px; max-width: 980px; margin: 0 auto; }
+  .feature-bubble {
+    background: white; border-radius: 22px; padding: 24px;
+    border: 3px solid var(--pink-dark); box-shadow: 6px 6px 0 var(--pink);
+    transition: all 0.2s;
+  }
+  .feature-bubble:nth-child(2n) { border-color: var(--mint-dark); box-shadow: 6px 6px 0 var(--mint); }
+  .feature-bubble:nth-child(3n) { border-color: var(--sky-dark); box-shadow: 6px 6px 0 var(--sky); }
+  .feature-bubble:nth-child(4n) { border-color: var(--butter-dark); box-shadow: 6px 6px 0 var(--butter); }
+  .feature-bubble:hover { transform: translateY(-4px) rotate(-0.5deg); }
+  .feature-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .feature-bubble h3 { font-size: 1rem; font-weight: 800; margin-bottom: 6px; }
+  .feature-bubble p { font-size: 0.88rem; color: var(--text-light); line-height: 1.6; }
+
+  /* Providers */
+  .providers-bg { background: linear-gradient(135deg, var(--pink) 0%, var(--mint) 100%); padding: 56px 24px; }
+  .badge-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 780px; margin: 0 auto; }
+  .provider-badge {
+    background: white; border-radius: 999px; padding: 9px 18px; font-size: 0.82rem; font-weight: 700;
+    border: 2.5px solid var(--pink-dark); box-shadow: 3px 3px 0 var(--pink-dark);
+    display: flex; align-items: center; gap: 6px; transition: all 0.15s; cursor: default;
+  }
+  .provider-badge:hover { transform: translateY(-3px) rotate(-1deg); background: var(--butter); }
+
+  /* Comparison */
+  .compare-table { max-width: 780px; margin: 0 auto; border-radius: 20px; overflow: hidden; border: 3px solid var(--pink-dark); box-shadow: 8px 8px 0 var(--pink); }
+  .compare-hdr { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; background: var(--pink); padding: 14px 20px; font-weight: 800; font-size: 0.86rem; align-items: center; }
+  .compare-hdr span:not(:first-child) { text-align: center; }
+  .compare-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 12px 20px; align-items: center; font-size: 0.88rem; border-top: 2px dashed var(--pink); background: white; transition: background 0.15s; }
+  .compare-row:hover { background: var(--cream); }
+  .compare-row span:not(:first-child) { text-align: center; font-size: 1.1rem; }
+  .check { color: #4ecdc4; } .cross { color: #ffb3c6; }
+
+  /* Install */
+  .install-bg { background: var(--mint); padding: 56px 24px; }
+  .install-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; max-width: 840px; margin: 0 auto; }
+  .install-card { background: white; border-radius: 18px; padding: 22px; border: 3px solid var(--mint-dark); box-shadow: 5px 5px 0 var(--mint-dark); text-align: center; }
+  .install-card h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 14px; }
+  .code-block { background: #1a1228; border-radius: 10px; padding: 10px 14px; text-align: left; font-family: 'Comic Neue', monospace; font-size: 0.82rem; color: #a8e6cf; margin-bottom: 6px; word-break: break-all; }
+
+  footer { background: #1a1228; color: #8a7aaa; padding: 44px 24px; text-align: center; }
+  .footer-logo { font-size: 1.8rem; font-weight: 900; color: var(--accent); margin-bottom: 6px; }
+  .footer-tagline { font-size: 0.88rem; margin-bottom: 20px; color: #6a5a8a; }
+  .footer-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .footer-links a { color: #8a7aaa; text-decoration: none; font-size: 0.83rem; font-weight: 600; }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-copy { font-size: 0.78rem; color: #4a3a6a; }
+
+  @media (max-width:640px) {
+    .compare-hdr, .compare-row { grid-template-columns: 1.5fr 1fr 1fr; }
+    .compare-hdr span:nth-child(4), .compare-hdr span:nth-child(5),
+    .compare-row span:nth-child(4), .compare-row span:nth-child(5) { display: none; }
+    .nav-links { display: none; }
+    .lang-toggle { right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-blob"></div><div class="bg-blob"></div><div class="bg-blob"></div><div class="bg-blob"></div>
+
+<!-- Language toggle -->
+<div class="ctrl-bar">
+  <div class="theme-toggle">
+    <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<nav>
+  <a href="#" class="nav-logo">🐾 hanimo</a>
+  <div class="nav-links">
+    <a href="#features" data-ko="기능" data-en="Features">기능</a>
+    <a href="#install" data-ko="설치" data-en="Install">설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo" class="nav-gh">⭐ GitHub</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="hero-badge" data-ko="🌸 오픈소스 · 무료 · Apache-2.0" data-en="🌸 open source · free · Apache-2.0">🌸 오픈소스 · 무료 · Apache-2.0</div>
+    <div class="hero-ascii">(｡◕‿◕｡) ♥ ✨ ♥ (｡◕‿◕｡)</div>
+    <h1>hanimo</h1>
+    <p class="hero-sub" data-ko="오픈소스를 위한 AI 코딩 에이전트 ✨" data-en="The open-source AI coding agent ✨">오픈소스를 위한 AI 코딩 에이전트 ✨</p>
+
+    <div class="install-box">
+      <div class="install-cmd">
+        <span>curl -fsSL https://hanimo.dev/install.sh | sh</span>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('curl -fsSL https://hanimo.dev/install.sh | sh')">copy</button>
+      </div>
+      <div class="install-cmd">
+        <span>brew install hanimo</span>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('brew install hanimo')">copy</button>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <a href="#install" class="btn-primary" data-ko="🌸 시작하기" data-en="🌸 Get Started">🌸 시작하기</a>
+      <a href="https://github.com/flykimjiwon/hanimo" class="btn-secondary">⭐ GitHub</a>
+    </div>
+  </section>
+
+  <section class="terminal-section" style="padding-top:0">
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div>
+        <div class="terminal-title">hanimo ♥ ~ kawaii mode</div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">hanimo ♥ ~ $</span> <span class="t-cmd">hanimo --provider claude</span></div>
+        <div class="t-yellow">  ✨ Claude claude-3-7-sonnet · 14K/200K</div>
+        <div class="t-out">  ♥ hash-anchor: on · compaction: on</div>
+        <br>
+        <div class="t-dim">&gt; auth.go 버그 고쳐줘</div>
+        <div class="t-out">  🔍 #a3f92b 앵커 확인 → 패치 적용 완료 ✅</div>
+        <br>
+        <div><span class="t-prompt">hanimo ♥ ~ $</span> <span class="t-cursor"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <h2 class="section-title">✨ <span data-ko="기능" data-en="Features">기능</span> ✨</h2>
+    <div class="features-grid">
+      <div class="feature-bubble">
+        <div class="feature-icon">⚓</div>
+        <h3 data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</h3>
+        <p data-ko="라인별 MD5. 수정 충돌 방지." data-en="MD5 per line. No stale edits.">라인별 MD5. 수정 충돌 방지.</p>
+      </div>
+      <div class="feature-bubble">
+        <div class="feature-icon">🤖</div>
+        <h3 data-ko="14+ LLM 제공자" data-en="14+ LLM Providers">14+ LLM 제공자</h3>
+        <p data-ko="Claude, GPT, Gemini, Ollama 등 선택." data-en="Claude, GPT, Gemini, Ollama & more.">Claude, GPT, Gemini, Ollama 등 선택.</p>
+      </div>
+      <div class="feature-bubble">
+        <div class="feature-icon">🪄</div>
+        <h3 data-ko="스마트 컴팩션" data-en="Smart Compaction">스마트 컴팩션</h3>
+        <p data-ko="컨텍스트 자동 요약. 토큰 한계 없이." data-en="Auto-summarize context. No token walls.">컨텍스트 자동 요약. 토큰 한계 없이.</p>
+      </div>
+      <div class="feature-bubble">
+        <div class="feature-icon">🚀</div>
+        <h3 data-ko="/auto 자율 모드" data-en="/auto Autonomous">/auto 자율 모드</h3>
+        <p data-ko="계획→코딩→테스트 자동 실행." data-en="Plan, code, test — fully autonomous.">계획→코딩→테스트 자동 실행.</p>
+      </div>
+      <div class="feature-bubble">
+        <div class="feature-icon">💾</div>
+        <h3 data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</h3>
+        <p data-ko="로컬 저장. 언제든 재개 가능." data-en="Local storage. Resume anytime.">로컬 저장. 언제든 재개 가능.</p>
+      </div>
+      <div class="feature-bubble">
+        <div class="feature-icon">🔌</div>
+        <h3 data-ko="MCP 지원" data-en="MCP Support">MCP 지원</h3>
+        <p data-ko="외부 도구·서버 자유롭게 연결." data-en="Connect any tool or server freely.">외부 도구·서버 자유롭게 연결.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="providers-bg">
+    <h2 class="section-title" data-ko="🌈 14개 제공자" data-en="🌈 14 Providers">🌈 14개 제공자</h2>
+    <div class="badge-grid">
+      <div class="provider-badge">🧠 Claude</div>
+      <div class="provider-badge">✨ OpenAI</div>
+      <div class="provider-badge">💎 Gemini</div>
+      <div class="provider-badge">🦙 Ollama</div>
+      <div class="provider-badge">🔥 Groq</div>
+      <div class="provider-badge">🌊 DeepSeek</div>
+      <div class="provider-badge">🦊 Mistral</div>
+      <div class="provider-badge">☁️ Azure OpenAI</div>
+      <div class="provider-badge">⚡ Cohere</div>
+      <div class="provider-badge">🤗 HuggingFace</div>
+      <div class="provider-badge">🐋 Together AI</div>
+      <div class="provider-badge">🌟 Perplexity</div>
+      <div class="provider-badge">🎯 Replicate</div>
+      <div class="provider-badge">🏠 Local LLMs</div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">✨ <span data-ko="비교" data-en="Comparison">비교</span> ✨</h2>
+    <div class="compare-table">
+      <div class="compare-hdr">
+        <span data-ko="기능" data-en="Feature">기능</span>
+        <span>🐾 hanimo</span>
+        <span>Claude Code</span>
+        <span>Cursor</span>
+        <span>Aider</span>
+      </div>
+      <div class="compare-row"><span data-ko="무료 오픈소스" data-en="Free & Open Source">무료 오픈소스</span><span class="check">✨</span><span class="cross">💔</span><span class="cross">💔</span><span class="check">✨</span></div>
+      <div class="compare-row"><span data-ko="14+ LLM 제공자" data-en="14+ LLM Providers">14+ LLM 제공자</span><span class="check">✨</span><span class="cross">💔</span><span class="cross">💔</span><span class="check">✨</span></div>
+      <div class="compare-row"><span data-ko="해시 앵커 편집" data-en="Hash-Anchored Edits">해시 앵커 편집</span><span class="check">✨</span><span class="cross">💔</span><span class="cross">💔</span><span class="cross">💔</span></div>
+      <div class="compare-row"><span data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</span><span class="check">✨</span><span class="cross">💔</span><span class="cross">💔</span><span class="cross">💔</span></div>
+      <div class="compare-row"><span data-ko="스마트 컴팩션" data-en="Smart Compaction">스마트 컴팩션</span><span class="check">✨</span><span class="check">✨</span><span class="cross">💔</span><span class="cross">💔</span></div>
+      <div class="compare-row"><span data-ko="MCP 지원" data-en="MCP Support">MCP 지원</span><span class="check">✨</span><span class="check">✨</span><span class="cross">💔</span><span class="cross">💔</span></div>
+    </div>
+  </section>
+
+  <section class="install-bg" id="install">
+    <h2 class="section-title" data-ko="🎁 설치하기 ♥" data-en="🎁 Install hanimo ♥">🎁 설치하기 ♥</h2>
+    <div class="install-cards">
+      <div class="install-card">
+        <div style="font-size:1.8rem;margin-bottom:10px">🌊</div>
+        <h3 data-ko="curl (Linux / macOS)" data-en="curl (Linux / macOS)">curl (Linux / macOS)</h3>
+        <div class="code-block">curl -fsSL https://hanimo.dev/install.sh | sh</div>
+      </div>
+      <div class="install-card">
+        <div style="font-size:1.8rem;margin-bottom:10px">🍺</div>
+        <h3>Homebrew (macOS)</h3>
+        <div class="code-block">brew tap flykimjiwon/hanimo<br>brew install hanimo</div>
+      </div>
+      <div class="install-card">
+        <div style="font-size:1.8rem;margin-bottom:10px">🔨</div>
+        <h3 data-ko="소스 빌드" data-en="Build from Source">소스 빌드</h3>
+        <div class="code-block">git clone github.com/flykimjiwon/hanimo<br>cd hanimo && go build .</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-logo">🐾 hanimo</div>
+  <p class="footer-tagline" data-ko="오픈소스 커뮤니티가 ♥ 로 만듭니다" data-en="made with ♥ by the open-source community">오픈소스 커뮤니티가 ♥ 로 만듭니다</p>
+  <div class="footer-links">
+    <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+    <a href="https://hanimo.dev">hanimo.dev</a>
+    <a href="#">Apache-2.0</a>
+    <a href="https://github.com/flykimjiwon/hanimo/issues" data-ko="버그 제보" data-en="Report Bug">버그 제보 ♥</a>
+  </div>
+  <p class="footer-copy">(｡◕‿◕｡) Apache-2.0 · flykimjiwon/hanimo · hanimo.dev</p>
+</footer>
+
+<script>
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.documentElement.lang = lang;
+}
+(function(){ setTheme(document.documentElement.dataset.theme || 'light'); })();
+</script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hanimo — 오픈소스 AI 코딩 에이전트</title>
+  <script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Outfit:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --plum: #2d1b3d; --magenta: #d946ef; --coral: #fb7185; --amber: #fbbf24;
+      --glass: rgba(255,255,255,0.08); --glass-border: rgba(255,255,255,0.14);
+      --text: rgba(255,255,255,0.95); --text-2: rgba(255,255,255,0.6); --text-3: rgba(255,255,255,0.38);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--plum);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden;}
+    .font-display{font-family:'Playfair Display',Georgia,serif;}
+    .font-mono{font-family:'JetBrains Mono',monospace;}
+    .hero-gradient{background:linear-gradient(135deg,#2d1b3d 0%,#4a1060 15%,#8b1a8b 30%,#d946ef 48%,#fb7185 65%,#fd9a6f 78%,#fbbf24 100%);}
+    .gradient-text{background:linear-gradient(90deg,var(--magenta),var(--coral),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    nav{position:sticky;top:0;z-index:100;background:rgba(45,27,61,0.8);backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-border);}
+    .glass-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;backdrop-filter:blur(20px);}
+    .terminal{background:rgba(10,5,18,0.85);border:1px solid rgba(217,70,239,0.3);border-radius:16px;backdrop-filter:blur(20px);box-shadow:0 0 60px rgba(217,70,239,0.15),0 30px 80px rgba(0,0,0,0.4);}
+    .terminal-bar{background:rgba(10,5,18,0.6);border-radius:16px 16px 0 0;padding:14px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(217,70,239,0.2);}
+    .dot{width:12px;height:12px;border-radius:50%;}
+    .dot-r{background:#fb7185;} .dot-y{background:#fbbf24;} .dot-g{background:#86efac;}
+    .terminal-body{padding:20px 24px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;}
+    .t-prompt{color:#d946ef;} .t-cmd{color:#fbbf24;} .t-out{color:rgba(255,255,255,0.4);} .t-ok{color:#fb7185;}
+    .t-cursor{display:inline-block;width:8px;height:14px;background:#d946ef;animation:blink 1.1s ease-in-out infinite;vertical-align:middle;}
+    @keyframes blink{0%,49%{opacity:1;}50%,100%{opacity:0;}}
+    .feature-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:18px;padding:26px;backdrop-filter:blur(16px);transition:transform .25s,border-color .25s,box-shadow .25s;}
+    .feature-card:hover{transform:translateY(-6px);border-color:rgba(217,70,239,0.4);box-shadow:0 20px 60px rgba(217,70,239,0.12);}
+    .provider-pill{background:rgba(255,255,255,0.07);border:1px solid var(--glass-border);border-radius:999px;padding:5px 14px;font-size:12px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.65);transition:all .15s;cursor:default;}
+    .provider-pill:hover{background:rgba(217,70,239,0.15);border-color:rgba(217,70,239,0.5);color:#fff;}
+    .compare-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;align-items:center;padding:13px 24px;border-bottom:1px solid rgba(255,255,255,0.07);font-size:14px;}
+    .compare-row.header{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.4);}
+    .check{color:#86efac;text-align:center;} .cross{color:rgba(255,255,255,0.18);text-align:center;} .partial{color:#fbbf24;text-align:center;font-size:12px;}
+    .btn-primary{background:linear-gradient(135deg,#d946ef,#fb7185);color:#fff;padding:13px 30px;border-radius:12px;font-weight:500;font-size:15px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:opacity .2s,transform .15s;box-shadow:0 8px 32px rgba(217,70,239,0.35);}
+    .btn-primary:hover{opacity:.88;transform:translateY(-2px);}
+    .btn-glass{background:var(--glass);border:1px solid var(--glass-border);color:rgba(255,255,255,0.85);padding:13px 26px;border-radius:12px;font-size:15px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;backdrop-filter:blur(8px);transition:background .2s;}
+    .btn-glass:hover{background:rgba(255,255,255,0.13);}
+    .install-block{background:rgba(0,0,0,0.35);border:1px solid rgba(217,70,239,0.25);border-radius:12px;padding:13px 18px;font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(217,70,239,0.8);margin-bottom:14px;}
+    .orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(217,70,239,0.3),rgba(251,113,133,0.3),transparent);margin:72px 0;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+    .fu{opacity:0;animation:fadeUp .7s ease forwards;}
+    .fu1{animation-delay:.1s;} .fu2{animation-delay:.28s;} .fu3{animation-delay:.44s;} .fu4{animation-delay:.58s;} .fu5{animation-delay:.72s;}
+
+    /* light theme overrides */
+    [data-theme="light"] body{background:#fff5f9;color:#3d1a2e;}
+    [data-theme="light"] nav{background:rgba(255,245,249,0.92);}
+    [data-theme="light"] .glass-card{background:rgba(255,255,255,0.7);border-color:rgba(217,70,239,0.2);}
+    [data-theme="light"] .feature-card{background:rgba(255,255,255,0.8);border-color:rgba(217,70,239,0.2);}
+    [data-theme="light"] .terminal{background:rgba(10,5,18,0.9);}
+    [data-theme="light"] .compare-row{border-bottom-color:rgba(217,70,239,0.15);}
+    [data-theme="light"] .install-block{background:rgba(217,70,239,0.06);border-color:rgba(217,70,239,0.3);color:#3d1a2e;}
+    /* i18n + theme toggle */
+    .ctrl-row{display:flex;gap:8px;align-items:center;}
+    .lang-toggle{display:flex;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);border-radius:8px;overflow:hidden;}
+    .theme-toggle{display:flex;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);border-radius:8px;overflow:hidden;}
+    [data-theme="light"] .lang-toggle,[data-theme="light"] .theme-toggle{background:rgba(217,70,239,0.07);border-color:rgba(217,70,239,0.2);}
+    .lang-btn,.theme-btn{padding:5px 13px;font-family:'JetBrains Mono',monospace;font-size:12px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.45);transition:all .15s;}
+    .lang-btn.active,.theme-btn.active{background:linear-gradient(135deg,#d946ef,#fb7185);color:#fff;}
+    [data-theme="light"] .lang-btn,[data-theme="light"] .theme-btn{color:rgba(61,26,46,0.55);}
+    [data-theme="light"] .lang-btn.active,[data-theme="light"] .theme-btn.active{color:#fff;}
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div style="max-width:1120px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:62px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="font-display gradient-text" style="font-size:23px;font-weight:500;letter-spacing:-.02em;">hanimo</span>
+        <span style="background:rgba(217,70,239,0.15);border:1px solid rgba(217,70,239,0.3);color:#d946ef;font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:999px;">v0.9.1</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px;font-size:14px;color:rgba(255,255,255,0.6);">
+        <a href="#features" style="text-decoration:none;color:inherit;" data-ko="기능" data-en="Features">기능</a>
+        <a href="#install" style="text-decoration:none;color:inherit;" data-ko="설치" data-en="Install">설치</a>
+        <a href="#compare" style="text-decoration:none;color:inherit;" data-ko="비교" data-en="Compare">비교</a>
+        <div class="ctrl-row">
+          <div class="theme-toggle">
+            <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+            <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+          </div>
+          <div class="lang-toggle">
+            <button class="lang-btn active" onclick="setLang('ko')" id="btn-ko">KO</button>
+            <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+          </div>
+        </div>
+        <a href="https://github.com/flykimjiwon/hanimo" style="text-decoration:none;background:var(--glass);border:1px solid var(--glass-border);color:rgba(255,255,255,0.85);padding:7px 14px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero-gradient" style="position:relative;padding:120px 24px 100px;overflow:hidden;min-height:85vh;display:flex;align-items:center;">
+    <div class="orb" style="width:500px;height:500px;background:rgba(217,70,239,0.25);top:-100px;left:-150px;"></div>
+    <div class="orb" style="width:400px;height:400px;background:rgba(251,113,133,0.2);bottom:-50px;right:-100px;"></div>
+
+    <div style="max-width:1120px;margin:0 auto;width:100%;position:relative;z-index:2;">
+      <div class="label fu fu1" style="color:rgba(255,255,255,0.75);" data-ko="오픈소스 AI 코딩 에이전트" data-en="Open Source AI Coding Agent">오픈소스 AI 코딩 에이전트</div>
+
+      <h1 class="font-display fu fu2" style="font-size:clamp(52px,8vw,96px);line-height:1.02;font-weight:400;color:#fff;max-width:860px;margin-bottom:20px;letter-spacing:-.03em;text-shadow:0 4px 40px rgba(0,0,0,0.25);">
+        <span data-ko="오픈소스<br>AI 코딩 플랫폼" data-en="The <em style='font-style:italic;'>open-source</em><br>AI coding platform">오픈소스<br>AI 코딩 플랫폼</span>
+      </h1>
+
+      <p class="fu fu3" style="font-size:16px;color:rgba(255,255,255,0.65);max-width:500px;line-height:1.65;margin-bottom:48px;font-weight:300;"
+         data-ko="Go 기반 터미널 AI 에이전트. 구독 없이 14+ LLM 지원."
+         data-en="Terminal AI agent in Go. 14+ LLMs, no subscription.">Go 기반 터미널 AI 에이전트. 구독 없이 14+ LLM 지원.</p>
+
+      <div class="fu fu4" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:48px;align-items:center;">
+        <div class="install-block" style="min-width:320px;">
+          <span><span style="color:#d946ef;">$</span> curl -fsSL hanimo.dev/install | sh</span>
+          <button onclick="navigator.clipboard.writeText('curl -fsSL hanimo.dev/install | sh')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);" title="Copy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="fu fu5" style="display:flex;flex-wrap:wrap;gap:12px;">
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-primary" data-ko="GitHub에서 보기" data-en="Star on GitHub">GitHub에서 보기</a>
+        <a href="https://hanimo.dev" class="btn-glass" data-ko="문서 보기 →" data-en="Read the docs →">문서 보기 →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Terminal -->
+  <section style="max-width:1120px;margin:0 auto;padding:80px 24px 0;">
+    <div class="terminal" style="max-width:700px;margin:0 auto;">
+      <div class="terminal-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,0.3);margin-left:8px;">hanimo — ~/my-project</span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">❯</span> <span class="t-cmd">hanimo --model claude-3-5-sonnet</span></div>
+        <div class="t-out" style="margin:4px 0 12px 14px;">Session #42 · hanimo v0.9.1</div>
+        <div><span class="t-prompt">hanimo›</span> <span class="t-cmd">/auto implement OAuth2 login flow</span></div>
+        <div class="t-out" style="margin:4px 0 2px 14px;">Planning 3 steps...</div>
+        <div class="t-out" style="margin:2px 0 8px 14px;">Proceed? [Y/n] Y</div>
+        <div class="t-ok" style="margin:2px 0 2px 14px;">✓ routes/auth.go [hash:a3f9d2]</div>
+        <div class="t-ok" style="margin:2px 0 2px 14px;">✓ auth/oauth.go [hash:b7e1c4]</div>
+        <div class="t-ok" style="margin:2px 0 12px 14px;">✓ middleware/session.go [hash:c2a8f1]</div>
+        <div><span class="t-prompt">hanimo›</span> <span class="t-cursor"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1120px;margin:0 auto;padding:0 24px;"><div class="divider"></div></div>
+
+  <!-- Features -->
+  <section id="features" style="max-width:1120px;margin:0 auto;padding:0 24px 80px;">
+    <div class="label" data-ko="주요 기능" data-en="Features">주요 기능</div>
+    <h2 class="font-display" style="font-size:clamp(30px,4vw,52px);font-weight:400;margin-bottom:44px;letter-spacing:-.02em;line-height:1.1;">
+      <span data-ko="핵심만, <span class='gradient-text'>구독 없이</span>" data-en="Essential tools. <span class='gradient-text'>No subscription.</span>">핵심만, <span class="gradient-text">구독 없이</span></span>
+    </h2>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;">
+      <div class="feature-card">
+        <div style="font-size:24px;margin-bottom:14px;">⚓</div>
+        <h3 class="font-display" style="font-size:19px;font-weight:500;margin-bottom:8px;" data-ko="해시 기반 편집" data-en="Hash-Anchored Editing">해시 기반 편집</h3>
+        <p style="font-size:13.5px;color:rgba(255,255,255,0.5);line-height:1.6;" data-ko="라인별 MD5. 수정 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 수정 충돌 없음.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size:24px;margin-bottom:14px;">🧠</div>
+        <h3 class="font-display" style="font-size:19px;font-weight:500;margin-bottom:8px;" data-ko="14+ LLM 지원" data-en="14+ LLM Providers">14+ LLM 지원</h3>
+        <p style="font-size:13.5px;color:rgba(255,255,255,0.5);line-height:1.6;" data-ko="Claude, GPT, Gemini. 세션 중 전환 가능." data-en="Claude, GPT, Gemini. Switch mid-session.">Claude, GPT, Gemini. 세션 중 전환 가능.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size:24px;margin-bottom:14px;">📦</div>
+        <h3 class="font-display" style="font-size:19px;font-weight:500;margin-bottom:8px;" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</h3>
+        <p style="font-size:13.5px;color:rgba(255,255,255,0.5);line-height:1.6;" data-ko="컨텍스트 자동 요약. 중요 정보 유지." data-en="Auto-summarize context. Key info stays.">컨텍스트 자동 요약. 중요 정보 유지.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size:24px;margin-bottom:14px;">🤖</div>
+        <h3 class="font-display" style="font-size:19px;font-weight:500;margin-bottom:8px;" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</h3>
+        <p style="font-size:13.5px;color:rgba(255,255,255,0.5);line-height:1.6;" data-ko="계획 확인 후 자동 실행." data-en="Plan, approve, execute automatically.">계획 확인 후 자동 실행.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size:24px;margin-bottom:14px;">🗄️</div>
+        <h3 class="font-display" style="font-size:19px;font-weight:500;margin-bottom:8px;" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</h3>
+        <p style="font-size:13.5px;color:rgba(255,255,255,0.5);line-height:1.6;" data-ko="전체 대화 로컬 저장. 재개 가능." data-en="Full history, local. Resume anytime.">전체 대화 로컬 저장. 재개 가능.</p>
+      </div>
+      <div class="feature-card">
+        <div style="font-size:24px;margin-bottom:14px;">🔌</div>
+        <h3 class="font-display" style="font-size:19px;font-weight:500;margin-bottom:8px;" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</h3>
+        <p style="font-size:13.5px;color:rgba(255,255,255,0.5);line-height:1.6;" data-ko="커스텀 도구 연결. 자유로운 확장." data-en="Connect custom tools. Extend freely.">커스텀 도구 연결. 자유로운 확장.</p>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1120px;margin:0 auto;padding:0 24px;"><div class="divider"></div></div>
+
+  <!-- Providers -->
+  <section style="max-width:1120px;margin:0 auto;padding:0 24px 80px;">
+    <div class="label" data-ko="지원 LLM" data-en="LLM Providers">지원 LLM</div>
+    <h2 class="font-display" style="font-size:clamp(26px,3.5vw,44px);font-weight:400;margin-bottom:28px;letter-spacing:-.02em;">
+      <span data-ko="내 모델, <span class='gradient-text'>내 선택</span>" data-en="Your model, <span class='gradient-text'>your choice</span>">내 모델, <span class="gradient-text">내 선택</span></span>
+    </h2>
+    <div style="display:flex;flex-wrap:wrap;gap:9px;">
+      <span class="provider-pill">claude-3-5-sonnet</span><span class="provider-pill">claude-3-opus</span>
+      <span class="provider-pill">gpt-4o</span><span class="provider-pill">gpt-4-turbo</span>
+      <span class="provider-pill">gemini-1.5-pro</span><span class="provider-pill">gemini-flash</span>
+      <span class="provider-pill">mistral-large</span><span class="provider-pill">codestral</span>
+      <span class="provider-pill">ollama/llama3</span><span class="provider-pill">ollama/codellama</span>
+      <span class="provider-pill">deepseek-coder</span><span class="provider-pill">groq/mixtral</span>
+      <span class="provider-pill">cohere-command</span><span class="provider-pill">perplexity-sonar</span>
+    </div>
+  </section>
+
+  <div style="max-width:1120px;margin:0 auto;padding:0 24px;"><div class="divider"></div></div>
+
+  <!-- Compare -->
+  <section id="compare" style="max-width:1120px;margin:0 auto;padding:0 24px 80px;">
+    <div class="label" data-ko="비교" data-en="Compare">비교</div>
+    <h2 class="font-display" style="font-size:clamp(26px,3.5vw,44px);font-weight:400;margin-bottom:28px;letter-spacing:-.02em;">
+      hanimo <span class="gradient-text" data-ko="vs 다른 도구" data-en="vs the rest">vs 다른 도구</span>
+    </h2>
+    <div class="glass-card" style="overflow:hidden;">
+      <div class="compare-row header">
+        <span data-ko="기능" data-en="Feature">기능</span>
+        <span style="text-align:center;color:#d946ef;">hanimo</span>
+        <span style="text-align:center;">Claude Code</span>
+        <span style="text-align:center;">Cursor</span>
+        <span style="text-align:center;">Aider</span>
+      </div>
+      <div class="compare-row"><span data-ko="오픈소스" data-en="Open Source">오픈소스</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span><span class="check">✓</span></div>
+      <div class="compare-row"><span data-ko="해시 기반 편집" data-en="Hash-Anchored Edits">해시 기반 편집</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span><span class="cross">✗</span></div>
+      <div class="compare-row"><span data-ko="14+ LLM" data-en="14+ LLM Providers">14+ LLM</span><span class="check">✓</span><span class="cross">✗</span><span class="partial" data-ko="일부" data-en="partial">일부</span><span class="check">✓</span></div>
+      <div class="compare-row"><span data-ko="터미널 기반" data-en="Terminal-native">터미널 기반</span><span class="check">✓</span><span class="check">✓</span><span class="cross">✗</span><span class="check">✓</span></div>
+      <div class="compare-row"><span data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span><span class="cross">✗</span></div>
+      <div class="compare-row"><span data-ko="구독 불필요" data-en="No subscription">구독 불필요</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span><span class="check">✓</span></div>
+      <div class="compare-row" style="border-bottom:none;"><span data-ko="MCP 지원" data-en="MCP Support">MCP 지원</span><span class="check">✓</span><span class="check">✓</span><span class="cross">✗</span><span class="cross">✗</span></div>
+    </div>
+  </section>
+
+  <div style="max-width:1120px;margin:0 auto;padding:0 24px;"><div class="divider"></div></div>
+
+  <!-- Install -->
+  <section id="install" style="max-width:1120px;margin:0 auto;padding:0 24px 80px;">
+    <div class="label" data-ko="설치" data-en="Installation">설치</div>
+    <h2 class="font-display" style="font-size:clamp(26px,3.5vw,44px);font-weight:400;margin-bottom:32px;letter-spacing:-.02em;">
+      <span data-ko="바로 시작하기" data-en="Get started now">바로 시작하기</span>
+    </h2>
+    <div class="glass-card" style="padding:32px;max-width:620px;">
+      <div style="margin-bottom:20px;">
+        <div class="label" style="margin-bottom:8px;">curl</div>
+        <div class="install-block">
+          <span><span style="color:#d946ef;">$</span> curl -fsSL hanimo.dev/install | sh</span>
+          <button onclick="navigator.clipboard.writeText('curl -fsSL hanimo.dev/install | sh')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);" title="Copy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="label" style="margin-bottom:8px;">homebrew</div>
+        <div class="install-block">
+          <span><span style="color:#d946ef;">$</span> brew install flykimjiwon/tap/hanimo</span>
+          <button onclick="navigator.clipboard.writeText('brew install flykimjiwon/tap/hanimo')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);" title="Copy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div>
+        <div class="label" style="margin-bottom:8px;">go build</div>
+        <div class="install-block" style="flex-direction:column;align-items:flex-start;gap:5px;">
+          <span><span style="color:#d946ef;">$</span> git clone https://github.com/flykimjiwon/hanimo</span>
+          <span><span style="color:#d946ef;">$</span> cd hanimo &amp;&amp; go build -o hanimo ./cmd/hanimo</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="border-top:1px solid rgba(217,70,239,0.15);padding:36px 24px;max-width:1120px;margin:0 auto;">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;">
+      <div>
+        <span class="font-display gradient-text" style="font-size:20px;">hanimo</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,0.3);margin-left:10px;">Apache-2.0</span>
+      </div>
+      <div style="display:flex;gap:20px;font-size:13px;color:rgba(255,255,255,0.35);">
+        <a href="https://github.com/flykimjiwon/hanimo" style="text-decoration:none;color:inherit;">flykimjiwon/hanimo</a>
+        <a href="https://hanimo.dev" style="text-decoration:none;color:inherit;">hanimo.dev</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      localStorage.setItem('hanimo-theme', t);
+      document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+      document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    }
+    function setLang(lang) {
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.querySelectorAll('[data-ko],[data-en]').forEach(el => {
+        const txt = el.getAttribute('data-' + lang);
+        if (txt) el.innerHTML = txt;
+      });
+    }
+    (function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+  </script>
+</body>
+</html>

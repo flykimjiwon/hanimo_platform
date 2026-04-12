@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo 가격 계산기</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050810;
+    --bg2: #0a0d1a;
+    --bg3: #0f1220;
+    --grid: #0d1018;
+    --border: #1a1f30;
+    --border2: #252a3f;
+    --text: #dde2f0;
+    --dim: #6b7290;
+    --dimmer: #3a3f55;
+    --green: #00e676;
+    --green2: #1de9b6;
+    --green-bg: rgba(0,230,118,0.06);
+    --red: #ff4444;
+    --red-bg: rgba(255,68,68,0.07);
+    --amber: #ffab40;
+    --amber-bg: rgba(255,171,64,0.07);
+    --blue: #448aff;
+    --hanimo: #00e676;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    font-family:'Syne',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* GRID BG */
+  body::before {
+    content:'';
+    position:fixed; inset:0; z-index:0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:40px 40px;
+    pointer-events:none;
+  }
+
+  /* light theme */
+  [data-theme="light"] body { background:#f0f4f8; color:#1a2030; }
+  [data-theme="light"] body::before { opacity:0.3; }
+  [data-theme="light"] nav { background:rgba(240,244,248,0.92); }
+  /* LANG + THEME */
+  .lang-bar { position:fixed; top:0; right:0; z-index:300; display:flex; }
+  .lang-btn, .theme-btn { background:var(--bg2); border:1px solid var(--border2); color:var(--dim); font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.5rem 0.8rem; cursor:pointer; transition:all 0.15s; }
+  .lang-btn.active, .theme-btn.active { background:var(--hanimo); color:#000; border-color:var(--hanimo); }
+  [data-theme="light"] .lang-btn, [data-theme="light"] .theme-btn { background:#e0e8f0; border-color:#c0ccd8; color:#6080a0; }
+  [data-theme="light"] .lang-btn.active, [data-theme="light"] .theme-btn.active { background:var(--hanimo); color:#000; }
+
+  /* NAV */
+  nav {
+    position:sticky; top:0; z-index:200;
+    background:rgba(5,8,16,0.92); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+    padding:0.85rem 2rem;
+    display:flex; align-items:center; gap:1.5rem;
+  }
+  .nav-logo { font-size:1.3rem; font-weight:800; color:var(--hanimo); letter-spacing:-0.02em; }
+  .nav-tag { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--dim); letter-spacing:0.15em; }
+  .install-btn { margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:0.7rem; background:transparent; border:1px solid var(--border2); color:var(--hanimo); padding:0.4rem 0.85rem; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .install-btn:hover { background:var(--green-bg); border-color:var(--hanimo); }
+
+  /* HERO */
+  .hero {
+    position:relative; z-index:1;
+    padding:5rem 2rem 3rem; text-align:center;
+    max-width:900px; margin:0 auto;
+  }
+  .hero-eye { font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--hanimo); letter-spacing:0.4em; text-transform:uppercase; margin-bottom:1.5rem; }
+  .hero-h1 { font-size:clamp(2.5rem,6vw,5rem); font-weight:800; line-height:1.05; margin-bottom:1rem; letter-spacing:-0.02em; }
+  .hero-h1 .zero { color:var(--hanimo); display:block; font-size:1.4em; line-height:1; }
+  .hero-sub { font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--dim); letter-spacing:0.12em; margin-bottom:0.8rem; }
+  .hero-ko { font-size:0.9rem; color:var(--dimmer); }
+
+  /* MAIN LAYOUT */
+  .main { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:0 2rem 5rem; }
+
+  /* SLIDER SECTION */
+  .calc-card {
+    background:var(--bg2); border:1px solid var(--border2);
+    padding:2rem 2.5rem; margin-bottom:1.5rem;
+  }
+  .calc-title { font-size:0.75rem; font-weight:600; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim); margin-bottom:1.5rem; display:flex; align-items:center; gap:0.8rem; }
+  .calc-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .slider-row { display:flex; align-items:center; gap:1.5rem; margin-bottom:0.5rem; flex-wrap:wrap; }
+  .slider-label { font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--text); flex:1; min-width:180px; }
+  .slider-val { font-family:'JetBrains Mono',monospace; font-size:1.1rem; color:var(--hanimo); font-weight:500; min-width:60px; text-align:right; }
+  input[type=range] {
+    flex:2; min-width:200px; height:4px; appearance:none;
+    background:var(--border2); border-radius:2px; cursor:pointer;
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--hanimo); cursor:pointer; transition:transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+
+  /* COST GRID */
+  .cost-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1px; background:var(--border); margin-bottom:1.5rem; }
+  .cost-cell {
+    background:var(--bg2); padding:1.4rem 1.5rem;
+    display:flex; flex-direction:column; gap:0.4rem;
+    transition:background 0.2s;
+  }
+  .cost-cell:hover { background:var(--bg3); }
+  .cost-tool { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--dim); letter-spacing:0.2em; text-transform:uppercase; }
+  .cost-num { font-size:2.2rem; font-weight:800; line-height:1; letter-spacing:-0.03em; }
+  .cost-num.red { color:var(--red); }
+  .cost-num.amber { color:var(--amber); }
+  .cost-num.green { color:var(--hanimo); }
+  .cost-per { font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--dim); }
+  .cost-note { font-family:'JetBrains Mono',monospace; font-size:0.67rem; color:var(--dimmer); margin-top:0.3rem; line-height:1.45; }
+
+  /* SAVINGS BANNER */
+  .savings-banner {
+    background:var(--green-bg); border:1px solid rgba(0,230,118,0.2);
+    padding:1.8rem 2rem; text-align:center; margin-bottom:1.5rem;
+  }
+  .sav-eye { font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--hanimo); letter-spacing:0.35em; text-transform:uppercase; margin-bottom:0.6rem; }
+  .sav-num { font-size:clamp(3rem,8vw,6rem); font-weight:800; color:var(--hanimo); line-height:1; letter-spacing:-0.03em; margin-bottom:0.5rem; }
+  .sav-sub { font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--dim); }
+
+  /* WHAT YOU GET */
+  .what-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1px; background:var(--border); margin-bottom:1.5rem; }
+  .what-item { background:var(--bg2); padding:1.1rem 1.3rem; display:flex; align-items:flex-start; gap:0.7rem; }
+  .what-check { color:var(--hanimo); font-size:0.9rem; margin-top:0.1rem; flex-shrink:0; }
+  .what-text { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text); line-height:1.55; }
+  .what-sub { color:var(--dim); font-size:0.65rem; display:block; margin-top:0.15rem; }
+
+  /* YEAR TABLE */
+  .year-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:0.75rem; }
+  .year-table thead tr { background:var(--bg3); border-bottom:1px solid var(--border2); }
+  .year-table th { padding:0.7rem 1rem; text-align:left; color:var(--dim); letter-spacing:0.12em; text-transform:uppercase; font-weight:400; font-size:0.65rem; }
+  .year-table tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+  .year-table tbody tr:hover { background:var(--bg3); }
+  .year-table td { padding:0.8rem 1rem; }
+  .year-table td:first-child { color:var(--text); font-weight:500; }
+  .yr-red { color:var(--red); }
+  .yr-amber { color:var(--amber); }
+  .yr-green { color:var(--hanimo); font-weight:700; }
+
+  /* TERMINAL */
+  .term-wrap { margin-top:1.5rem; }
+  .term { background:#040608; border:1px solid var(--border2); font-family:'JetBrains Mono',monospace; font-size:0.75rem; }
+  .term-bar { background:var(--bg3); padding:0.5rem 0.9rem; display:flex; align-items:center; gap:0.35rem; border-bottom:1px solid var(--border); }
+  .dot { width:8px;height:8px;border-radius:50%; }
+  .dr{background:#ff5f57;}.dy{background:#ffbd2e;}.dg{background:#28c840;}
+  .tbar-t { margin-left:auto; font-size:0.6rem; color:var(--dimmer); }
+  .tbody { padding:1.1rem 1.3rem; line-height:1.85; }
+  .tp{color:var(--hanimo);}.ts{color:#00e676;}.ti{color:#448aff;}.th{color:#ffab40;}.to{color:#555d80;}
+  .tcur{display:inline-block;width:7px;height:0.9em;background:var(--hanimo);vertical-align:text-bottom;animation:blink 1s step-end infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* PROVIDERS */
+  .prov-wrap { display:flex; flex-wrap:wrap; gap:0.35rem; }
+  .prov { background:var(--bg3); border:1px solid var(--border); color:var(--dim); font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.22rem 0.6rem; transition:all 0.12s; cursor:default; }
+  .prov:hover { border-color:var(--hanimo); color:var(--hanimo); background:var(--green-bg); }
+
+  /* FOOTER */
+  footer { position:relative; z-index:1; background:var(--bg2); border-top:1px solid var(--border); padding:2rem; font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--dimmer); }
+  .foot-in { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+  .f-logo { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--hanimo); }
+  footer a { color:var(--dim); text-decoration:none; } footer a:hover { color:var(--hanimo); }
+
+  /* Install cmds */
+  .install-row { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-top:1rem; }
+  .icmd { font-family:'JetBrains Mono',monospace; font-size:0.72rem; background:var(--bg3); border:1px solid var(--border2); color:var(--hanimo); padding:0.35rem 0.75rem; cursor:pointer; transition:all 0.12s; white-space:nowrap; }
+  .icmd:hover { background:var(--green-bg); border-color:var(--hanimo); }
+</style>
+</head>
+<body>
+
+<div class="lang-bar">
+  <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+  <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  <button class="lang-btn active" data-lang="ko" onclick="setLang('ko')">KO</button>
+  <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+</div>
+
+<nav>
+  <div class="nav-logo">hanimo</div>
+  <div class="nav-tag" data-ko="가격 계산기" data-en="Pricing Calculator">가격 계산기</div>
+  <button class="install-btn" id="inav" data-copy="curl -sSL https://hanimo.dev/install | sh">$ curl -sSL https://hanimo.dev/install | sh</button>
+</nav>
+
+<section class="hero">
+  <div class="hero-eye" data-ko="가격 충격 계산기 · 2026" data-en="Pricing Shock Calculator · 2026">가격 충격 계산기 · 2026</div>
+  <h1 class="hero-h1">
+    <span data-ko="경쟁사는 얼마?" data-en="What competitors cost?">경쟁사는 얼마?</span>
+    <span class="zero">$0</span>
+    <span style="font-size:0.45em;color:var(--dim);display:block;margin-top:0.3em;" data-ko="그게 hanimo의 가격입니다." data-en="That's hanimo.">그게 hanimo의 가격입니다.</span>
+  </h1>
+  <p class="hero-sub" data-ko="슬라이더를 조정해서 절약액을 확인하세요." data-en="Adjust the slider to see your savings.">슬라이더를 조정해서 절약액을 확인하세요.</p>
+  <p class="hero-ko" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding agent">오픈소스를 위한 AI 코딩 에이전트</p>
+</section>
+
+<div class="main">
+
+  <!-- SLIDER CARD -->
+  <div class="calc-card">
+    <div class="calc-title" data-ko="월 사용량 설정" data-en="Set Monthly Usage">월 사용량 설정</div>
+    <div class="slider-row">
+      <div class="slider-label" data-ko="월 개발 일수" data-en="Dev days per month">월 개발 일수</div>
+      <input type="range" id="days" min="1" max="22" value="10" step="1">
+      <div class="slider-val"><span id="days-val">10</span> <span data-ko="일" data-en="days">일</span></div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label" data-ko="하루 평균 요청 수" data-en="Avg requests per day">하루 평균 요청 수</div>
+      <input type="range" id="reqs" min="10" max="200" value="60" step="10">
+      <div class="slider-val"><span id="reqs-val">60</span></div>
+    </div>
+  </div>
+
+  <!-- COST GRID -->
+  <div class="cost-grid">
+    <div class="cost-cell">
+      <div class="cost-tool">Claude Code Max</div>
+      <div class="cost-num red" id="cc-cost">$100</div>
+      <div class="cost-per" data-ko="/월 (Max 플랜 고정)" data-en="/mo (Max plan flat)">/월 (Max 플랜 고정)</div>
+      <div class="cost-note" data-ko="API 별도. 실제 사용량에 따라 더 비쌈." data-en="API extra. Costs more with heavy usage.">API 별도. 실제론 더 비쌈.</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-tool">Cursor</div>
+      <div class="cost-num amber" id="cursor-cost">$20</div>
+      <div class="cost-per" data-ko="/월 (Hobby)" data-en="/mo (Hobby)">/월 (Hobby)</div>
+      <div class="cost-note" data-ko="Claude/GPT 공유 사용량. 초과 시 추가 비용." data-en="Shared Claude/GPT usage. Overage fees apply.">공유 사용량. 초과 요금 있음.</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-tool">GitHub Copilot CLI</div>
+      <div class="cost-num amber" id="gh-cost">$10</div>
+      <div class="cost-per" data-ko="/월" data-en="/mo">/월</div>
+      <div class="cost-note" data-ko="GitHub 모델 전용. BYOM 없음." data-en="GitHub models only. No BYOM.">GitHub 모델 전용.</div>
+    </div>
+    <div class="cost-cell" style="background:var(--green-bg);border:1px solid rgba(0,230,118,0.15);">
+      <div class="cost-tool" style="color:var(--hanimo);">hanimo</div>
+      <div class="cost-num green">$0</div>
+      <div class="cost-per" data-ko="/월 (영구 무료)" data-en="/mo (free forever)">/월 (영구 무료)</div>
+      <div class="cost-note" id="hanimo-note" data-ko="Ollama 사용 시 API 비용도 $0." data-en="With Ollama, API costs = $0 too.">Ollama 사용 시 API 비용도 $0.</div>
+    </div>
+  </div>
+
+  <!-- SAVINGS BANNER -->
+  <div class="savings-banner">
+    <div class="sav-eye" data-ko="Claude Code Max 대비 연간 절약액" data-en="Annual savings vs Claude Code Max">Claude Code Max 대비 연간 절약액</div>
+    <div class="sav-num" id="annual-save">$1,200</div>
+    <div class="sav-sub" data-ko="절약된 돈으로 더 좋은 하드웨어를 사거나 팀을 늘리세요." data-en="Spend it on better hardware or grow your team.">절약된 돈으로 더 좋은 하드웨어를 사거나 팀을 늘리세요.</div>
+  </div>
+
+  <!-- WHAT YOU ALSO GET -->
+  <div class="calc-card">
+    <div class="calc-title" data-ko="$0에 포함된 것들" data-en="What you get for $0">$0에 포함된 것들</div>
+    <div class="what-grid">
+      <div class="what-item"><span class="what-check">✓</span><span class="what-text" data-ko="해시 앵커 편집<span class='what-sub'>위치 오류 없음</span>" data-en="Hash-Anchored Editing<span class='what-sub'>Zero wrong-location edits</span>">해시 앵커 편집<span class="what-sub">위치 오류 없음</span></span></div>
+      <div class="what-item"><span class="what-check">✓</span><span class="what-text" data-ko="SQLite 세션<span class='what-sub'>포크·검색·브랜치</span>" data-en="SQLite Sessions<span class='what-sub'>Fork, search, branch</span>">SQLite 세션<span class="what-sub">포크·검색·브랜치</span></span></div>
+      <div class="what-item"><span class="what-check">✓</span><span class="what-text" data-ko="14개+ 프로바이더<span class='what-sub'>진정한 BYOM</span>" data-en="14+ Providers<span class='what-sub'>True BYOM</span>">14개+ 프로바이더<span class="what-sub">진정한 BYOM</span></span></div>
+      <div class="what-item"><span class="what-check">✓</span><span class="what-text" data-ko="3가지 에이전트 모드<span class='what-sub'>Super / Dev / Plan</span>" data-en="3 Agent Modes<span class='what-sub'>Super / Dev / Plan</span>">3가지 에이전트 모드<span class="what-sub">Super / Dev / Plan</span></span></div>
+      <div class="what-item"><span class="what-check">✓</span><span class="what-text" data-ko="MCP stdio 지원<span class='what-sub'>전체 생태계 호환</span>" data-en="MCP stdio<span class='what-sub'>Full ecosystem compat</span>">MCP stdio 지원<span class="what-sub">전체 생태계 호환</span></span></div>
+      <div class="what-item"><span class="what-check">✓</span><span class="what-text" data-ko="한국어 UI<span class='what-sub'>한국어 네이티브</span>" data-en="Korean UI<span class='what-sub'>Native Korean support</span>">한국어 UI<span class="what-sub">한국어 네이티브</span></span></div>
+      <div class="what-item"><span class="what-check">✓</span><span class="what-text" data-ko="Apache-2.0 라이선스<span class='what-sub'>특허 허여 포함</span>" data-en="Apache-2.0<span class='what-sub'>Patent grant included</span>">Apache-2.0 라이선스<span class="what-sub">특허 허여 포함</span></span></div>
+      <div class="what-item"><span class="what-check">✓</span><span class="what-text" data-ko="단일 Go 바이너리<span class='what-sub'>런타임 의존성 없음</span>" data-en="Single Go binary<span class='what-sub'>Zero runtime deps</span>">단일 Go 바이너리<span class="what-sub">런타임 없음</span></span></div>
+    </div>
+  </div>
+
+  <!-- YEAR TABLE -->
+  <div class="calc-card">
+    <div class="calc-title" data-ko="3년 총 비용 비교" data-en="3-Year Total Cost">3년 총 비용 비교</div>
+    <table class="year-table">
+      <thead>
+        <tr>
+          <th data-ko="도구" data-en="Tool">도구</th>
+          <th data-ko="1년" data-en="Year 1">1년</th>
+          <th data-ko="2년" data-en="Year 2">2년</th>
+          <th data-ko="3년" data-en="Year 3">3년</th>
+          <th data-ko="비고" data-en="Notes">비고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Claude Code Max</td>
+          <td class="yr-red" id="yr-cc-1">$1,200</td>
+          <td class="yr-red" id="yr-cc-2">$2,400</td>
+          <td class="yr-red" id="yr-cc-3">$3,600</td>
+          <td style="color:var(--dimmer);font-size:0.65rem;" data-ko="가격 인상 가능" data-en="Price may increase">가격 인상 가능</td>
+        </tr>
+        <tr>
+          <td>Cursor</td>
+          <td class="yr-amber" id="yr-cur-1">$240</td>
+          <td class="yr-amber" id="yr-cur-2">$480</td>
+          <td class="yr-amber" id="yr-cur-3">$720</td>
+          <td style="color:var(--dimmer);font-size:0.65rem;" data-ko="IDE 종속" data-en="IDE lock-in">IDE 종속</td>
+        </tr>
+        <tr>
+          <td>GitHub Copilot CLI</td>
+          <td class="yr-amber" id="yr-gh-1">$120</td>
+          <td class="yr-amber" id="yr-gh-2">$240</td>
+          <td class="yr-amber" id="yr-gh-3">$360</td>
+          <td style="color:var(--dimmer);font-size:0.65rem;" data-ko="GitHub 모델만" data-en="GitHub models only">GitHub 모델만</td>
+        </tr>
+        <tr style="background:var(--green-bg);">
+          <td style="color:var(--hanimo);font-weight:700;">hanimo</td>
+          <td class="yr-green">$0</td>
+          <td class="yr-green">$0</td>
+          <td class="yr-green">$0</td>
+          <td style="color:var(--hanimo);font-size:0.65rem;" data-ko="영구 무료" data-en="Free forever">영구 무료</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TERMINAL -->
+  <div class="term-wrap">
+    <div class="calc-title" style="margin-bottom:1rem;" data-ko="터미널 미리보기" data-en="Terminal Preview">터미널 미리보기</div>
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+        <div class="tbar-t">hanimo — zsh</div>
+      </div>
+      <div class="tbody">
+        <div><span class="tp">~ $</span> hanimo --provider ollama --model llama3.2</div>
+        <div class="ti">⚡ hanimo v0.9.0 · Local mode · $0.00/req</div>
+        <div class="to">  provider: ollama · model: llama3.2 · offline: yes</div>
+        <div class="ts">  ✓ ready — no API key required</div>
+        <div><span class="tp">~ $</span> <span class="tcur"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTALL -->
+  <div class="calc-card" style="margin-top:1.5rem;">
+    <div class="calc-title" data-ko="지금 시작하기" data-en="Get Started Now">지금 시작하기</div>
+    <div class="install-row">
+      <code class="icmd" data-copy="curl -sSL https://hanimo.dev/install | sh">curl -sSL https://hanimo.dev/install | sh</code>
+      <code class="icmd" data-copy="brew install hanimo">brew install hanimo</code>
+      <code class="icmd" data-copy="go install github.com/flykimjiwon/hanimo@latest">go install github.com/flykimjiwon/hanimo@latest</code>
+    </div>
+  </div>
+
+  <!-- PROVIDERS -->
+  <div class="calc-card" style="margin-top:1.5rem;">
+    <div class="calc-title" data-ko="14개+ 지원 프로바이더" data-en="14+ Supported Providers">14개+ 지원 프로바이더</div>
+    <div class="prov-wrap">
+      <span class="prov">Anthropic</span><span class="prov">OpenAI</span><span class="prov">Gemini</span>
+      <span class="prov">Mistral</span><span class="prov">Ollama</span><span class="prov">vLLM</span>
+      <span class="prov">Groq</span><span class="prov">Cohere</span><span class="prov">Together AI</span>
+      <span class="prov">Fireworks</span><span class="prov">Perplexity</span><span class="prov">DeepSeek</span>
+      <span class="prov">xAI Grok</span><span class="prov">+ More</span>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="foot-in">
+    <div>
+      <div class="f-logo">hanimo</div>
+      <div style="margin-top:0.25rem;" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding agent">오픈소스를 위한 AI 코딩 에이전트</div>
+    </div>
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+      <a href="https://hanimo.dev">hanimo.dev</a>
+      <a href="https://github.com/flykimjiwon/hanimo">github.com/flykimjiwon/hanimo</a>
+      <span>Apache-2.0</span>
+    </div>
+    <div style="text-align:right;" data-ko="영구 무료 · 로컬 우선 · 종속 없음" data-en="Free forever · Local-first · No lock-in">영구 무료 · 로컬 우선 · 종속 없음</div>
+  </div>
+</footer>
+
+<script>
+// LANG
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    const txt = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    if (txt !== undefined) el.innerHTML = txt;
+  });
+}
+
+// CALCULATOR
+const daysIn = document.getElementById('days');
+const reqsIn = document.getElementById('reqs');
+const daysVal = document.getElementById('days-val');
+const reqsVal = document.getElementById('reqs-val');
+
+function update() {
+  const days = parseInt(daysIn.value);
+  const reqs = parseInt(reqsIn.value);
+  daysVal.textContent = days;
+  reqsVal.textContent = reqs;
+
+  // Prices are flat monthly subscriptions — slider affects "value you get" framing
+  // Claude Code Max: $100/mo flat
+  const cc = 100;
+  const cursor = 20;
+  const gh = 10;
+  const hanimo = 0;
+
+  document.getElementById('cc-cost').textContent = '$' + cc;
+  document.getElementById('cursor-cost').textContent = '$' + cursor;
+  document.getElementById('gh-cost').textContent = '$' + gh;
+
+  const annualSave = cc * 12;
+  document.getElementById('annual-save').textContent = '$' + annualSave.toLocaleString();
+
+  // Year table
+  document.getElementById('yr-cc-1').textContent = '$' + (cc * 12).toLocaleString();
+  document.getElementById('yr-cc-2').textContent = '$' + (cc * 24).toLocaleString();
+  document.getElementById('yr-cc-3').textContent = '$' + (cc * 36).toLocaleString();
+  document.getElementById('yr-cur-1').textContent = '$' + (cursor * 12).toLocaleString();
+  document.getElementById('yr-cur-2').textContent = '$' + (cursor * 24).toLocaleString();
+  document.getElementById('yr-cur-3').textContent = '$' + (cursor * 36).toLocaleString();
+  document.getElementById('yr-gh-1').textContent = '$' + (gh * 12).toLocaleString();
+  document.getElementById('yr-gh-2').textContent = '$' + (gh * 24).toLocaleString();
+  document.getElementById('yr-gh-3').textContent = '$' + (gh * 36).toLocaleString();
+}
+
+daysIn.addEventListener('input', update);
+reqsIn.addEventListener('input', update);
+update();
+
+(function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+// COPY
+document.querySelectorAll('[data-copy]').forEach(el => {
+  el.title = 'Click to copy';
+  el.addEventListener('click', () => {
+    navigator.clipboard.writeText(el.dataset.copy).then(() => {
+      const o = el.textContent;
+      el.textContent = '✓ Copied!';
+      el.style.color = '#00e676';
+      setTimeout(() => { el.textContent = o; el.style.color = ''; }, 1500);
+    });
+  });
+});
+</script>
+</body>
+</html>

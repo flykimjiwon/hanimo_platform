@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — AI Coding Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00ff41;
+    --green-mid: #00cc33;
+    --green-dim: #006622;
+    --green-faint: #002a0e;
+    --bg: #000000;
+    --bg-panel: #020d02;
+    --bg-hud: rgba(0, 20, 0, 0.85);
+    --honey: #F9E2AF;
+    /* theme tokens */
+    --surface: #020d02;
+    --border: #006622;
+    --text: #00ff41;
+    --muted: #006622;
+    --accent: #00ff41;
+  }
+
+  [data-theme="light"] {
+    --bg: #f0fff4;
+    --bg-panel: #e0f5e8;
+    --bg-hud: rgba(224, 245, 232, 0.95);
+    --surface: #e0f5e8;
+    --border: #4caf70;
+    --green: #007a20;
+    --green-mid: #009928;
+    --green-dim: #2e7d4f;
+    --green-faint: #b3dfc2;
+    --text: #003d10;
+    --muted: #2e7d4f;
+    --accent: #007a20;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ══ MATRIX RAIN CANVAS ══ */
+  #matrix-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.18;
+  }
+
+  /* Overlay to darken matrix bg */
+  .matrix-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center,
+      rgba(0,0,0,0.55) 0%,
+      rgba(0,0,0,0.82) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Scanlines */
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.1),
+      rgba(0, 0, 0, 0.1) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+
+  /* ══ SYSTEM HUD (corner monitor) ══ */
+  .hud {
+    position: fixed;
+    top: 64px;
+    right: 20px;
+    width: 220px;
+    background: var(--bg-hud);
+    border: 1px solid var(--green-dim);
+    z-index: 500;
+    font-size: 10px;
+    box-shadow: 0 0 16px rgba(0, 255, 65, 0.08), inset 0 0 16px rgba(0,255,65,0.03);
+  }
+
+  .hud-bar {
+    background: var(--green-faint);
+    border-bottom: 1px solid var(--green-dim);
+    padding: 5px 10px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--green-mid);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .hud-body { padding: 10px; }
+
+  .hud-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    color: var(--green-dim);
+  }
+
+  .hud-row .hud-key { color: var(--green-dim); }
+  .hud-row .hud-val { color: var(--green-mid); }
+  .hud-row .hud-val.hl { color: var(--green); text-shadow: 0 0 6px var(--green); }
+
+  .hud-bar-chart {
+    height: 3px;
+    background: var(--green-faint);
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hud-bar-fill {
+    height: 100%;
+    background: var(--green-mid);
+    box-shadow: 0 0 4px var(--green);
+  }
+
+  @keyframes hud-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .hud-live {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: hud-pulse 2s infinite;
+    box-shadow: 0 0 6px var(--green);
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  /* ══ MAIN LAYOUT ══ */
+  .main-content {
+    position: relative;
+    z-index: 10;
+  }
+
+  /* ══ NAV ══ */
+  nav {
+    padding: 14px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--green-faint);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+  }
+
+  .nav-logo {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--green);
+    text-shadow: 0 0 8px var(--green), 0 0 20px var(--green-mid);
+  }
+
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a {
+    color: var(--green-dim);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--green); text-shadow: 0 0 8px var(--green); }
+
+  /* ══ HERO ══ */
+  .hero {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    padding: 80px 48px 80px 48px;
+  }
+
+  .hero-content { max-width: 720px; }
+
+  .hero-prefix {
+    font-size: 11px;
+    color: var(--green-dim);
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+  }
+
+  .hero-title {
+    font-size: clamp(48px, 8vw, 88px);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    text-shadow:
+      0 0 10px var(--green),
+      0 0 30px var(--green-mid),
+      0 0 60px rgba(0, 255, 65, 0.3);
+    margin-bottom: 20px;
+    line-height: 1;
+  }
+
+  .hero-tagline {
+    font-size: clamp(14px, 2vw, 18px);
+    color: var(--green-mid);
+    margin-bottom: 8px;
+    text-shadow: 0 0 8px var(--green-mid);
+  }
+
+  .hero-sub {
+    font-size: 12px;
+    color: var(--green-dim);
+    margin-bottom: 48px;
+    letter-spacing: 0.1em;
+  }
+
+  .install-strip {
+    background: rgba(0, 20, 0, 0.8);
+    border: 1px solid var(--green-dim);
+    border-left: 3px solid var(--green);
+    padding: 14px 20px;
+    margin-bottom: 28px;
+    max-width: 540px;
+    box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+  }
+
+  .install-strip code {
+    color: var(--green);
+    font-size: 13px;
+  }
+
+  .install-strip .p { color: var(--green-dim); }
+
+  .cta-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .cursor {
+    display: inline-block;
+    width: 8px; height: 1em;
+    background: var(--green);
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+    box-shadow: 0 0 6px var(--green);
+  }
+
+  .btn-matrix {
+    background: transparent;
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    padding: 10px 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+    text-shadow: 0 0 6px var(--green);
+    box-shadow: 0 0 10px rgba(0,255,65,0.1);
+  }
+
+  .btn-matrix:hover {
+    background: rgba(0, 255, 65, 0.06);
+    border-color: var(--green);
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.25);
+  }
+
+  .btn-ghost-m {
+    background: transparent;
+    border: 1px solid var(--green-faint);
+    color: var(--green-dim);
+    padding: 10px 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+  }
+
+  .btn-ghost-m:hover { color: var(--green); border-color: var(--green-dim); }
+
+  /* ══ SECTIONS ══ */
+  .section {
+    padding: 80px 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--green-faint);
+  }
+
+  .section-label {
+    font-size: 10px;
+    color: var(--green-dim);
+    letter-spacing: 0.25em;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: clamp(18px, 2.5vw, 28px);
+    font-weight: 700;
+    color: var(--green);
+    text-shadow: 0 0 10px var(--green-mid);
+    margin-bottom: 40px;
+  }
+
+  /* ══ TERMINAL PREVIEW ══ */
+  .term-win {
+    background: var(--bg-panel);
+    border: 1px solid var(--green-dim);
+    max-width: 740px;
+    box-shadow: 0 0 30px rgba(0,255,65,0.08);
+  }
+
+  .term-bar {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--green-faint);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    color: var(--green-dim);
+    background: var(--green-faint);
+  }
+
+  .term-bar-title { flex: 1; text-align: center; }
+
+  .term-body { padding: 20px 24px; }
+  .t-row { margin-bottom: 4px; font-size: 12px; }
+  .t-p { color: var(--green-dim); }
+  .t-c { color: var(--green); }
+  .t-o { color: var(--green-mid); }
+  .t-d { color: var(--green-dim); }
+  .t-h { color: var(--honey); opacity: 0.7; }
+  .t-sp { height: 10px; }
+
+  .theme-switch {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--green-faint);
+    font-size: 10px;
+    color: var(--green-dim);
+  }
+
+  .t-tag {
+    display: inline-block;
+    border: 1px solid var(--green-faint);
+    padding: 2px 8px;
+    margin: 4px 4px 0 0;
+    font-size: 9px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .t-tag.on {
+    border-color: var(--green-dim);
+    color: var(--green);
+    text-shadow: 0 0 6px var(--green);
+  }
+
+  /* ══ FEATURES ══ */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .feat-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--green-faint);
+    padding: 24px;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .feat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px; height: 100%;
+    background: var(--green-dim);
+  }
+
+  .feat-card:hover {
+    border-color: var(--green-dim);
+    box-shadow: 0 0 16px rgba(0,255,65,0.06);
+  }
+
+  .feat-num {
+    font-size: 9px;
+    color: var(--green-faint);
+    letter-spacing: 0.2em;
+    margin-bottom: 10px;
+  }
+
+  .feat-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 8px;
+    text-shadow: 0 0 6px var(--green-mid);
+  }
+
+  .feat-desc {
+    font-size: 11px;
+    color: var(--green-dim);
+    line-height: 1.8;
+  }
+
+  /* ══ COMPARISON ══ */
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .comp-table th {
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--green-dim);
+    color: var(--green);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+  }
+
+  .comp-table th.hl {
+    text-shadow: 0 0 8px var(--green);
+    background: rgba(0,255,65,0.03);
+  }
+
+  .comp-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--green-faint);
+    color: var(--green-dim);
+  }
+
+  .comp-table tr:hover td { background: rgba(0,255,65,0.02); }
+  .comp-table td.lbl { color: var(--green-mid); }
+  .check { color: var(--green); text-shadow: 0 0 6px var(--green); }
+  .cross { color: var(--green-faint); }
+  .part { color: var(--honey); opacity: 0.6; }
+
+  /* ══ INSTALL ══ */
+  .install-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .install-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--green-faint);
+    padding: 24px;
+  }
+
+  .install-card-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--green-dim);
+    margin-bottom: 14px;
+  }
+
+  .install-code {
+    font-size: 11px;
+    line-height: 2;
+    color: var(--green-mid);
+  }
+
+  .install-code .p { color: var(--green-faint); }
+  .install-code .c { color: var(--green-faint); font-style: italic; }
+
+  /* ══ FOOTER ══ */
+  footer {
+    border-top: 1px solid var(--green-faint);
+    padding: 28px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--green-faint);
+    background: rgba(0,0,0,0.6);
+    position: relative;
+    z-index: 10;
+  }
+
+  footer a { color: var(--green-dim); text-decoration: none; }
+  footer a:hover { color: var(--green); }
+
+  @media (max-width: 640px) {
+    nav { padding: 12px 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 60px 20px; }
+    .section { padding: 60px 20px; }
+    footer { padding: 24px 20px; flex-direction: column; }
+    .hud { display: none; }
+  }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 12px; right: 248px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  }
+  .ctl-row { display: flex; border: 1px solid var(--green-dim); background: var(--bg-panel); }
+  .ctl-btn {
+    background: transparent; border: none; color: var(--green-dim);
+    padding: 4px 10px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.1em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 1px solid var(--green-dim); }
+  .ctl-btn.active { background: rgba(0,255,65,0.1); color: var(--green); text-shadow: 0 0 6px var(--green); }
+  @media (max-width: 640px) { .ctl-group { right: 16px; } }
+</style>
+</head>
+<body>
+
+<!-- TOGGLE CONTROLS -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<!-- Matrix rain canvas -->
+<canvas id="matrix-canvas"></canvas>
+<div class="matrix-overlay"></div>
+<div class="scanlines"></div>
+
+<!-- HUD — corner system monitor -->
+<div class="hud">
+  <div class="hud-bar">
+    <span><span class="hud-live"></span>SYS MONITOR</span>
+    <span>LIVE</span>
+  </div>
+  <div class="hud-body">
+    <div class="hud-row">
+      <span class="hud-key">AGENT</span>
+      <span class="hud-val hl">HANIMO v0.9.4</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">MODEL</span>
+      <span class="hud-val">claude-sonnet-4</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">MODE</span>
+      <span class="hud-val hl">SUPER</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">TOKENS</span>
+      <span class="hud-val">14K / 200K</span>
+    </div>
+    <div class="hud-bar-chart">
+      <div class="hud-bar-fill" style="width: 7%"></div>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">SESSION</span>
+      <span class="hud-val">f7a2c9</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">MCP TOOLS</span>
+      <span class="hud-val hl">3 ACTIVE</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">PROVIDERS</span>
+      <span class="hud-val">14 LOADED</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">EDITS</span>
+      <span class="hud-val">47 LINES</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">UPTIME</span>
+      <span class="hud-val hl">00:17:42</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-key">STATUS</span>
+      <span class="hud-val hl">ONLINE</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+<nav>
+  <div class="nav-logo">HANIMO</div>
+  <div class="nav-links">
+    <a href="#features" data-ko="기능" data-en="FEATURES">기능</a>
+    <a href="#install" data-ko="설치" data-en="INSTALL">설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo">GITHUB</a>
+    <a href="https://hanimo.dev" data-ko="문서" data-en="DOCS">문서</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-prefix" data-ko="// Go 기반 터미널 AI 에이전트 · 오픈소스" data-en="// GO-BASED TERMINAL AI AGENT · OPEN SOURCE">// Go 기반 터미널 AI 에이전트 · 오픈소스</div>
+    <div class="hero-title">HANIMO</div>
+    <div class="hero-tagline" data-ko="오픈소스 AI 코딩 플랫폼" data-en="Open-source AI coding platform">오픈소스 AI 코딩 플랫폼</div>
+    <div class="hero-sub" data-ko="14+ LLM 프로바이더 · SQLite 세션" data-en="14+ LLM providers · SQLite sessions">14+ LLM 프로바이더 · SQLite 세션</div>
+
+    <div class="install-strip">
+      <code>
+        <span class="p">$ </span>curl -fsSL https://hanimo.dev/install.sh | sh<span class="cursor"></span>
+      </code>
+    </div>
+
+    <div class="cta-row">
+      <a href="https://github.com/flykimjiwon/hanimo" class="btn-matrix" data-ko="▶ 시작하기" data-en="▶ GET STARTED">▶ 시작하기</a>
+      <a href="https://hanimo.dev" class="btn-ghost-m" data-ko="문서 읽기 →" data-en="READ DOCS →">문서 읽기 →</a>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- TERMINAL PREVIEW -->
+<div class="section" id="demo">
+  <div class="section-label">// ACTIVE SESSION</div>
+  <div class="section-title" data-ko="실시간 동작" data-en="WATCH HANIMO EXECUTE">실시간 동작</div>
+
+  <div class="term-win">
+    <div class="term-bar">
+      <span>[●]</span>
+      <span class="term-bar-title">hanimo · anthropic/claude-sonnet-4 · Super · 120×40</span>
+      <span>[■]</span>
+    </div>
+    <div class="term-body">
+      <div class="t-row"><span class="t-p">$ </span><span class="t-c">hanimo --provider anthropic --model claude-sonnet-4 --mode super</span></div>
+      <div class="t-sp"></div>
+      <div class="t-row t-o">╔══════════════════════════════════════════════════╗</div>
+      <div class="t-row t-o">║  hanimo v0.9.4  ·  Super  ·  tokens: 14K/200K    ║</div>
+      <div class="t-row t-o">║  session: f7a2c9  ·  MCP: 3 tools active          ║</div>
+      <div class="t-row t-o">╚══════════════════════════════════════════════════╝</div>
+      <div class="t-sp"></div>
+      <div class="t-row"><span class="t-p">you&gt; </span><span class="t-c">/auto refactor database layer to use connection pooling</span></div>
+      <div class="t-sp"></div>
+      <div class="t-row t-o">▶ AUTONOMOUS MODE ACTIVE</div>
+      <div class="t-sp"></div>
+      <div class="t-row t-o">● PLAN  [1/3] Scan DB layer files</div>
+      <div class="t-row t-c">  ✓ Found 6 files in src/db/</div>
+      <div class="t-row t-o">● EDIT  [2/3] Refactor connection handling</div>
+      <div class="t-row t-c">  ✓ src/db/pool.go        +89 lines [NEW]</div>
+      <div class="t-row t-c">  ✓ src/db/client.go      +31 -12 [hash-anchored]</div>
+      <div class="t-row t-c">  ✓ src/db/migrations.go  +8  -2</div>
+      <div class="t-row t-o">● TEST  [3/3] Run diagnostics</div>
+      <div class="t-row t-c">  ✓ /diagnostics → 0 errors  2 warnings</div>
+      <div class="t-sp"></div>
+      <div class="t-row t-d">  /auto /save /remember /diagnostics /plan</div>
+      <div class="t-row"><span class="t-p">you&gt; </span><span class="cursor"></span></div>
+
+      <div class="theme-switch">
+        THEME:&nbsp;
+        <span class="t-tag on">HONEY</span>
+        <span class="t-tag">OCEAN</span>
+        <span class="t-tag">DRACULA</span>
+        <span class="t-tag">MATRIX</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- FEATURES -->
+<div class="section" id="features">
+  <div class="section-label">// CAPABILITIES</div>
+  <div class="section-title" data-ko="핵심 기능" data-en="CORE FEATURE SET">핵심 기능</div>
+
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-num">01 // EDIT</div>
+      <div class="feat-name" data-ko="해시 기반 편집" data-en="Hash-Anchored Editing">해시 기반 편집</div>
+      <div class="feat-desc" data-ko="콘텐츠 해시로 정밀 편집. 오류 없는 수술적 수정." data-en="Hash-anchored edits. Surgical precision, no phantom rewrites.">콘텐츠 해시로 정밀 편집. 오류 없는 수술적 수정.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">02 // PROVIDERS</div>
+      <div class="feat-name" data-ko="14+ LLM 프로바이더" data-en="14+ LLM Providers">14+ LLM 프로바이더</div>
+      <div class="feat-desc" data-ko="Ollama, OpenAI, Anthropic 등. 세션 중 전환 가능." data-en="Ollama, OpenAI, Anthropic and more. Switch mid-session.">Ollama, OpenAI, Anthropic 등. 세션 중 전환 가능.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">03 // MEMORY</div>
+      <div class="feat-name" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</div>
+      <div class="feat-desc" data-ko="컨텍스트 한계 시 자동 요약. 200K 토큰 이상 작업." data-en="Auto-summarizes at context limits. Work past 200K tokens.">컨텍스트 한계 시 자동 요약. 200K 토큰 이상 작업.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">04 // AGENT</div>
+      <div class="feat-name" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</div>
+      <div class="feat-desc" data-ko="작업 위임 후 자율 실행. 전체 감사 추적 제공." data-en="Delegate tasks. Autonomous execution with full auditability.">작업 위임 후 자율 실행. 전체 감사 추적 제공.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">05 // DATA</div>
+      <div class="feat-name" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+      <div class="feat-desc" data-ko="로컬 SQLite에 대화 저장. 데이터는 내 기기에." data-en="Sessions stored locally in SQLite. Your data, your machine.">로컬 SQLite에 대화 저장. 데이터는 내 기기에.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">06 // EXTEND</div>
+      <div class="feat-name" data-ko="MCP 프로토콜 지원" data-en="MCP Protocol Support">MCP 프로토콜 지원</div>
+      <div class="feat-desc" data-ko="외부 도구·DB·API를 컨텍스트로. 포크 없이 확장." data-en="Connect tools, DBs, APIs as context providers. No forking.">외부 도구·DB·API를 컨텍스트로. 포크 없이 확장.</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- COMPARISON -->
+<div class="section" id="compare">
+  <div class="section-label">// ANALYSIS</div>
+  <div class="section-title" data-ko="경쟁 분석" data-en="COMPETITIVE MATRIX">경쟁 분석</div>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>CAPABILITY</th>
+        <th class="hl">HANIMO</th>
+        <th>CLAUDE CODE</th>
+        <th>CURSOR</th>
+        <th>AIDER</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="lbl">Open Source (Apache-2.0)</td>
+        <td class="check">✓ YES</td>
+        <td class="cross">✗ NO</td>
+        <td class="cross">✗ NO</td>
+        <td class="check">✓ YES</td>
+      </tr>
+      <tr>
+        <td class="lbl">Local LLM (Ollama)</td>
+        <td class="check">✓ YES</td>
+        <td class="cross">✗ NO</td>
+        <td class="part">△ PARTIAL</td>
+        <td class="check">✓ YES</td>
+      </tr>
+      <tr>
+        <td class="lbl">Hash-Anchored Edits</td>
+        <td class="check">✓ YES</td>
+        <td class="part">△ PARTIAL</td>
+        <td class="cross">✗ NO</td>
+        <td class="part">△ PARTIAL</td>
+      </tr>
+      <tr>
+        <td class="lbl">SQLite Session Store</td>
+        <td class="check">✓ YES</td>
+        <td class="cross">✗ NO</td>
+        <td class="cross">✗ NO</td>
+        <td class="cross">✗ NO</td>
+      </tr>
+      <tr>
+        <td class="lbl">MCP Protocol</td>
+        <td class="check">✓ YES</td>
+        <td class="check">✓ YES</td>
+        <td class="cross">✗ NO</td>
+        <td class="cross">✗ NO</td>
+      </tr>
+      <tr>
+        <td class="lbl">IDE-Free Operation</td>
+        <td class="check">✓ YES</td>
+        <td class="check">✓ YES</td>
+        <td class="cross">✗ NO</td>
+        <td class="check">✓ YES</td>
+      </tr>
+      <tr>
+        <td class="lbl">Smart Context Compaction</td>
+        <td class="check">✓ YES</td>
+        <td class="check">✓ YES</td>
+        <td class="cross">✗ NO</td>
+        <td class="cross">✗ NO</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="divider">
+
+<!-- INSTALL -->
+<div class="section" id="install">
+  <div class="section-label">// DEPLOYMENT</div>
+  <div class="section-title" data-ko="30초 안에 시작" data-en="INITIALIZE IN 30 SECONDS">30초 안에 시작</div>
+
+  <div class="install-grid">
+    <div class="install-card">
+      <div class="install-card-label">[ CURL BINARY ]</div>
+      <div class="install-code">
+        <div><span class="c"># Linux / macOS</span></div>
+        <div><span class="p">$ </span>curl -fsSL https://hanimo.dev/install.sh | sh</div>
+        <br>
+        <div><span class="c"># Verify</span></div>
+        <div><span class="p">$ </span>hanimo --version</div>
+        <div style="color: var(--green-faint)">hanimo v0.9.4 (darwin/arm64)</div>
+      </div>
+    </div>
+    <div class="install-card">
+      <div class="install-card-label">[ GO BUILD ]</div>
+      <div class="install-code">
+        <div><span class="c"># From source</span></div>
+        <div><span class="p">$ </span>git clone github.com/flykimjiwon/hanimo</div>
+        <div><span class="p">$ </span>cd hanimo</div>
+        <div><span class="p">$ </span>go build -o hanimo ./cmd/hanimo</div>
+        <div><span class="p">$ </span>./hanimo --help</div>
+      </div>
+    </div>
+    <div class="install-card">
+      <div class="install-card-label">[ PROVIDERS ]</div>
+      <div class="install-code">
+        <div><span class="c"># Anthropic</span></div>
+        <div><span class="p">$ </span>ANTHROPIC_API_KEY=sk-... hanimo</div>
+        <br>
+        <div><span class="c"># Ollama (local)</span></div>
+        <div><span class="p">$ </span>hanimo --provider ollama --model qwen3:8b</div>
+        <br>
+        <div><span class="c"># OpenAI</span></div>
+        <div><span class="p">$ </span>OPENAI_API_KEY=sk-... hanimo --provider openai --model gpt-4o</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<footer>
+  <div style="color: var(--green); font-weight: 700; letter-spacing: 0.2em; text-shadow: 0 0 8px var(--green);">HANIMO</div>
+  <div style="display: flex; gap: 24px;">
+    <a href="https://github.com/flykimjiwon/hanimo">github.com/flykimjiwon/hanimo</a>
+    <a href="https://hanimo.dev">hanimo.dev</a>
+  </div>
+  <div style="font-size: 10px; letter-spacing: 0.12em;">
+    APACHE-2.0 &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; GO 1.22+
+  </div>
+</footer>
+
+</div><!-- end main-content -->
+
+<script>
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  localStorage.setItem('hanimo-lang', lang);
+  document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+}
+(function init() {
+  const theme = localStorage.getItem('hanimo-theme') || 'dark';
+  const lang = localStorage.getItem('hanimo-lang') || 'ko';
+  setTheme(theme);
+  setLang(lang);
+})();
+</script>
+
+<script>
+// Matrix rain animation
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:<>?/\\アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+const fontSize = 13;
+let columns = Math.floor(canvas.width / fontSize);
+let drops = [];
+
+function initDrops() {
+  columns = Math.floor(canvas.width / fontSize);
+  drops = Array.from({ length: columns }, () => Math.random() * -100);
+}
+initDrops();
+window.addEventListener('resize', initDrops);
+
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < drops.length; i++) {
+    const char = chars[Math.floor(Math.random() * chars.length)];
+    const x = i * fontSize;
+    const y = drops[i] * fontSize;
+
+    // Lead character brighter
+    ctx.fillStyle = drops[i] * fontSize < canvas.height * 0.3
+      ? '#00ff41'
+      : '#00cc33';
+
+    if (Math.random() < 0.02) ctx.fillStyle = '#ffffff';
+
+    ctx.font = fontSize + 'px JetBrains Mono, monospace';
+    ctx.fillText(char, x, y);
+
+    if (y > canvas.height && Math.random() > 0.975) {
+      drops[i] = 0;
+    }
+    drops[i] += 0.5;
+  }
+}
+
+setInterval(drawMatrix, 50);
+</script>
+
+</body>
+</html>

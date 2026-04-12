@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Premium</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:       #0a0a0b;
+      --surface:  #111113;
+      --surface2: #161618;
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.12);
+      --text:     #f0f0ee;
+      --text-dim: #71717a;
+      --text-faint: #3f3f46;
+      --violet:   #8b5cf6;
+      --violet-2: #6d28d9;
+      --emerald:  #10b981;
+      --gold:     #F9E2AF;
+      --gold-dim: #a07c3a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Geist', 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ─── TOP ANNOUNCEMENT BAR ─── */
+    .top-bar {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+      text-align: center;
+      background: rgba(139,92,246,0.04);
+    }
+    .top-bar-inner {
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .top-bar-tag {
+      background: rgba(139,92,246,0.15);
+      border: 1px solid rgba(139,92,246,0.25);
+      color: #a78bfa;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,11,0.92);
+      backdrop-filter: blur(24px) saturate(160%);
+    }
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 40px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      color: var(--text);
+    }
+    .nav-logo .accent { color: var(--violet); }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .nav-links a {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.15s;
+      letter-spacing: -0.01em;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-end { display: flex; align-items: center; gap: 12px; }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-nav-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .btn-nav-ghost:hover { border-color: var(--border2); color: var(--text); background: rgba(255,255,255,0.03); }
+    .btn-nav-solid {
+      background: var(--violet);
+      color: white;
+      border: 1px solid rgba(139,92,246,0.6);
+      box-shadow: 0 0 0 0 rgba(139,92,246,0.4);
+    }
+    .btn-nav-solid:hover { background: #7c3aed; box-shadow: 0 0 20px rgba(139,92,246,0.25); transform: translateY(-1px); }
+
+    /* ─── HERO ─── */
+    .hero {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 120px 40px 100px;
+      position: relative;
+    }
+
+    /* Subtle radial behind hero text */
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 800px;
+      height: 400px;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: radial-gradient(ellipse at center, rgba(139,92,246,0.1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+    .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--emerald); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    .hero-h1 {
+      font-size: clamp(44px, 6vw, 80px);
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      line-height: 1.0;
+      color: var(--text);
+      margin-bottom: 24px;
+      max-width: 760px;
+    }
+    .hero-h1 span { color: var(--violet); }
+
+    .hero-p {
+      font-size: 16px;
+      font-weight: 300;
+      color: var(--text-dim);
+      line-height: 1.65;
+      max-width: 500px;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .hero-korean {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: rgba(139,92,246,0.7);
+      letter-spacing: 0.02em;
+      margin-bottom: 44px;
+    }
+
+    .hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 80px; }
+    .cta-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: var(--text);
+      color: var(--bg);
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .cta-main:hover { background: #e8e8e6; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .cta-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      background: transparent;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+    }
+    .cta-ghost:hover { border-color: var(--border2); color: var(--text); background: rgba(255,255,255,0.03); }
+
+    /* ─── TERMINAL ─── */
+    .terminal-card {
+      max-width: 760px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0d0d0f;
+      border: 1px solid var(--border);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.5),
+        0 32px 64px rgba(0,0,0,0.6),
+        0 0 60px rgba(139,92,246,0.06);
+    }
+    .t-titlebar {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,255,255,0.015);
+    }
+    .t-d { width: 10px; height: 10px; border-radius: 50%; }
+    .t-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); margin-left: 10px; }
+    .t-body { padding: 18px 22px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.8; }
+    .tp { color: #7c3aed; } .ts { color: #059669; } .tg { color: #d4b483; } .tm { color: #3f3f46; } .tw { color: #d4d0cb; } .tv { color: #a78bfa; }
+    .tc { display:inline-block;width:7px;height:13px;background:var(--violet);animation:blink 1.2s step-end infinite;vertical-align:middle; }
+    @keyframes blink { 50%{opacity:0} }
+
+    /* ─── DIVIDER ─── */
+    .hr { border: none; border-top: 1px solid var(--border); }
+
+    /* ─── SECTION STRUCTURE ─── */
+    .section {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 80px 40px;
+    }
+    .section-head {
+      margin-bottom: 56px;
+    }
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 16px;
+    }
+    .section-h2 {
+      font-size: clamp(28px, 3.5vw, 44px);
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .section-h2 .dim { color: var(--text-faint); font-weight: 300; }
+
+    /* ─── FEATURES ─── */
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    @media (max-width: 900px) { .feat-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .feat-grid { grid-template-columns: 1fr; } }
+    .feat-cell {
+      background: var(--bg);
+      padding: 28px;
+      transition: background 0.2s;
+      position: relative;
+    }
+    .feat-cell:hover { background: var(--surface); }
+    .feat-cell.hero-feat {
+      background: var(--surface);
+      grid-column: span 2;
+    }
+    @media (max-width: 560px) { .feat-cell.hero-feat { grid-column: span 1; } }
+    .feat-cell.hero-feat:hover { background: var(--surface2); }
+    .feat-eyebrow {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 14px;
+    }
+    .feat-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feat-badge {
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(139,92,246,0.12);
+      border: 1px solid rgba(139,92,246,0.25);
+      color: #a78bfa;
+      font-weight: 500;
+    }
+    .feat-desc { font-size: 13px; font-weight: 300; color: var(--text-dim); line-height: 1.6; letter-spacing: -0.005em; }
+    .feat-code {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: #a78bfa;
+      line-height: 1.6;
+    }
+    .feat-modes {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .mode-chip {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    /* ─── PROVIDERS ─── */
+    .providers-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .p-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 12.5px;
+      font-weight: 400;
+      color: var(--text-dim);
+      letter-spacing: -0.01em;
+      transition: all 0.2s;
+    }
+    .p-chip:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+    .p-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ─── COMPARISON ─── */
+    .compare-wrap {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .compare-head {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr 1fr 1fr;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    @media (max-width: 700px) { .compare-head, .compare-row-g { grid-template-columns: 1.5fr 1fr; } .compare-head div:nth-child(n+3), .compare-row-g div:nth-child(n+3) { display: none; } }
+    .ch { padding: 12px 18px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; }
+    .ch.hanimo { background: rgba(139,92,246,0.08); color: #a78bfa; border-right: 1px solid rgba(139,92,246,0.15); }
+    .compare-row-g {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .compare-row-g:last-child { border-bottom: none; }
+    .compare-row-g:hover { background: rgba(255,255,255,0.01); }
+    .cd { padding: 13px 18px; font-size: 13px; color: var(--text-dim); font-weight: 300; display: flex; align-items: center; gap: 6px; }
+    .cd.label { color: var(--text); font-weight: 400; }
+    .cd.hanimo { background: rgba(139,92,246,0.04); border-right: 1px solid rgba(139,92,246,0.08); }
+    .yes { color: var(--emerald); font-weight: 500; }
+    .no { color: var(--text-faint); }
+
+    /* ─── INSTALL ─── */
+    .install-shell {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      max-width: 680px;
+    }
+    .install-tabs-row {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .itab {
+      padding: 10px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-faint);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .itab:hover { color: var(--text-dim); }
+    .itab.active { color: var(--text); border-bottom-color: var(--violet); }
+    .install-body-p {
+      padding: 20px 22px;
+      background: #0a0a0c;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+    .i-prompt { color: var(--emerald); margin-right: 10px; user-select: none; }
+    .i-cmd { color: var(--text); }
+    .i-comment { color: var(--text-faint); font-size: 11px; margin-top: 8px; display: block; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px;
+    }
+    .footer-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-brand { font-size: 15px; font-weight: 600; letter-spacing: -0.04em; }
+    .footer-brand .accent { color: var(--violet); }
+    .footer-tagline { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); margin-top: 3px; }
+    .footer-links { display: flex; gap: 20px; align-items: center; }
+    .footer-links a { font-size: 12px; color: var(--text-faint); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--text-dim); }
+    .license-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--text-faint);
+    }
+
+    /* ─── FULL-WIDTH DIVIDER SECTIONS ─── */
+    .full-divider { border-top: 1px solid var(--border); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    .animate-hero { animation: slideUp 0.8s ease forwards; }
+    .d1 { animation-delay: 0.05s; opacity: 0; }
+    .d2 { animation-delay: 0.15s; opacity: 0; }
+    .d3 { animation-delay: 0.27s; opacity: 0; }
+    .d4 { animation-delay: 0.4s; opacity: 0; }
+    .d5 { animation-delay: 0.55s; opacity: 0; }
+    .d6 { animation-delay: 0.7s; opacity: 0; }
+
+    /* scroll reveal */
+    .reveal { opacity:0; transform:translateY(12px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .reveal.in { opacity:1; transform:translateY(0); }
+
+    /* ── LIGHT MODE ── */
+    [data-theme="light"] {
+      --bg: #fafafa;
+      --surface: #f4f4f5;
+      --surface2: #ececee;
+      --border: rgba(0,0,0,0.08);
+      --border2: rgba(0,0,0,0.15);
+      --text: #09090b;
+      --text-dim: #52525b;
+      --text-faint: #a1a1aa;
+      --violet: #7c3aed;
+      --violet-2: #6d28d9;
+    }
+    [data-theme="light"] body { background: #fafafa; color: #09090b; }
+    [data-theme="light"] nav { background: rgba(250,250,250,0.92); }
+    [data-theme="light"] .top-bar { background: rgba(124,58,237,0.04); border-color: rgba(0,0,0,0.07); }
+    [data-theme="light"] .terminal-card { background: #1a1a1f; }
+    [data-theme="light"] .feat-card { background: var(--surface); border-color: var(--border); }
+    [data-theme="light"] .feat-card:hover { border-color: var(--border2); }
+
+    /* ── TOGGLE CONTROLS ── */
+    .ctl-group {
+      position: fixed; top: 12px; right: 16px; z-index: 10000;
+      display: flex; flex-direction: column; gap: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    }
+    .ctl-row {
+      display: flex; border-radius: 6px; overflow: hidden;
+      border: 1px solid var(--border); background: var(--surface);
+    }
+    .ctl-btn {
+      background: transparent; border: none; color: var(--text-dim);
+      padding: 5px 12px; cursor: pointer; font-family: inherit;
+      font-size: 10px; letter-spacing: 0.08em; transition: all 0.15s;
+    }
+    .ctl-btn + .ctl-btn { border-left: 1px solid var(--border); }
+    .ctl-btn.active { background: rgba(139,92,246,0.15); color: #a78bfa; }
+    [data-theme="light"] .ctl-btn.active { background: rgba(124,58,237,0.12); color: #7c3aed; }
+  </style>
+</head>
+<body>
+
+  <!-- Toggle controls -->
+  <div class="ctl-group">
+    <div class="ctl-row">
+      <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+      <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+    </div>
+    <div class="ctl-row">
+      <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+      <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-bar-inner">
+      <span class="top-bar-tag">v0.1</span>
+      <span data-ko="hanimo는 오픈소스입니다. Apache-2.0 라이선스." data-en="hanimo is open-source. Apache-2.0 License.">hanimo는 오픈소스입니다. Apache-2.0 라이선스.</span>
+      <a href="https://github.com/flykimjiwon/hanimo" style="color:#a78bfa;text-decoration:none;font-weight:500;" data-ko="GitHub 스타 →" data-en="Star on GitHub →">GitHub 스타 →</a>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-logo">han<span class="accent">imo</span></div>
+      <div class="nav-links hidden md:flex">
+        <a href="#features" data-ko="기능" data-en="Features">기능</a>
+        <a href="#compare" data-ko="비교" data-en="Compare">비교</a>
+        <a href="#install" data-ko="설치" data-en="Install">설치</a>
+        <a href="https://github.com/flykimjiwon/hanimo" data-ko="GitHub" data-en="GitHub">GitHub</a>
+        <a href="https://hanimo.dev" data-ko="문서" data-en="Docs">문서</a>
+      </div>
+      <div class="nav-end">
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-nav btn-nav-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="#install" class="btn-nav btn-nav-solid" data-ko="설치" data-en="Install">설치</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div style="border-bottom: 1px solid var(--border);">
+    <div class="hero">
+      <div class="hero-label animate-hero d1" data-ko="오픈소스 · Go 빌드 · Apache-2.0" data-en="Open-Source · Built in Go · Apache-2.0">
+        <span class="live-dot"></span>
+        오픈소스 · Go 빌드 · Apache-2.0
+      </div>
+      <h1 class="hero-h1 animate-hero d2">
+        <span data-ko="오픈소스" data-en="The open-source">오픈소스</span><br/><span data-ko="AI 코딩 플랫폼." data-en="AI coding platform.">AI 코딩 플랫폼.</span>
+      </h1>
+      <p class="hero-p animate-hero d3" data-ko="Modol의 후계자. 해시 앵커 편집. 14개 이상의 LLM 프로바이더. 완전 자율. 락인 없음." data-en="Successor to Modol. Hash-anchored editing. 14+ LLM providers. Fully autonomous. Zero lock-in.">
+        Modol의 후계자. 해시 앵커 편집. 14개 이상의 LLM 프로바이더. 완전 자율. 락인 없음.
+      </p>
+      <p class="hero-korean animate-hero d3" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="AI coding agent for open-source">오픈소스를 위한 AI 코딩 에이전트</p>
+
+      <div class="hero-ctas animate-hero d4">
+        <a href="#install" class="cta-main" data-ko="hanimo 설치" data-en="Install hanimo">
+          hanimo 설치
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </a>
+        <a href="https://github.com/flykimjiwon/hanimo" class="cta-ghost" data-ko="GitHub에서 보기 →" data-en="View on GitHub →">GitHub에서 보기 →</a>
+      </div>
+
+      <!-- Terminal -->
+      <div class="terminal-card animate-hero d5">
+        <div class="t-titlebar">
+          <div class="t-d" style="background:#ff5f57;"></div>
+          <div class="t-d" style="background:#febc2e;"></div>
+          <div class="t-d" style="background:#28c840;"></div>
+          <span class="t-label">~/project — hanimo — zsh</span>
+          <span class="t-label" style="margin-left:auto;font-size:10px;">sess_9a1f3c · ollama/mistral</span>
+        </div>
+        <div class="t-body">
+          <div><span class="tp">~/project</span><span class="tm"> $ </span><span class="tw">hanimo</span></div>
+          <div><span class="ts">✓</span> <span class="tg">hanimo v0.1.0</span> <span class="tm">— AI coding agent ready</span></div>
+          <div style="height:8px;"></div>
+          <div><span class="tp">hanimo</span><span class="tm"> &gt; </span><span class="tg">/auto</span> <span class="tw">add Redis caching layer to the API handlers</span></div>
+          <div><span class="ts">◆</span> <span class="tm">Autonomous mode · max 20 iterations · compaction: smart</span></div>
+          <div><span class="tv">  [1/20]</span> <span class="tw">Reading</span> <span class="tm">api/handlers.go (hash: c4e9b2f) ✓</span></div>
+          <div><span class="tv">  [2/20]</span> <span class="tw">Analyzing</span> <span class="tm">cache patterns → 6 endpoints identified</span></div>
+          <div><span class="tv">  [3/20]</span> <span class="tw">Writing</span> <span class="tm">cache/redis.go</span></div>
+          <div><span class="tv">  [4/20]</span> <span class="tw">Editing</span> <span class="tm">api/handlers.go ↔ hash-anchored (safe)</span></div>
+          <div><span class="tv">  [5/20]</span> <span class="tw">Editing</span> <span class="tm">api/middleware.go ↔ hash-anchored (safe)</span></div>
+          <div><span class="tg">  ✦ /diagnostics</span> <span class="tm">→ 0 errors · 0 warnings · tests passing</span></div>
+          <div><span class="ts">✓</span> <span class="tw">Done.</span> <span class="tm">3 files modified · 0 regressions · 5 iterations</span></div>
+          <div><span class="tp">hanimo</span><span class="tm"> &gt; </span><span class="tc"></span></div>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="animate-hero d6" style="display:flex;gap:40px;flex-wrap:wrap;margin-top:48px;padding-top:48px;border-top:1px solid var(--border);">
+        <div>
+          <div style="font-size:24px;font-weight:600;letter-spacing:-0.04em;color:var(--text);">14+</div>
+          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;letter-spacing:-0.01em;">LLM Providers</div>
+        </div>
+        <div>
+          <div style="font-size:24px;font-weight:600;letter-spacing:-0.04em;color:var(--text);">20</div>
+          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;letter-spacing:-0.01em;">Auto Iterations</div>
+        </div>
+        <div>
+          <div style="font-size:24px;font-weight:600;letter-spacing:-0.04em;color:var(--text);">0</div>
+          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;letter-spacing:-0.01em;">Runtime Deps</div>
+        </div>
+        <div>
+          <div style="font-size:24px;font-weight:600;letter-spacing:-0.04em;color:var(--text);">Apache-2.0</div>
+          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;letter-spacing:-0.01em;">License</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Providers strip -->
+  <div class="full-divider" style="border-bottom:1px solid var(--border);">
+    <div class="section" style="padding-top:48px;padding-bottom:48px;">
+      <p class="eyebrow" style="margin-bottom:20px;text-align:center;">Connect to any provider — local or cloud</p>
+      <div class="providers-wrap reveal justify-center" style="justify-content:center;">
+        <span class="p-chip"><span class="p-dot" style="background:#10b981;"></span>Ollama</span>
+        <span class="p-chip"><span class="p-dot" style="background:#74aa9c;"></span>OpenAI</span>
+        <span class="p-chip"><span class="p-dot" style="background:#d97706;"></span>Anthropic</span>
+        <span class="p-chip"><span class="p-dot" style="background:#4285f4;"></span>Google</span>
+        <span class="p-chip"><span class="p-dot" style="background:#a78bfa;"></span>DeepSeek</span>
+        <span class="p-chip"><span class="p-dot" style="background:#f97316;"></span>Groq</span>
+        <span class="p-chip"><span class="p-dot" style="background:#ec4899;"></span>Mistral</span>
+        <span class="p-chip" style="color:var(--text-faint);border-style:dashed;">+7 more</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="full-divider" style="border-bottom:1px solid var(--border);" id="features">
+    <div class="section">
+      <div class="section-head reveal">
+        <p class="eyebrow">Capabilities</p>
+        <h2 class="section-h2">
+          Built different. <span class="dim">Everything by design.</span>
+        </h2>
+      </div>
+      <div class="feat-grid reveal">
+        <!-- Hash-anchored — spans 2 cols -->
+        <div class="feat-cell hero-feat">
+          <p class="feat-eyebrow">01 · Unique Feature</p>
+          <div class="feat-name">
+            Hash-Anchored Editing
+            <span class="feat-badge">only hanimo</span>
+          </div>
+          <p class="feat-desc">Every edit is anchored to a cryptographic content hash. The agent verifies exact file state before writing — stale-state corruption is mathematically impossible. No other AI coding tool does this.</p>
+          <div class="feat-code">
+            <span style="color:var(--emerald);">→</span> read(file) <span style="color:var(--text-faint);"># capture hash</span><br/>
+            <span style="color:var(--emerald);">→</span> verify(hash: a3f7d2b1) <span style="color:var(--text-faint);"># confirm state</span><br/>
+            <span style="color:var(--emerald);">→</span> edit(anchored: true) <span style="color:var(--text-faint);"># safe write</span>
+          </div>
+        </div>
+
+        <!-- /auto mode -->
+        <div class="feat-cell">
+          <p class="feat-eyebrow">02</p>
+          <div class="feat-name">/auto Autonomous Mode</div>
+          <p class="feat-desc">Up to 20 self-directed iterations. Reads, writes, runs diagnostics, self-corrects — no human in the loop. Full stack, fully autonomous.</p>
+        </div>
+
+        <!-- Smart compaction -->
+        <div class="feat-cell">
+          <p class="feat-eyebrow">03</p>
+          <div class="feat-name">Smart 3-Stage Compaction</div>
+          <p class="feat-desc">Intelligent context management. Long sessions stay sharp — critical context preserved, verbose history compressed without losing the thread.</p>
+        </div>
+
+        <!-- 3 modes -->
+        <div class="feat-cell">
+          <p class="feat-eyebrow">04</p>
+          <div class="feat-name">3 Execution Modes</div>
+          <p class="feat-desc">Right tool for every workflow.</p>
+          <div class="feat-modes">
+            <span class="mode-chip" style="background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.2);color:#a78bfa;">Super</span>
+            <span class="mode-chip" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#10b981;">Dev</span>
+            <span class="mode-chip" style="background:rgba(249,226,175,0.08);border:1px solid rgba(249,226,175,0.2);color:#d4b483;">Plan</span>
+          </div>
+        </div>
+
+        <!-- SQLite -->
+        <div class="feat-cell">
+          <p class="feat-eyebrow">05</p>
+          <div class="feat-name">SQLite Sessions</div>
+          <p class="feat-desc">Persistent local history. Resume sessions, search past work, export logs. Use <span class="mono" style="font-size:11px;color:var(--violet);">/save</span> and <span class="mono" style="font-size:11px;color:var(--violet);">/remember</span> to annotate.</p>
+        </div>
+
+        <!-- MCP -->
+        <div class="feat-cell">
+          <p class="feat-eyebrow">06</p>
+          <div class="feat-name">MCP Protocol</div>
+          <p class="feat-desc">Full Model Context Protocol support. Connect any MCP server to extend capabilities — databases, APIs, custom tooling, knowledge bases.</p>
+        </div>
+
+        <!-- Single binary -->
+        <div class="feat-cell">
+          <p class="feat-eyebrow">07</p>
+          <div class="feat-name">Single Go Binary</div>
+          <p class="feat-desc">Zero runtime deps. No Node, no Python, no Docker. One binary — Linux, macOS, Windows. Ship anywhere trivially.</p>
+        </div>
+
+        <!-- Slash commands -->
+        <div class="feat-cell">
+          <p class="feat-eyebrow">08</p>
+          <div class="feat-name">Slash Commands</div>
+          <div class="feat-code" style="margin-top:10px;line-height:2;">
+            <span style="color:#a78bfa;">/auto</span> &nbsp;<span style="color:#10b981;">/save</span> &nbsp;<span style="color:var(--text-dim);">/remember</span><br/>
+            <span style="color:var(--text-dim);">/diagnostics</span> &nbsp;<span style="color:#d4b483;">/plan</span> &nbsp;<span style="color:var(--text-dim);">/compaction</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison -->
+  <div class="full-divider" style="border-bottom:1px solid var(--border);" id="compare">
+    <div class="section">
+      <div class="section-head reveal">
+        <p class="eyebrow">Comparison</p>
+        <h2 class="section-h2">
+          Why hanimo. <span class="dim">The clear choice.</span>
+        </h2>
+      </div>
+      <div class="compare-wrap reveal">
+        <div class="compare-head">
+          <div class="ch">Feature</div>
+          <div class="ch hanimo">hanimo</div>
+          <div class="ch">Claude Code</div>
+          <div class="ch">Cursor / Aider</div>
+        </div>
+        <div class="compare-row-g">
+          <div class="cd label">Open Source</div>
+          <div class="cd hanimo"><span class="yes">✓</span> Apache-2.0</div>
+          <div class="cd"><span class="no">✗</span> Closed</div>
+          <div class="cd"><span class="no">✗</span> / <span class="yes">✓</span> Aider</div>
+        </div>
+        <div class="compare-row-g">
+          <div class="cd label">Local-First</div>
+          <div class="cd hanimo"><span class="yes">✓</span> Fully offline</div>
+          <div class="cd"><span class="no">✗</span> Cloud only</div>
+          <div class="cd">Partial</div>
+        </div>
+        <div class="compare-row-g">
+          <div class="cd label">Model-Agnostic (14+)</div>
+          <div class="cd hanimo"><span class="yes">✓</span> Any provider</div>
+          <div class="cd"><span class="no">✗</span> Claude only</div>
+          <div class="cd">Limited</div>
+        </div>
+        <div class="compare-row-g">
+          <div class="cd label">Hash-Anchored Safety</div>
+          <div class="cd hanimo"><span class="yes">✓</span> Unique</div>
+          <div class="cd"><span class="no">✗</span> None</div>
+          <div class="cd"><span class="no">✗</span> None</div>
+        </div>
+        <div class="compare-row-g">
+          <div class="cd label">Autonomous /auto (20 iter)</div>
+          <div class="cd hanimo"><span class="yes">✓</span> 20 iterations</div>
+          <div class="cd"><span class="yes">✓</span></div>
+          <div class="cd">Partial</div>
+        </div>
+        <div class="compare-row-g">
+          <div class="cd label">SQLite Session Persistence</div>
+          <div class="cd hanimo"><span class="yes">✓</span> Local DB</div>
+          <div class="cd"><span class="no">✗</span></div>
+          <div class="cd"><span class="no">✗</span></div>
+        </div>
+        <div class="compare-row-g">
+          <div class="cd label">MCP Protocol</div>
+          <div class="cd hanimo"><span class="yes">✓</span></div>
+          <div class="cd"><span class="yes">✓</span></div>
+          <div class="cd"><span class="no">✗</span></div>
+        </div>
+        <div class="compare-row-g">
+          <div class="cd label">Single Binary</div>
+          <div class="cd hanimo"><span class="yes">✓</span> Go, zero deps</div>
+          <div class="cd">Node.js</div>
+          <div class="cd">Electron / Python</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Install -->
+  <div class="full-divider" id="install">
+    <div class="section" style="padding-bottom:120px;">
+      <div class="section-head reveal">
+        <p class="eyebrow">Installation</p>
+        <h2 class="section-h2">
+          Install in seconds.
+        </h2>
+        <p style="font-size:14px;font-weight:300;color:var(--text-dim);margin-top:12px;max-width:440px;letter-spacing:-0.01em;">
+          Three install methods. All produce a single binary with zero runtime dependencies.
+        </p>
+      </div>
+      <div class="install-shell reveal">
+        <div class="install-tabs-row">
+          <button class="itab active" onclick="iTab('curl',this)">curl</button>
+          <button class="itab" onclick="iTab('brew',this)">homebrew</button>
+          <button class="itab" onclick="iTab('go',this)">go install</button>
+        </div>
+        <div id="i-curl" class="install-body-p">
+          <div><span class="i-prompt">$</span><span class="i-cmd">curl -fsSL https://hanimo.dev/install | sh</span></div>
+          <span class="i-comment"># Downloads and installs the latest hanimo binary (Linux &amp; macOS · arm64 + amd64)</span>
+        </div>
+        <div id="i-brew" class="install-body-p" style="display:none;">
+          <div><span class="i-prompt">$</span><span class="i-cmd">brew install flykimjiwon/tap/hanimo</span></div>
+          <span class="i-comment"># Homebrew tap — updates automatically with brew upgrade</span>
+        </div>
+        <div id="i-go" class="install-body-p" style="display:none;">
+          <div><span class="i-prompt">$</span><span class="i-cmd">go install github.com/flykimjiwon/hanimo@latest</span></div>
+          <span class="i-comment"># Build from source · requires Go 1.21+</span>
+        </div>
+      </div>
+      <p class="mono reveal" style="font-size:12px;color:var(--text-faint);margin-top:16px;">
+        Then run <span style="color:#a78bfa;">hanimo</span> in any project directory to start.
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">han<span class="accent">imo</span></div>
+        <div class="footer-tagline">오픈소스를 위한 AI 코딩 에이전트</div>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/flykimjiwon/hanimo">github.com/flykimjiwon/hanimo</a>
+        <a href="https://hanimo.dev">hanimo.dev</a>
+        <span class="license-badge">Apache-2.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Install tabs
+    function iTab(name, el) {
+      ['curl','brew','go'].forEach(n => document.getElementById('i-'+n).style.display = 'none');
+      document.querySelectorAll('.itab').forEach(b => b.classList.remove('active'));
+      document.getElementById('i-'+name).style.display = 'block';
+      el.classList.add('active');
+    }
+
+    // Scroll reveal
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  </script>
+  <script>
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      localStorage.setItem('hanimo-theme', t);
+      document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+      document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    }
+    function setLang(lang) {
+      document.documentElement.lang = lang;
+      localStorage.setItem('hanimo-lang', lang);
+      document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+        el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+      });
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+    (function init() {
+      const theme = localStorage.getItem('hanimo-theme') || 'dark';
+      const lang = localStorage.getItem('hanimo-lang') || 'ko';
+      setTheme(theme);
+      setLang(lang);
+    })();
+  </script>
+</body>
+</html>

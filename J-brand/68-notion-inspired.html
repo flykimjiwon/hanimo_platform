@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hanimo — Open-Source AI Coding Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg2: #fbfbfa;
+      --bg3: #f1f1ef;
+      --bg-hover: #f7f7f5;
+      --border: #e9e9e7;
+      --text: #37352f;
+      --text2: #787774;
+      --text3: #9b9a97;
+      --accent: #2eaadc;
+      --accent2: #0f7b6c;
+      --red: #e03e3e;
+      --orange: #d9730d;
+      --yellow: #dfab01;
+      --green: #0f7b6c;
+      --blue: #0b6e99;
+      --purple: #6940a5;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    /* Notion-style topnav */
+    nav {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .logo-emoji { font-size: 22px; line-height: 1; }
+    .logo-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .nav-links {
+      display: flex;
+      gap: 2px;
+    }
+    .nav-link {
+      padding: 6px 12px;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text2);
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.1s, color 0.1s;
+    }
+    .nav-link:hover { background: var(--bg-hover); color: var(--text); }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lang-toggle {
+      display: flex;
+      background: var(--bg3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .lang-btn {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      transition: all 0.1s;
+    }
+    .lang-btn.active { background: var(--text); color: white; border-radius: 4px; }
+    /* Dark theme override */
+    [data-theme="dark"] {
+      --bg: #191919;
+      --bg2: #222222;
+      --bg3: #2d2d2d;
+      --bg-hover: #2a2a2a;
+      --border: #333333;
+      --text: #e8e8e4;
+      --text2: #9b9a97;
+      --text3: #6b6a67;
+      --card: #222222;
+    }
+    [data-theme="dark"] body { background: var(--bg); color: var(--text); }
+    [data-theme="dark"] nav { background: rgba(25,25,25,0.95); border-color: var(--border); }
+    [data-theme="dark"] .nav-link { color: var(--text2); }
+    [data-theme="dark"] .nav-link:hover { background: var(--bg-hover); color: var(--text); }
+    [data-theme="dark"] .lang-toggle { background: var(--bg3); }
+    [data-theme="dark"] .lang-btn { color: var(--text2); }
+    [data-theme="dark"] .logo { color: var(--text); }
+    [data-theme="dark"] .logo-text { color: var(--text); }
+    .btn-primary {
+      background: var(--text);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.1s;
+    }
+    .btn-ghost:hover { background: var(--bg-hover); color: var(--text); }
+    /* Page header — Notion-style doc */
+    .page-header {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 80px 24px 32px;
+    }
+    .page-cover {
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(135deg, #e8f4fd 0%, #d1f5ea 50%, #fef9ec 100%);
+      border-radius: 8px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      overflow: hidden;
+      position: relative;
+    }
+    .page-cover-grid {
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px);
+    }
+    .page-icon { font-size: 56px; margin-bottom: 16px; display: block; }
+    .page-title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+    .page-subtitle {
+      font-size: 16px;
+      color: var(--text2);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    /* Property table — Notion-style */
+    .properties {
+      border-top: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .property-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .property-key {
+      width: 140px;
+      font-size: 13px;
+      color: var(--text3);
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .property-val {
+      font-size: 13px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 3px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tag-blue { background: #e7f3f8; color: var(--blue); }
+    .tag-green { background: #d4f1e9; color: var(--green); }
+    .tag-orange { background: #fdebd3; color: var(--orange); }
+    .tag-purple { background: #e8e0f0; color: var(--purple); }
+    .tag-gray { background: var(--bg3); color: var(--text2); }
+    /* Page actions */
+    .page-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 48px;
+      flex-wrap: wrap;
+    }
+    /* Notion content body */
+    .notion-body {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+    /* Callout block */
+    .callout {
+      display: flex;
+      gap: 12px;
+      background: var(--bg2);
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+    .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .callout-text { font-size: 14px; color: var(--text); line-height: 1.6; }
+    .callout-text strong { font-weight: 600; }
+    /* H2 blocks */
+    .notion-h1 {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 40px 0 16px;
+      letter-spacing: -0.01em;
+    }
+    .notion-h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 32px 0 12px;
+    }
+    .notion-p {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .notion-p .text2 { color: var(--text2); }
+    /* Toggle / feature list */
+    .toggle-list { margin-bottom: 20px; }
+    .toggle-item {
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 2px;
+    }
+    .toggle-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.1s;
+    }
+    .toggle-header:hover { background: var(--bg-hover); }
+    .toggle-arrow {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
+      transition: transform 0.15s;
+      flex-shrink: 0;
+    }
+    .toggle-arrow.open { transform: rotate(90deg); }
+    .toggle-emoji { font-size: 16px; flex-shrink: 0; }
+    .toggle-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      flex: 1;
+    }
+    .toggle-body {
+      padding: 4px 10px 12px 36px;
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.65;
+      display: none;
+    }
+    .toggle-body.open { display: block; }
+    /* Divider */
+    .notion-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+    /* Database table — Notion-style */
+    .notion-table-wrap {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .notion-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 600px;
+    }
+    .notion-th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text3);
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    .notion-th:first-child { padding-left: 16px; }
+    .notion-td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+    .notion-td:first-child { padding-left: 16px; font-weight: 500; }
+    .notion-tr:last-child .notion-td { border-bottom: none; }
+    .notion-tr:hover .notion-td { background: var(--bg-hover); }
+    .check-icon { color: var(--green); font-size: 15px; }
+    .cross-icon { color: var(--border); font-size: 15px; }
+    .partial-icon { color: var(--orange); font-size: 15px; }
+    /* Code block */
+    .code-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .code-lang {
+      padding: 6px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .code-body {
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .code-body .c-key { color: var(--blue); }
+    .code-body .c-val { color: var(--green); }
+    .code-body .c-cmt { color: var(--text3); }
+    /* Gallery cards — provider grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .gallery-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      cursor: pointer;
+      transition: background 0.1s, box-shadow 0.15s;
+      background: var(--card);
+    }
+    .gallery-card:hover {
+      background: var(--bg-hover);
+      box-shadow: 0 2px 8px rgba(55,53,47,0.06);
+    }
+    .gallery-emoji { font-size: 20px; margin-bottom: 8px; }
+    .gallery-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .gallery-sub {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+    /* Inline mention chips */
+    .mention {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg3);
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 13px;
+      color: var(--text2);
+      font-weight: 500;
+      margin: 0 1px;
+    }
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+    .breadcrumb span { color: var(--text3); }
+    .breadcrumb a { color: var(--text2); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--text); }
+    /* Notion install block */
+    .install-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .install-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px;
+      background: var(--card);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .install-card:hover { background: var(--bg-hover); }
+    .install-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .install-card-body {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+      background: var(--bg3);
+      border-radius: 3px;
+      padding: 10px 12px;
+      line-height: 1.7;
+    }
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .footer-brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .footer-desc { font-size: 13px; color: var(--text3); max-width: 220px; line-height: 1.5; }
+    .footer-col h4 { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 7px; }
+    .footer-col ul li a { font-size: 13px; color: var(--text2); text-decoration: none; transition: color 0.1s; }
+    .footer-col ul li a:hover { color: var(--text); }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .footer-bottom p { font-size: 12px; color: var(--text3); }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .page-header, .notion-body { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <span class="logo-emoji">🐹</span>
+        <span class="logo-text">hanimo</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features" class="nav-link" data-ko="기능" data-en="Features">기능</a>
+        <a href="#providers" class="nav-link" data-ko="공급자" data-en="Providers">공급자</a>
+        <a href="#compare" class="nav-link" data-ko="비교" data-en="Compare">비교</a>
+        <a href="#install" class="nav-link" data-ko="설치" data-en="Install">설치</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle" style="margin-right:4px;">
+          <button class="lang-btn active" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+          <button class="lang-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+        </div>
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+          <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+        </div>
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-ghost">GitHub</a>
+        <a href="#install" class="btn-primary" data-ko="시작하기" data-en="Get started">시작하기</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a href="#">hanimo</a>
+      <span>/</span>
+      <span data-ko="개요" data-en="Overview">개요</span>
+    </div>
+    <div class="page-cover">
+      <div class="page-cover-grid"></div>
+      <span style="position:relative;z-index:1;font-size:72px;">🐹</span>
+    </div>
+    <h1 class="page-title" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding platform">오픈소스를 위한 AI 코딩 에이전트</h1>
+    <p class="page-subtitle" data-ko="Modol의 후계자. 터미널에서 실행되는 Go 기반 AI 코딩 에이전트." data-en="Successor to Modol. A Go-native terminal AI coding agent.">Modol의 후계자. 터미널에서 실행되는 Go 기반 AI 코딩 에이전트.</p>
+
+    <!-- Properties -->
+    <div class="properties">
+      <div class="property-row">
+        <div class="property-key">🏷️ <span data-ko="상태" data-en="Status">상태</span></div>
+        <div class="property-val"><span class="tag tag-green" data-ko="활성" data-en="Active">활성</span></div>
+      </div>
+      <div class="property-row">
+        <div class="property-key">⚖️ <span data-ko="라이선스" data-en="License">라이선스</span></div>
+        <div class="property-val"><span class="tag tag-blue">Apache-2.0</span></div>
+      </div>
+      <div class="property-row">
+        <div class="property-key">🔌 <span data-ko="공급자" data-en="Providers">공급자</span></div>
+        <div class="property-val"><span class="tag tag-gray">14+</span></div>
+      </div>
+      <div class="property-row">
+        <div class="property-key">🔨 <span data-ko="언어" data-en="Language">언어</span></div>
+        <div class="property-val"><span class="tag tag-blue">Go</span></div>
+      </div>
+      <div class="property-row">
+        <div class="property-key">📦 <span data-ko="설치" data-en="Install">설치</span></div>
+        <div class="property-val">
+          <span class="mention">curl</span>
+          <span class="mention">brew</span>
+          <span class="mention">go build</span>
+        </div>
+      </div>
+      <div class="property-row">
+        <div class="property-key">🔗 <span data-ko="링크" data-en="Links">링크</span></div>
+        <div class="property-val">
+          <a href="https://github.com/flykimjiwon/hanimo" style="color:var(--blue);font-size:13px;text-decoration:none;">github.com/flykimjiwon/hanimo</a>
+          <span style="color:var(--text3);font-size:13px;margin:0 4px;">·</span>
+          <a href="https://hanimo.dev" style="color:var(--blue);font-size:13px;text-decoration:none;">hanimo.dev</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="page-actions">
+      <a href="#install" class="btn-primary" data-ko="설치하기 →" data-en="Install now →">설치하기 →</a>
+      <a href="https://github.com/flykimjiwon/hanimo" class="btn-ghost">GitHub ↗</a>
+    </div>
+  </div>
+
+  <!-- Callout -->
+  <div class="notion-body">
+    <div class="callout">
+      <span class="callout-icon">💡</span>
+      <div class="callout-text" data-ko="hanimo는 Modol의 후계자로, 14개 이상의 LLM 공급자를 지원하며 로컬 우선으로 설계된 오픈소스 Go AI 코딩 에이전트입니다. Apache-2.0 라이선스." data-en="hanimo is the successor to Modol — an open-source Go AI coding agent supporting 14+ LLM providers, designed local-first. Apache-2.0 licensed.">hanimo는 Modol의 후계자로, 14개 이상의 LLM 공급자를 지원하며 로컬 우선으로 설계된 오픈소스 Go AI 코딩 에이전트입니다. Apache-2.0 라이선스.</div>
+    </div>
+
+    <!-- Terminal preview -->
+    <h2 class="notion-h2" id="terminal" data-ko="💻 터미널 미리보기" data-en="💻 Terminal Preview">💻 터미널 미리보기</h2>
+    <div class="code-wrap">
+      <div class="code-lang">bash</div>
+      <div class="code-body">
+        <span class="c-cmt"># Install</span><br/>
+        curl -fsSL https://hanimo.dev/install.sh | sh<br/>
+        <span class="c-cmt"># ✓ installed hanimo v1.0.0</span><br/>
+        <br/>
+        <span class="c-cmt"># Run</span><br/>
+        hanimo<br/>
+        <span class="c-cmt"># ◆ Session #7 · SQLite · 12 prior turns</span><br/>
+        <br/>
+        <span class="c-cmt"># Ask</span><br/>
+        &gt; <span class="c-key">Refactor auth.go to use context propagation</span><br/>
+        <span class="c-cmt"># ⚓ hash-anchor #a3f9b2 · editing lines 88–134</span><br/>
+        <span class="c-val"># ✓ 2 hunks applied · tests passing</span><br/>
+        <br/>
+        &gt; <span class="c-key">/auto ship this feature</span><br/>
+        <span class="c-cmt"># ⚡ autonomous mode · 4 steps planned ···</span>
+      </div>
+    </div>
+
+    <hr class="notion-divider" />
+
+    <!-- Features as toggles -->
+    <h2 class="notion-h1" id="features" data-ko="⚡ 핵심 기능" data-en="⚡ Core Features">⚡ 핵심 기능</h2>
+    <div class="toggle-list">
+      <div class="toggle-item">
+        <div class="toggle-header" onclick="toggleItem(this)">
+          <span class="toggle-arrow">▶</span>
+          <span class="toggle-emoji">⚓</span>
+          <span class="toggle-title" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</span>
+        </div>
+        <div class="toggle-body" data-ko="줄 번호 대신 콘텐츠 해시로 정밀 편집. 리베이스나 머지 후에도 편집 위치가 드리프트되지 않습니다." data-en="Precise edits via content hashes instead of line numbers. No drift after rebase or merge.">줄 번호 대신 콘텐츠 해시로 정밀 편집. 리베이스나 머지 후에도 편집 위치가 드리프트되지 않습니다.</div>
+      </div>
+      <div class="toggle-item">
+        <div class="toggle-header" onclick="toggleItem(this)">
+          <span class="toggle-arrow">▶</span>
+          <span class="toggle-emoji">🔌</span>
+          <span class="toggle-title" data-ko="14개 LLM 공급자" data-en="14+ LLM Providers">14개 LLM 공급자</span>
+        </div>
+        <div class="toggle-body" data-ko="Ollama, OpenAI, Anthropic, Google, DeepSeek, Groq, Novita, OpenRouter, Mistral, Fireworks, vLLM, LM Studio, Together, Custom. 로컬부터 클라우드까지." data-en="Ollama, OpenAI, Anthropic, Google, DeepSeek, Groq, Novita, OpenRouter, Mistral, Fireworks, vLLM, LM Studio, Together, Custom.">Ollama, OpenAI, Anthropic, Google, DeepSeek, Groq, Novita, OpenRouter, Mistral, Fireworks, vLLM, LM Studio, Together, Custom. 로컬부터 클라우드까지.</div>
+      </div>
+      <div class="toggle-item">
+        <div class="toggle-header" onclick="toggleItem(this)">
+          <span class="toggle-arrow">▶</span>
+          <span class="toggle-emoji">🗜️</span>
+          <span class="toggle-title" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</span>
+        </div>
+        <div class="toggle-body" data-ko="컨텍스트 창을 자동으로 관리해 비용 없이 긴 세션을 유지합니다." data-en="Auto-manage context window to keep long sessions affordable.">컨텍스트 창을 자동으로 관리해 비용 없이 긴 세션을 유지합니다.</div>
+      </div>
+      <div class="toggle-item">
+        <div class="toggle-header" onclick="toggleItem(this)">
+          <span class="toggle-arrow">▶</span>
+          <span class="toggle-emoji">⚡</span>
+          <span class="toggle-title" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</span>
+        </div>
+        <div class="toggle-body" data-ko="단일 /auto 명령으로 멀티스텝 작업을 자율적으로 실행합니다. 계획 수립, 편집, 테스트 실행까지 자동." data-en="One /auto command drives full autonomous multi-step task execution. Planning, edits, tests — all automated.">/auto 명령으로 멀티스텝 작업을 자율적으로 실행합니다. 계획 수립, 편집, 테스트 실행까지 자동.</div>
+      </div>
+      <div class="toggle-item">
+        <div class="toggle-header" onclick="toggleItem(this)">
+          <span class="toggle-arrow">▶</span>
+          <span class="toggle-emoji">💾</span>
+          <span class="toggle-title" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</span>
+        </div>
+        <div class="toggle-body" data-ko="로컬 SQLite에 대화를 영구 저장합니다. 클라우드 동기화 없이 완전한 로컬 우선." data-en="Persist conversations in local SQLite. Fully local-first, no cloud sync.">로컬 SQLite에 대화를 영구 저장합니다. 클라우드 동기화 없이 완전한 로컬 우선.</div>
+      </div>
+      <div class="toggle-item">
+        <div class="toggle-header" onclick="toggleItem(this)">
+          <span class="toggle-arrow">▶</span>
+          <span class="toggle-emoji">🔗</span>
+          <span class="toggle-title" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</span>
+        </div>
+        <div class="toggle-body" data-ko="Model Context Protocol로 외부 도구와 서비스를 연결합니다." data-en="Connect external tools and services via Model Context Protocol.">Model Context Protocol로 외부 도구와 서비스를 연결합니다.</div>
+      </div>
+    </div>
+
+    <hr class="notion-divider" />
+
+    <!-- Modes -->
+    <h2 class="notion-h1" data-ko="🚀 실행 모드" data-en="🚀 Execution Modes">🚀 실행 모드</h2>
+    <div class="gallery-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="gallery-card">
+        <div class="gallery-emoji">🚀</div>
+        <div class="gallery-title">Super</div>
+        <div class="gallery-sub" data-ko="최대 권한 모드" data-en="Maximum permission mode">최대 권한 모드</div>
+      </div>
+      <div class="gallery-card">
+        <div class="gallery-emoji">⚙️</div>
+        <div class="gallery-title">Dev</div>
+        <div class="gallery-sub" data-ko="일반 개발 모드" data-en="Standard dev mode">일반 개발 모드</div>
+      </div>
+      <div class="gallery-card">
+        <div class="gallery-emoji">📋</div>
+        <div class="gallery-title">Plan</div>
+        <div class="gallery-sub" data-ko="계획 후 실행 모드" data-en="Plan-first mode">계획 후 실행 모드</div>
+      </div>
+    </div>
+
+    <hr class="notion-divider" />
+
+    <!-- Providers gallery -->
+    <h2 class="notion-h1" id="providers" data-ko="🔌 LLM 공급자" data-en="🔌 LLM Providers">🔌 LLM 공급자</h2>
+    <p class="notion-p" style="margin-bottom:16px;" data-ko="14개 공급자를 단일 인터페이스로 통합합니다. 로컬 모델부터 클라우드 API까지." data-en="14+ providers unified under one interface. Local models to cloud APIs.">14개 공급자를 단일 인터페이스로 통합합니다. 로컬 모델부터 클라우드 API까지.</p>
+    <div class="gallery-grid">
+      <div class="gallery-card"><div class="gallery-emoji">🟢</div><div class="gallery-title">Ollama</div><div class="gallery-sub" data-ko="로컬" data-en="Local">로컬</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">⚫</div><div class="gallery-title">OpenAI</div><div class="gallery-sub" data-ko="클라우드" data-en="Cloud">클라우드</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">🟠</div><div class="gallery-title">Anthropic</div><div class="gallery-sub" data-ko="클라우드" data-en="Cloud">클라우드</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">🔵</div><div class="gallery-title">Google</div><div class="gallery-sub" data-ko="클라우드" data-en="Cloud">클라우드</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">🐋</div><div class="gallery-title">DeepSeek</div><div class="gallery-sub" data-ko="클라우드" data-en="Cloud">클라우드</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">⚡</div><div class="gallery-title">Groq</div><div class="gallery-sub" data-ko="클라우드" data-en="Cloud">클라우드</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">🌐</div><div class="gallery-title">OpenRouter</div><div class="gallery-sub" data-ko="게이트웨이" data-en="Gateway">게이트웨이</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">🔥</div><div class="gallery-title">Mistral</div><div class="gallery-sub" data-ko="클라우드" data-en="Cloud">클라우드</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">✨</div><div class="gallery-title">Fireworks</div><div class="gallery-sub" data-ko="클라우드" data-en="Cloud">클라우드</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">🔧</div><div class="gallery-title">vLLM</div><div class="gallery-sub" data-ko="로컬" data-en="Local">로컬</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">🎨</div><div class="gallery-title">LM Studio</div><div class="gallery-sub" data-ko="로컬" data-en="Local">로컬</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">🤝</div><div class="gallery-title">Together</div><div class="gallery-sub" data-ko="클라우드" data-en="Cloud">클라우드</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">💫</div><div class="gallery-title">Novita</div><div class="gallery-sub" data-ko="게이트웨이" data-en="Gateway">게이트웨이</div></div>
+      <div class="gallery-card"><div class="gallery-emoji">⚙️</div><div class="gallery-title">Custom</div><div class="gallery-sub" data-ko="커스텀" data-en="Custom">커스텀</div></div>
+    </div>
+
+    <hr class="notion-divider" />
+
+    <!-- Comparison database -->
+    <h2 class="notion-h1" id="compare" data-ko="📊 비교 데이터베이스" data-en="📊 Comparison Database">📊 비교 데이터베이스</h2>
+    <div class="notion-table-wrap">
+      <table class="notion-table">
+        <thead>
+          <tr>
+            <th class="notion-th" data-ko="기능" data-en="Feature">기능</th>
+            <th class="notion-th">hanimo</th>
+            <th class="notion-th">Claude Code</th>
+            <th class="notion-th">Cursor</th>
+            <th class="notion-th">Aider</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="notion-tr">
+            <td class="notion-td" data-ko="오픈소스" data-en="Open-source">오픈소스</td>
+            <td class="notion-td"><span class="check-icon">✓</span></td>
+            <td class="notion-td"><span class="cross-icon">—</span></td>
+            <td class="notion-td"><span class="cross-icon">—</span></td>
+            <td class="notion-td"><span class="check-icon">✓</span></td>
+          </tr>
+          <tr class="notion-tr">
+            <td class="notion-td" data-ko="로컬 LLM" data-en="Local LLM">로컬 LLM</td>
+            <td class="notion-td"><span class="check-icon">✓</span></td>
+            <td class="notion-td"><span class="cross-icon">—</span></td>
+            <td class="notion-td"><span class="partial-icon">△</span></td>
+            <td class="notion-td"><span class="check-icon">✓</span></td>
+          </tr>
+          <tr class="notion-tr">
+            <td class="notion-td" data-ko="SQLite 세션" data-en="SQLite sessions">SQLite 세션</td>
+            <td class="notion-td"><span class="check-icon">✓</span></td>
+            <td class="notion-td"><span class="cross-icon">—</span></td>
+            <td class="notion-td"><span class="cross-icon">—</span></td>
+            <td class="notion-td"><span class="cross-icon">—</span></td>
+          </tr>
+          <tr class="notion-tr">
+            <td class="notion-td" data-ko="MCP 지원" data-en="MCP support">MCP 지원</td>
+            <td class="notion-td"><span class="check-icon">✓</span></td>
+            <td class="notion-td"><span class="check-icon">✓</span></td>
+            <td class="notion-td"><span class="cross-icon">—</span></td>
+            <td class="notion-td"><span class="cross-icon">—</span></td>
+          </tr>
+          <tr class="notion-tr">
+            <td class="notion-td" data-ko="자율 모드" data-en="Autonomous mode">자율 모드</td>
+            <td class="notion-td"><span class="tag tag-green" style="font-size:11px;">/auto</span></td>
+            <td class="notion-td"><span class="partial-icon">△</span></td>
+            <td class="notion-td"><span class="partial-icon">△</span></td>
+            <td class="notion-td"><span class="partial-icon">△</span></td>
+          </tr>
+          <tr class="notion-tr">
+            <td class="notion-td" data-ko="라이선스" data-en="License">라이선스</td>
+            <td class="notion-td"><span class="tag tag-blue" style="font-size:11px;">Apache-2.0</span></td>
+            <td class="notion-td"><span class="tag tag-gray" style="font-size:11px;">Proprietary</span></td>
+            <td class="notion-td"><span class="tag tag-gray" style="font-size:11px;">Proprietary</span></td>
+            <td class="notion-td"><span class="tag tag-blue" style="font-size:11px;">MIT</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="notion-divider" />
+
+    <!-- Install -->
+    <h2 class="notion-h1" id="install" data-ko="📦 설치" data-en="📦 Installation">📦 설치</h2>
+    <p class="notion-p" style="margin-bottom:16px;" data-ko="세 가지 방법으로 설치할 수 있습니다." data-en="Three ways to install.">세 가지 방법으로 설치할 수 있습니다.</p>
+    <div class="install-cards">
+      <div class="install-card">
+        <div class="install-card-title">⬇️ <span data-ko="바이너리 (추천)" data-en="Binary (Recommended)">바이너리 (추천)</span></div>
+        <div class="install-card-body">curl -fsSL hanimo.dev/install.sh | sh</div>
+      </div>
+      <div class="install-card">
+        <div class="install-card-title">🍺 Homebrew</div>
+        <div class="install-card-body">brew tap flykimjiwon/hanimo<br/>brew install hanimo</div>
+      </div>
+      <div class="install-card">
+        <div class="install-card-title">🔨 <span data-ko="소스 빌드" data-en="Build from source">소스 빌드</span></div>
+        <div class="install-card-body">git clone github.com/flykimjiwon/hanimo<br/>cd hanimo && go build -o hanimo ./cmd/hanimo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand-name">🐹 hanimo</div>
+        <p class="footer-desc" data-ko="오픈소스 Go AI 코딩 에이전트. Modol의 후계자." data-en="Open-source Go AI coding agent. Successor to Modol.">오픈소스 Go AI 코딩 에이전트. Modol의 후계자.</p>
+      </div>
+      <div class="footer-col">
+        <h4 data-ko="프로젝트" data-en="Project">프로젝트</h4>
+        <ul>
+          <li><a href="https://github.com/flykimjiwon/hanimo">GitHub</a></li>
+          <li><a href="https://hanimo.dev">hanimo.dev</a></li>
+          <li><a href="#" data-ko="문서" data-en="Docs">문서</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4 data-ko="커뮤니티" data-en="Community">커뮤니티</h4>
+        <ul>
+          <li><a href="#" data-ko="이슈" data-en="Issues">이슈</a></li>
+          <li><a href="#" data-ko="토론" data-en="Discussions">토론</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p data-ko="© 2025 flykimjiwon. Apache-2.0 라이선스." data-en="© 2025 flykimjiwon. Apache-2.0 licensed.">© 2025 flykimjiwon. Apache-2.0 라이선스.</p>
+      <p>hanimo.dev</p>
+    </div>
+  </footer>
+
+  <script>
+    let currentLang = 'ko';
+    let currentTheme = 'light';
+
+    function setTheme(t) {
+      currentTheme = t;
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('hanimo-theme', t);
+      document.getElementById('btn-light').classList.toggle('active', t === 'light');
+      document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+      setLang(currentLang);
+    }
+
+    function setLang(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-ko]').forEach(el => {
+        el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+      });
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+    function toggleItem(header) {
+      const arrow = header.querySelector('.toggle-arrow');
+      const body = header.nextElementSibling;
+      const isOpen = body.classList.contains('open');
+      arrow.classList.toggle('open', !isOpen);
+      body.classList.toggle('open', !isOpen);
+    }
+    (function() {
+      const saved = localStorage.getItem('hanimo-theme') || 'light';
+      setTheme(saved);
+    })();
+    setLang('ko');
+  </script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cursor / Claude Code → hanimo 마이그레이션</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'light';document.documentElement.dataset.theme=t;})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,700&family=JetBrains+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --bg2: #f3ede3;
+    --bg3: #ebe3d5;
+    --ink: #1e1a14;
+    --ink2: #4a4235;
+    --ink3: #8c7e6a;
+    --rule: #d8cfc0;
+    --rule2: #c8bca8;
+    --green: #2d6a2d;
+    --green-bg: #eaf4ea;
+    --amber: #b07820;
+    --amber-bg: #fdf5e4;
+    --red-bg: #fdf0ee;
+    --red: #9a3020;
+    --step1: #4a7c59;
+    --step2: #3a6b8a;
+    --step3: #7a4a8a;
+    --step4: #8a6a2a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; }
+
+  /* dark theme */
+  [data-theme="dark"] body { background:#1a1610; color:#e8dcc8; }
+  [data-theme="dark"] nav { background:rgba(26,22,16,0.94); border-bottom-color:rgba(200,155,100,0.2); }
+  [data-theme="dark"] .hero { color:#e8dcc8; }
+  /* LANG + THEME */
+  .lang-bar { position:fixed; top:0; right:0; z-index:300; display:flex; }
+  .lang-btn, .theme-btn { background:var(--ink); border:1px solid #333; color:#aaa; font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.5rem 0.8rem; cursor:pointer; transition:all 0.15s; }
+  .lang-btn.active, .theme-btn.active { background:var(--amber); color:#000; border-color:var(--amber); }
+  [data-theme="light"] .lang-btn, [data-theme="light"] .theme-btn { background:var(--bg2); border-color:var(--rule); color:var(--ink3); }
+  [data-theme="light"] .lang-btn.active, [data-theme="light"] .theme-btn.active { background:var(--amber); color:#000; }
+
+  /* NAV */
+  nav {
+    position:sticky; top:0; z-index:200;
+    background:rgba(250,247,242,0.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--rule);
+    padding:0.9rem 2rem;
+    display:flex; align-items:center; gap:1.5rem;
+  }
+  .nav-logo { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:700; color:var(--ink); }
+  .nav-logo span { color:var(--amber); }
+  .nav-tag { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--ink3); letter-spacing:0.15em; }
+  .nav-cta { margin-left:auto; background:var(--ink); color:var(--bg); font-family:'JetBrains Mono',monospace; font-size:0.7rem; padding:0.4rem 0.9rem; cursor:pointer; border:none; transition:background 0.15s; white-space:nowrap; }
+  .nav-cta:hover { background:var(--amber); }
+
+  /* HERO */
+  .hero {
+    max-width:860px; margin:0 auto;
+    padding:5rem 2rem 3.5rem;
+    text-align:center;
+    position:relative;
+  }
+  .hero::before {
+    content:'';
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:1px; height:4rem; background:var(--rule);
+  }
+  .hero-eye { font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--amber); letter-spacing:0.38em; text-transform:uppercase; margin-bottom:1.5rem; }
+  .hero-h1 { font-family:'Fraunces',serif; font-size:clamp(2rem,5vw,4rem); font-weight:700; line-height:1.1; margin-bottom:1rem; }
+  .hero-h1 em { font-style:italic; color:var(--amber); }
+  .hero-sub { font-size:1rem; color:var(--ink3); max-width:520px; margin:0 auto 1rem; line-height:1.7; }
+  .hero-ko { font-size:0.9rem; color:var(--ink3); }
+
+  /* MAIN */
+  .main { max-width:940px; margin:0 auto; padding:0 2rem 6rem; }
+
+  /* FROM SELECT */
+  .from-select { display:flex; gap:1px; background:var(--rule); margin-bottom:3rem; }
+  .from-btn {
+    flex:1; padding:0.9rem 1rem; background:var(--bg2);
+    font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink3); cursor:pointer;
+    border:none; transition:all 0.15s; text-align:center;
+  }
+  .from-btn:hover { background:var(--bg3); color:var(--ink); }
+  .from-btn.active { background:var(--ink); color:var(--bg); }
+
+  /* STEPS */
+  .steps { display:flex; flex-direction:column; gap:0; }
+
+  .step {
+    display:grid; grid-template-columns:60px 1fr;
+    border-bottom:1px solid var(--rule);
+    opacity:0; transform:translateY(12px);
+    transition:opacity 0.4s ease, transform 0.4s ease;
+  }
+  .step.vis { opacity:1; transform:translateY(0); }
+
+  .step-num {
+    padding:1.8rem 1rem;
+    display:flex; flex-direction:column; align-items:center;
+    border-right:1px solid var(--rule);
+    gap:0.4rem;
+  }
+  .num-circle {
+    width:36px; height:36px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:700; font-size:0.95rem;
+    flex-shrink:0;
+  }
+  .step:nth-child(1) .num-circle { background:var(--green-bg); color:var(--green); }
+  .step:nth-child(2) .num-circle { background:#e8f0f8; color:var(--step2); }
+  .step:nth-child(3) .num-circle { background:#f3eef8; color:var(--step3); }
+  .step:nth-child(4) .num-circle { background:var(--amber-bg); color:var(--amber); }
+  .step:nth-child(5) .num-circle { background:var(--green-bg); color:var(--green); }
+  .num-line { flex:1; width:1px; background:var(--rule); }
+
+  .step-body { padding:1.8rem 1.5rem 1.8rem 1.8rem; }
+  .step-tag { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--ink3); letter-spacing:0.2em; text-transform:uppercase; margin-bottom:0.5rem; }
+  .step-title { font-family:'Fraunces',serif; font-size:1.3rem; font-weight:600; margin-bottom:0.8rem; line-height:1.2; }
+  .step-desc { font-size:0.9rem; color:var(--ink2); line-height:1.65; margin-bottom:1rem; }
+
+  .cmd-block { background:var(--ink); color:#e0dbd0; font-family:'JetBrains Mono',monospace; font-size:0.75rem; padding:1rem 1.2rem; line-height:1.85; position:relative; cursor:pointer; transition:background 0.12s; }
+  .cmd-block:hover { background:#2a2520; }
+  .cmd-block .cp-hint { position:absolute; top:0.5rem; right:0.8rem; font-size:0.58rem; color:#555; letter-spacing:0.1em; }
+  .cmd-prompt { color:#b8a070; }
+  .cmd-out { color:#6a7a5a; }
+  .cmd-success { color:#5eff5e; }
+  .cmd-info { color:#5eb8ff; }
+
+  .note-box { background:var(--amber-bg); border-left:3px solid var(--amber); padding:0.8rem 1rem; font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--ink2); line-height:1.6; margin-top:0.8rem; }
+  .note-box::before { content:'ℹ  '; color:var(--amber); font-weight:700; }
+
+  /* MAPPING TABLE */
+  .map-table { width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:0.8rem; }
+  .map-table thead tr { background:var(--bg3); }
+  .map-table th { padding:0.65rem 0.9rem; text-align:left; font-family:'JetBrains Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); font-weight:500; border-bottom:1px solid var(--rule2); }
+  .map-table tbody tr { border-bottom:1px solid var(--rule); transition:background 0.1s; }
+  .map-table tbody tr:hover { background:var(--bg2); }
+  .map-table td { padding:0.7rem 0.9rem; }
+  .map-table td:first-child { color:var(--red); font-family:'JetBrains Mono',monospace; font-size:0.75rem; }
+  .map-table td:nth-child(2) { color:var(--ink3); text-align:center; }
+  .map-table td:nth-child(3) { color:var(--green); font-family:'JetBrains Mono',monospace; font-size:0.75rem; }
+  .map-table td:last-child { color:var(--ink3); font-size:0.78rem; }
+
+  /* QUOTES */
+  .quotes { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1px; background:var(--rule); margin-top:3rem; margin-bottom:3rem; }
+  .quote-card { background:var(--bg2); padding:1.5rem; }
+  .quote-text { font-family:'Fraunces',serif; font-style:italic; font-size:0.95rem; line-height:1.6; color:var(--ink2); margin-bottom:0.8rem; }
+  .quote-author { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--ink3); letter-spacing:0.1em; }
+  .quote-from { display:inline-block; background:var(--bg3); padding:0.15rem 0.5rem; font-size:0.6rem; margin-top:0.3rem; letter-spacing:0.12em; color:var(--ink3); }
+
+  /* INSTALL */
+  .install-section { background:var(--bg3); border:1px solid var(--rule2); padding:1.5rem; margin-top:0; }
+  .install-title { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:600; margin-bottom:1rem; }
+  .install-grid { display:flex; flex-wrap:wrap; gap:0.5rem; }
+  .icmd { font-family:'JetBrains Mono',monospace; font-size:0.72rem; background:var(--ink); color:#b8a070; padding:0.4rem 0.8rem; cursor:pointer; border:none; transition:all 0.12s; white-space:nowrap; }
+  .icmd:hover { background:#2a2520; color:#e0dbd0; }
+
+  /* PROVIDERS */
+  .prov-section { margin-top:2rem; }
+  .sec-title { font-family:'JetBrains Mono',monospace; font-size:0.65rem; letter-spacing:0.3em; color:var(--ink3); text-transform:uppercase; margin-bottom:0.9rem; display:flex; align-items:center; gap:0.8rem; }
+  .sec-title::after { content:''; flex:1; height:1px; background:var(--rule); }
+  .prov-wrap { display:flex; flex-wrap:wrap; gap:0.35rem; }
+  .prov { background:var(--ink); color:#aaa; font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.22rem 0.6rem; transition:all 0.12s; cursor:default; }
+  .prov:hover { background:var(--amber); color:#000; }
+
+  /* FOOTER */
+  footer { background:var(--ink); color:#666; padding:2rem; font-family:'JetBrains Mono',monospace; font-size:0.68rem; }
+  .foot-in { max-width:940px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+  .f-logo { font-family:'Fraunces',serif; font-size:1.3rem; color:var(--bg); font-weight:700; }
+  .f-logo span { color:var(--amber); }
+  footer a { color:#888; text-decoration:none; } footer a:hover { color:var(--amber); }
+
+  @media(max-width:600px) {
+    .step { grid-template-columns:44px 1fr; }
+    .step-num { padding:1.2rem 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="lang-bar">
+  <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+  <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  <button class="lang-btn active" data-lang="ko" onclick="setLang('ko')">KO</button>
+  <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+</div>
+
+<nav>
+  <div class="nav-logo">hani<span>mo</span></div>
+  <div class="nav-tag" data-ko="마이그레이션 가이드" data-en="Migration Guide">마이그레이션 가이드</div>
+  <button class="nav-cta" id="ncta" data-copy="curl -sSL https://hanimo.dev/install | sh" data-ko="$ curl | sh 설치" data-en="$ curl | sh install">$ curl | sh 설치</button>
+</nav>
+
+<section class="hero">
+  <div class="hero-eye" data-ko="마이그레이션 가이드" data-en="Migration Guide">마이그레이션 가이드</div>
+  <h1 class="hero-h1">
+    <span data-ko="Cursor / Claude Code에서" data-en="Switching from">Cursor / Claude Code에서</span><br>
+    <em data-ko="hanimo로 전환하기" data-en="to hanimo">hanimo로 전환하기</em>
+  </h1>
+  <p class="hero-sub" data-ko="5단계로 끝납니다. 15분이면 충분해요." data-en="5 steps. About 15 minutes.">5단계로 끝납니다. 15분이면 충분해요.</p>
+  <p class="hero-ko" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding agent">오픈소스를 위한 AI 코딩 에이전트</p>
+</section>
+
+<div class="main">
+
+  <!-- FROM SELECT -->
+  <div class="from-select" id="from-bar">
+    <button class="from-btn active" data-from="cursor" data-ko="Cursor에서 전환" data-en="From Cursor">Cursor에서 전환</button>
+    <button class="from-btn" data-from="claude" data-ko="Claude Code에서 전환" data-en="From Claude Code">Claude Code에서 전환</button>
+    <button class="from-btn" data-from="aider" data-ko="Aider에서 전환" data-en="From Aider">Aider에서 전환</button>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps" id="steps-cursor">
+
+    <div class="step">
+      <div class="step-num"><div class="num-circle">1</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="제거" data-en="Remove">제거</div>
+        <div class="step-title" data-ko="Cursor 제거 (선택 사항)" data-en="Uninstall Cursor (optional)">Cursor 제거 (선택 사항)</div>
+        <div class="step-desc" data-ko="hanimo는 터미널 기반입니다. Cursor를 유지해도 충돌 없음." data-en="hanimo is terminal-based. You can keep Cursor — no conflict.">hanimo는 터미널 기반입니다. Cursor를 유지해도 충돌 없음.</div>
+        <div class="note-box" data-ko=".cursorrules 파일은 그대로 두세요. 다음 단계에서 변환합니다." data-en="Keep your .cursorrules file — we'll convert it in step 4.">.cursorrules 파일은 그대로 두세요. 다음 단계에서 변환합니다.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"><div class="num-circle">2</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="설치" data-en="Install">설치</div>
+        <div class="step-title" data-ko="hanimo 설치" data-en="Install hanimo">hanimo 설치</div>
+        <div class="step-desc" data-ko="단일 Go 바이너리. 런타임 불필요." data-en="Single Go binary. No runtime required.">단일 Go 바이너리. 런타임 불필요.</div>
+        <div class="cmd-block" data-copy="curl -sSL https://hanimo.dev/install | sh">
+          <span class="cp-hint" data-ko="클릭하여 복사" data-en="click to copy">클릭하여 복사</span>
+          <div><span class="cmd-prompt">$</span> curl -sSL https://hanimo.dev/install | sh</div>
+          <div class="cmd-success"># 또는</div>
+          <div><span class="cmd-prompt">$</span> brew install hanimo</div>
+          <div class="cmd-success"># 또는</div>
+          <div><span class="cmd-prompt">$</span> go install github.com/flykimjiwon/hanimo@latest</div>
+          <div class="cmd-out"># ~20MB, 의존성 없음</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"><div class="num-circle">3</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="설정" data-en="Configure">설정</div>
+        <div class="step-title" data-ko="모델 연결" data-en="Point to your models">모델 연결</div>
+        <div class="step-desc" data-ko="기존 API 키를 그대로 사용하거나 Ollama로 로컬 실행." data-en="Reuse your existing API keys, or go local with Ollama.">기존 API 키 재사용 또는 Ollama 로컬 실행.</div>
+        <div class="cmd-block" data-copy="hanimo config set provider anthropic">
+          <span class="cp-hint" data-ko="클릭하여 복사" data-en="click to copy">클릭하여 복사</span>
+          <div class="cmd-info"># Anthropic 사용 (기존 키 재활용)</div>
+          <div><span class="cmd-prompt">$</span> hanimo config set provider anthropic</div>
+          <div><span class="cmd-prompt">$</span> hanimo config set api-key $ANTHROPIC_API_KEY</div>
+          <br>
+          <div class="cmd-info"># 또는 Ollama로 완전 로컬 ($0/월)</div>
+          <div><span class="cmd-prompt">$</span> hanimo config set provider ollama</div>
+          <div><span class="cmd-prompt">$</span> hanimo config set model llama3.2</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"><div class="num-circle">4</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="이전" data-en="Migrate">이전</div>
+        <div class="step-title" data-ko=".cursorrules → .hanimo.md 변환" data-en="Convert .cursorrules → .hanimo.md">.cursorrules → .hanimo.md 변환</div>
+        <div class="step-desc" data-ko="Cursor의 규칙 파일을 그대로 가져올 수 있습니다." data-en="Your Cursor rules map directly.">Cursor의 규칙 파일을 그대로 가져올 수 있습니다.</div>
+        <div class="cmd-block" data-copy="cp .cursorrules .hanimo.md">
+          <span class="cp-hint" data-ko="클릭하여 복사" data-en="click to copy">클릭하여 복사</span>
+          <div><span class="cmd-prompt">$</span> cp .cursorrules .hanimo.md</div>
+          <div class="cmd-success"># 끝입니다. 형식 변환 없음.</div>
+        </div>
+        <div style="margin-top:1rem;">
+          <table class="map-table">
+            <thead>
+              <tr>
+                <th data-ko="Cursor 기능" data-en="Cursor feature">Cursor 기능</th>
+                <th>→</th>
+                <th data-ko="hanimo 대응" data-en="hanimo equivalent">hanimo 대응</th>
+                <th data-ko="비고" data-en="Notes">비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>.cursorrules</td><td>→</td><td>.hanimo.md</td>
+                <td data-ko="직접 복사" data-en="Direct copy">직접 복사</td>
+              </tr>
+              <tr>
+                <td data-ko="Cmd+K 인라인 편집" data-en="Cmd+K inline edit">Cmd+K 인라인</td><td>→</td>
+                <td data-ko="hanimo --mode dev" data-en="hanimo --mode dev">--mode dev</td>
+                <td data-ko="인터랙티브 모드" data-en="Interactive mode">인터랙티브</td>
+              </tr>
+              <tr>
+                <td data-ko="Composer (에이전트)" data-en="Composer (agent)">Composer (에이전트)</td><td>→</td>
+                <td data-ko="hanimo --mode super" data-en="hanimo --mode super">--mode super</td>
+                <td data-ko="자율 실행" data-en="Autonomous">자율 실행</td>
+              </tr>
+              <tr>
+                <td data-ko="Cursor 채팅" data-en="Cursor chat">Cursor 채팅</td><td>→</td>
+                <td data-ko="hanimo --mode plan" data-en="hanimo --mode plan">--mode plan</td>
+                <td data-ko="계획 전용" data-en="Plan-only">계획 전용</td>
+              </tr>
+              <tr>
+                <td data-ko="@파일 참조" data-en="@file references">@파일 참조</td><td>→</td>
+                <td data-ko="--context ./path" data-en="--context ./path">--context</td>
+                <td data-ko="파일·폴더 지정" data-en="File or folder">파일·폴더</td>
+              </tr>
+              <tr>
+                <td data-ko="세션 재시작" data-en="Session resume">세션 재시작</td><td>→</td>
+                <td>hanimo session resume</td>
+                <td data-ko="SQLite 영구 저장" data-en="SQLite persistent">SQLite 영구</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" style="border-bottom:none;">
+      <div class="step-num"><div class="num-circle">5</div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="실행" data-en="Run">실행</div>
+        <div class="step-title" data-ko="첫 번째 작업 실행" data-en="Run your first task">첫 번째 작업 실행</div>
+        <div class="step-desc" data-ko="이게 전부입니다. 도구는 설치됐고 설정도 됐어요." data-en="That's it. You're set up and ready to go.">이게 전부입니다.</div>
+        <div class="cmd-block" data-copy="hanimo --mode super &quot;이 함수를 리팩터링해줘&quot;">
+          <span class="cp-hint" data-ko="클릭하여 복사" data-en="click to copy">클릭하여 복사</span>
+          <div><span class="cmd-prompt">$</span> hanimo --mode super "이 함수를 리팩터링해줘"</div>
+          <div class="cmd-info">⚡ hanimo · SUPER mode · hash-anchored edits on</div>
+          <div class="cmd-success">✓ Done.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /steps-cursor -->
+
+  <!-- STEPS CLAUDE CODE (hidden by default) -->
+  <div class="steps hidden" id="steps-claude" style="display:none;">
+    <div class="step vis">
+      <div class="step-num"><div class="num-circle">1</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="제거" data-en="Remove">제거</div>
+        <div class="step-title" data-ko="Claude Code 제거" data-en="Uninstall Claude Code">Claude Code 제거</div>
+        <div class="cmd-block"><div><span class="cmd-prompt">$</span> npm uninstall -g @anthropic-ai/claude-code</div></div>
+      </div>
+    </div>
+    <div class="step vis">
+      <div class="step-num"><div class="num-circle">2</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="설치" data-en="Install">설치</div>
+        <div class="step-title" data-ko="hanimo 설치" data-en="Install hanimo">hanimo 설치</div>
+        <div class="cmd-block" data-copy="curl -sSL https://hanimo.dev/install | sh">
+          <div><span class="cmd-prompt">$</span> curl -sSL https://hanimo.dev/install | sh</div>
+        </div>
+      </div>
+    </div>
+    <div class="step vis">
+      <div class="step-num"><div class="num-circle">3</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="설정" data-en="Configure">설정</div>
+        <div class="step-title" data-ko="Anthropic API 키 연결" data-en="Connect Anthropic API key">Anthropic API 키 연결</div>
+        <div class="step-desc" data-ko="기존 API 키 그대로 사용. Claude Code보다 저렴하게." data-en="Same API key. Just cheaper — no $100/mo platform fee.">기존 API 키 재사용. 월 $100 구독료 사라짐.</div>
+        <div class="cmd-block" data-copy="hanimo config set provider anthropic">
+          <div><span class="cmd-prompt">$</span> hanimo config set provider anthropic</div>
+          <div><span class="cmd-prompt">$</span> hanimo config set api-key $ANTHROPIC_API_KEY</div>
+        </div>
+      </div>
+    </div>
+    <div class="step vis">
+      <div class="step-num"><div class="num-circle">4</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="이전" data-en="Migrate">이전</div>
+        <div class="step-title" data-ko="CLAUDE.md → .hanimo.md" data-en="CLAUDE.md → .hanimo.md">CLAUDE.md → .hanimo.md</div>
+        <div class="cmd-block" data-copy="cp CLAUDE.md .hanimo.md">
+          <div><span class="cmd-prompt">$</span> cp CLAUDE.md .hanimo.md</div>
+          <div class="cmd-success"># 직접 호환됩니다.</div>
+        </div>
+        <div style="margin-top:1rem;">
+          <table class="map-table">
+            <thead><tr><th data-ko="Claude Code" data-en="Claude Code">Claude Code</th><th>→</th><th>hanimo</th><th data-ko="차이점" data-en="Difference">차이점</th></tr></thead>
+            <tbody>
+              <tr><td>claude</td><td>→</td><td>hanimo</td><td data-ko="동일한 사용법" data-en="Same usage">동일</td></tr>
+              <tr><td>CLAUDE.md</td><td>→</td><td>.hanimo.md</td><td data-ko="직접 복사" data-en="Direct copy">직접 복사</td></tr>
+              <tr><td data-ko="에이전트 모드 (1개)" data-en="Agent mode (1)">에이전트 (1개)</td><td>→</td><td data-ko="Super/Dev/Plan (3개)" data-en="Super/Dev/Plan (3)">Super/Dev/Plan</td><td data-ko="더 세밀한 제어" data-en="More control">세밀한 제어</td></tr>
+              <tr><td data-ko="클라우드 전용" data-en="Cloud only">클라우드 전용</td><td>→</td><td data-ko="로컬 + 클라우드" data-en="Local + cloud">로컬 + 클라우드</td><td data-ko="Ollama 지원" data-en="Ollama support">Ollama 가능</td></tr>
+              <tr><td>$20–$100/월</td><td>→</td><td data-ko="$0/월" data-en="$0/month">$0/월</td><td data-ko="절약" data-en="Savings">절약</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="step vis" style="border-bottom:none;">
+      <div class="step-num"><div class="num-circle">5</div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="실행" data-en="Run">실행</div>
+        <div class="step-title" data-ko="시작하기" data-en="Get going">시작하기</div>
+        <div class="cmd-block"><div><span class="cmd-prompt">$</span> hanimo "코드 리뷰해줘"</div><div class="cmd-success">✓ Done.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEPS AIDER (hidden by default) -->
+  <div class="steps" id="steps-aider" style="display:none;">
+    <div class="step vis">
+      <div class="step-num"><div class="num-circle">1</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="설치" data-en="Install">설치</div>
+        <div class="step-title" data-ko="hanimo 설치" data-en="Install hanimo">hanimo 설치</div>
+        <div class="step-desc" data-ko="aider는 Python. hanimo는 Go 단일 바이너리." data-en="aider requires Python. hanimo is a single Go binary.">aider는 Python 필요. hanimo는 의존성 없음.</div>
+        <div class="cmd-block"><div><span class="cmd-prompt">$</span> curl -sSL https://hanimo.dev/install | sh</div></div>
+      </div>
+    </div>
+    <div class="step vis">
+      <div class="step-num"><div class="num-circle">2</div><div class="num-line"></div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="비교" data-en="Compare">비교</div>
+        <div class="step-title" data-ko="aider vs hanimo 주요 차이" data-en="Key differences from aider">aider vs hanimo 주요 차이</div>
+        <table class="map-table">
+          <thead><tr><th>aider</th><th>→</th><th>hanimo</th><th data-ko="차이" data-en="Difference">차이</th></tr></thead>
+          <tbody>
+            <tr><td data-ko="텍스트 diff" data-en="Text diff">텍스트 diff</td><td>→</td><td data-ko="해시 앵커 편집" data-en="Hash-anchored edits">해시 앵커</td><td data-ko="위치 오류 없음" data-en="No drift">드리프트 없음</td></tr>
+            <tr><td data-ko="MCP 없음" data-en="No MCP">MCP 없음</td><td>→</td><td>MCP stdio</td><td data-ko="전체 생태계" data-en="Full ecosystem">전체 생태계</td></tr>
+            <tr><td data-ko="세션 없음" data-en="No sessions">세션 없음</td><td>→</td><td>SQLite 세션</td><td data-ko="포크·검색" data-en="Fork, search">포크·검색</td></tr>
+            <tr><td data-ko="TUI 최소" data-en="Basic TUI">TUI 최소</td><td>→</td><td data-ko="풍부한 TUI" data-en="Rich TUI">풍부한 TUI</td><td data-ko="한국어 지원" data-en="Korean i18n">한국어 지원</td></tr>
+            <tr><td data-ko="1가지 모드" data-en="1 mode">1가지 모드</td><td>→</td><td>Super/Dev/Plan</td><td data-ko="3가지" data-en="3 modes">3가지</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="step vis" style="border-bottom:none;">
+      <div class="step-num"><div class="num-circle">3</div></div>
+      <div class="step-body">
+        <div class="step-tag" data-ko="실행" data-en="Run">실행</div>
+        <div class="step-title" data-ko="시작하기" data-en="Get going">시작하기</div>
+        <div class="cmd-block"><div><span class="cmd-prompt">$</span> hanimo --mode super "refactor this file"</div><div class="cmd-success">✓ hash-anchored edits applied.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTES -->
+  <div class="quotes">
+    <div class="quote-card">
+      <div class="quote-text" data-ko="&ldquo;설치하고 5분 만에 작동했어요. .cursorrules 그대로 옮겼고요.&rdquo;" data-en="&ldquo;Installed and working in 5 minutes. Copied my .cursorrules straight over.&rdquo;">&ldquo;설치하고 5분 만에 작동했어요. .cursorrules 그대로 옮겼고요.&rdquo;</div>
+      <div class="quote-author">— @devuser_kr</div>
+      <div class="quote-from" data-ko="Cursor에서 전환" data-en="Switched from Cursor">Cursor에서 전환</div>
+    </div>
+    <div class="quote-card">
+      <div class="quote-text" data-ko="&ldquo;월 $100 아끼고 동일한 Claude 모델 사용. 이해가 안 됐는데 이제 됩니다.&rdquo;" data-en="&ldquo;Saving $100/mo while using the same Claude models. Made no sense to stay.&rdquo;">&ldquo;월 $100 아끼고 동일한 Claude 사용. 이제 이해가 됩니다.&rdquo;</div>
+      <div class="quote-author">— @backend_eng</div>
+      <div class="quote-from" data-ko="Claude Code에서 전환" data-en="Switched from Claude Code">Claude Code에서 전환</div>
+    </div>
+    <div class="quote-card">
+      <div class="quote-text" data-ko="&ldquo;해시 앵커 편집 기능이 결정적이었어요. 이제 대용량 파일에서도 편집 위치 걱정 없어요.&rdquo;" data-en="&ldquo;Hash-anchored edits was the tipping point. No more wrong-location edits on large files.&rdquo;">&ldquo;해시 앵커 편집 기능이 결정적이었어요. 대용량 파일에서도 안전해요.&rdquo;</div>
+      <div class="quote-author">— @fullstack_dev</div>
+      <div class="quote-from" data-ko="aider에서 전환" data-en="Switched from aider">aider에서 전환</div>
+    </div>
+  </div>
+
+  <!-- INSTALL -->
+  <div class="install-section">
+    <div class="install-title" data-ko="지금 시작하기" data-en="Get started now">지금 시작하기</div>
+    <div class="install-grid">
+      <button class="icmd" data-copy="curl -sSL https://hanimo.dev/install | sh">curl -sSL https://hanimo.dev/install | sh</button>
+      <button class="icmd" data-copy="brew install hanimo">brew install hanimo</button>
+      <button class="icmd" data-copy="go install github.com/flykimjiwon/hanimo@latest">go install github.com/flykimjiwon/hanimo@latest</button>
+    </div>
+  </div>
+
+  <!-- PROVIDERS -->
+  <div class="prov-section">
+    <div class="sec-title" data-ko="14개+ 지원 프로바이더" data-en="14+ Supported Providers">14개+ 지원 프로바이더</div>
+    <div class="prov-wrap">
+      <span class="prov">Anthropic</span><span class="prov">OpenAI</span><span class="prov">Gemini</span>
+      <span class="prov">Mistral</span><span class="prov">Ollama</span><span class="prov">vLLM</span>
+      <span class="prov">Groq</span><span class="prov">Cohere</span><span class="prov">Together AI</span>
+      <span class="prov">Fireworks</span><span class="prov">Perplexity</span><span class="prov">DeepSeek</span>
+      <span class="prov">xAI Grok</span><span class="prov">+ More</span>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="foot-in">
+    <div>
+      <div class="f-logo">hani<span>mo</span></div>
+      <div style="margin-top:0.25rem;" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding agent">오픈소스를 위한 AI 코딩 에이전트</div>
+    </div>
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+      <a href="https://hanimo.dev">hanimo.dev</a>
+      <a href="https://github.com/flykimjiwon/hanimo">github.com/flykimjiwon/hanimo</a>
+      <span>Apache-2.0</span>
+    </div>
+    <div style="text-align:right;color:#555;" data-ko="영구 무료 · 로컬 우선" data-en="Free forever · Local-first">영구 무료 · 로컬 우선</div>
+  </div>
+</footer>
+
+<script>
+// THEME
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+// LANG
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    const txt = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    if (txt !== undefined) el.innerHTML = txt;
+  });
+}
+(function(){ setTheme(document.documentElement.dataset.theme || 'light'); })();
+// FROM SELECT
+const fromBtns = document.querySelectorAll('.from-btn');
+const stepSets = { cursor: 'steps-cursor', claude: 'steps-claude', aider: 'steps-aider' };
+fromBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    fromBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.values(stepSets).forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    const target = document.getElementById(stepSets[btn.dataset.from]);
+    target.style.display = 'flex';
+    // trigger vis
+    target.querySelectorAll('.step').forEach((s, i) => {
+      setTimeout(() => s.classList.add('vis'), i * 80);
+    });
+  });
+});
+
+// SCROLL REVEAL for default steps
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); obs.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('#steps-cursor .step').forEach((s, i) => {
+  s.style.transitionDelay = (i * 0.07) + 's';
+  obs.observe(s);
+});
+
+// COPY
+document.querySelectorAll('[data-copy]').forEach(el => {
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', () => {
+    navigator.clipboard.writeText(el.dataset.copy).then(() => {
+      const hint = el.querySelector('.cp-hint');
+      if (hint) {
+        const orig = hint.textContent;
+        hint.textContent = '✓ 복사됨';
+        setTimeout(() => { hint.textContent = orig; }, 1500);
+      }
+    });
+  });
+});
+document.querySelectorAll('.icmd, .nav-cta').forEach(el => {
+  el.addEventListener('click', () => {
+    const txt = el.dataset.copy || el.textContent;
+    navigator.clipboard.writeText(txt).then(() => {
+      const o = el.textContent;
+      el.textContent = '✓';
+      setTimeout(() => { el.textContent = o; }, 1200);
+    });
+  });
+});
+</script>
+</body>
+</html>

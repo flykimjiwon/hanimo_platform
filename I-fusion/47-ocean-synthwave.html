@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — Ocean × Synthwave</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --sky: #38bdf8;
+    --cyan: #22d3ee;
+    --sky-mid: #0ea5e9;
+    --sky-dark: #0369a1;
+    --bg: #050d1a;
+    --bg2: #0a1628;
+    --surface: #112240;
+    --surface2: #1e3a5f;
+    --t-bg: #050d1a;
+    --t-surface: #0a1628;
+    --t-border: #0369a1;
+    --t-text: #38bdf8;
+    --t-muted: #1e3a5f;
+    --t-accent: #38bdf8;
+  }
+  [data-theme="light"] {
+    --t-bg: #f0f9ff;
+    --t-surface: #e0f2fe;
+    --t-border: #0369a1;
+    --t-text: #0c4a6e;
+    --t-muted: #0369a1;
+    --t-accent: #0ea5e9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: 'Space Mono', monospace;
+    overflow-x: hidden;
+  }
+
+  /* Chrome gradient title */
+  .chrome-title {
+    background: linear-gradient(
+      180deg,
+      #ffffff 0%,
+      var(--sky) 25%,
+      var(--cyan) 50%,
+      var(--sky-mid) 75%,
+      var(--sky-dark) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 20px rgba(56,189,248,0.5));
+  }
+
+  /* Neon glows */
+  .neon-sky {
+    color: var(--sky);
+    text-shadow: 0 0 8px var(--sky), 0 0 20px rgba(56,189,248,0.6), 0 0 40px rgba(56,189,248,0.3);
+  }
+  .neon-cyan {
+    color: var(--cyan);
+    text-shadow: 0 0 8px var(--cyan), 0 0 20px rgba(34,211,238,0.5);
+  }
+
+  /* Synthwave perspective grid */
+  .synth-grid-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 280px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .synth-grid {
+    position: absolute;
+    bottom: 0;
+    left: -50%;
+    right: -50%;
+    height: 100%;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.25) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.25) 1px, transparent 1px);
+    background-size: 60px 60px;
+    transform: perspective(300px) rotateX(65deg);
+    transform-origin: bottom center;
+    mask-image: linear-gradient(to top, rgba(56,189,248,0.6) 0%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to top, rgba(56,189,248,0.6) 0%, transparent 80%);
+  }
+
+  /* Horizon glow line */
+  .horizon {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--sky), var(--cyan), transparent);
+    box-shadow: 0 0 20px var(--sky), 0 0 40px rgba(56,189,248,0.5);
+    bottom: 170px;
+  }
+
+  /* Sun / orb behind horizon */
+  .synth-sun {
+    position: absolute;
+    bottom: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 80px;
+    background: radial-gradient(ellipse at center bottom, var(--cyan) 0%, var(--sky-mid) 40%, transparent 70%);
+    filter: blur(12px);
+    opacity: 0.6;
+  }
+
+  /* CRT scanlines overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.1),
+      rgba(0,0,0,0.1) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Scanline sweep */
+  @keyframes sweep { from { top: -4px; } to { top: 100vh; } }
+  .sweep {
+    position: fixed;
+    left: 0; right: 0; height: 3px;
+    background: linear-gradient(transparent, rgba(56,189,248,0.07), transparent);
+    animation: sweep 7s linear infinite;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* Subtle flicker */
+  @keyframes flicker { 0%,100%{opacity:1} 97%{opacity:0.97} 98%{opacity:1} 99%{opacity:0.94} }
+  .hero-content { animation: flicker 5s infinite; }
+
+  /* Controls row */
+  .ctrl-row {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10000;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  /* Lang toggle */
+  #lang-toggle {
+    background: transparent;
+    border: 1px solid var(--sky);
+    color: var(--t-text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(56,189,248,0.3);
+  }
+  #lang-toggle:hover { background: var(--sky); color: var(--t-bg); }
+  .theme-ctrl {
+    display: flex;
+    background: transparent;
+    border: 1px solid var(--sky);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    overflow: hidden;
+  }
+  .theme-btn {
+    padding: 0.3rem 0.55rem;
+    background: none;
+    border: none;
+    color: var(--t-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    transition: all 0.15s;
+  }
+  .theme-btn.active { background: var(--sky); color: var(--t-bg); }
+  .theme-btn:not(.active):hover { color: var(--t-text); }
+
+  /* Terminal */
+  .terminal {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    padding: 1.25rem 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    box-shadow: 0 0 20px rgba(56,189,248,0.06), inset 0 0 20px rgba(56,189,248,0.02);
+  }
+  .prompt { color: var(--t-text); }
+  .comment { color: var(--t-muted); }
+  .ok { color: var(--cyan); }
+  .out { color: var(--t-muted); }
+
+  /* Feature card */
+  .feat-card {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    border-bottom: 2px solid var(--sky-dark);
+    padding: 1.25rem;
+    transition: all 0.2s;
+  }
+  .feat-card:hover {
+    border-bottom-color: var(--sky);
+    box-shadow: 0 4px 20px rgba(56,189,248,0.1);
+  }
+
+  /* Table */
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--t-border); padding: 0.6rem 1rem; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+  th { color: var(--t-text); background: var(--t-surface); }
+  td { color: var(--t-muted); }
+  tr:hover td { background: rgba(56,189,248,0.03); }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor::after { content:'█'; animation: blink 1s infinite; color: var(--sky); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-content { animation: none; }
+    .sweep { display: none; }
+    .cursor::after { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sweep"></div>
+<div class="ctrl-row">
+  <div class="theme-ctrl">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <button id="lang-toggle" onclick="toggleLang()">KO/EN</button>
+</div>
+
+<!-- HERO -->
+<section class="relative min-h-screen flex flex-col items-center justify-center px-6 py-32 text-center overflow-hidden">
+
+  <!-- Synthwave background elements -->
+  <div class="synth-sun"></div>
+  <div class="synth-grid-wrap">
+    <div class="synth-grid"></div>
+    <div class="horizon"></div>
+  </div>
+
+  <!-- Starfield dots -->
+  <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
+    <div style="position:absolute;width:2px;height:2px;background:var(--sky);border-radius:50%;top:10%;left:15%;opacity:0.6;box-shadow:0 0 4px var(--sky);"></div>
+    <div style="position:absolute;width:1px;height:1px;background:var(--cyan);border-radius:50%;top:20%;left:70%;opacity:0.8;box-shadow:0 0 3px var(--cyan);"></div>
+    <div style="position:absolute;width:2px;height:2px;background:var(--sky);border-radius:50%;top:8%;left:85%;opacity:0.5;box-shadow:0 0 4px var(--sky);"></div>
+    <div style="position:absolute;width:1px;height:1px;background:#fff;border-radius:50%;top:15%;left:40%;opacity:0.7;"></div>
+    <div style="position:absolute;width:2px;height:2px;background:var(--cyan);border-radius:50%;top:5%;left:55%;opacity:0.6;box-shadow:0 0 4px var(--cyan);"></div>
+    <div style="position:absolute;width:1px;height:1px;background:#fff;border-radius:50%;top:25%;left:25%;opacity:0.5;"></div>
+    <div style="position:absolute;width:2px;height:2px;background:var(--sky);border-radius:50%;top:12%;left:92%;opacity:0.7;box-shadow:0 0 3px var(--sky);"></div>
+  </div>
+
+  <div class="hero-content relative z-10">
+    <div class="text-xs tracking-widest mb-6" style="color:var(--surface2)">
+      <span data-ko="SUBMARINE · MIAMI VICE · OCEAN DEPTHS" data-en="SUBMARINE · MIAMI VICE · OCEAN DEPTHS">SUBMARINE · MIAMI VICE · OCEAN DEPTHS</span>
+    </div>
+
+    <h1 class="chrome-title text-7xl md:text-9xl font-bold mb-4" style="letter-spacing:0.1em;line-height:1;">
+      HANIMO
+    </h1>
+
+    <p class="text-lg mb-2 neon-cyan">
+      <span data-ko="바다와 마이애미가 만나는 곳에서 코드를" data-en="Where the ocean meets Miami Vice code">바다와 마이애미가 만나는 곳에서 코드를</span>
+    </p>
+    <p class="text-sm mb-10" style="color:var(--surface2)">
+      <span data-ko="오픈소스 Go AI 코딩 에이전트 · Apache-2.0" data-en="Open-source Go AI coding agent · Apache-2.0">오픈소스 Go AI 코딩 에이전트 · Apache-2.0</span>
+    </p>
+
+    <div class="terminal mb-8" style="max-width:460px;width:100%;text-align:left;margin:0 auto 2rem;">
+      <div class="prompt">$ curl -sSL hanimo.dev/install | bash<span class="cursor"></span></div>
+    </div>
+
+    <div class="flex gap-4 justify-center flex-wrap">
+      <a href="https://github.com/flykimjiwon/hanimo"
+        style="border:1px solid var(--sky);color:var(--sky);padding:0.5rem 1.5rem;font-size:0.8rem;box-shadow:0 0 12px rgba(56,189,248,0.2);"
+        onmouseover="this.style.background='rgba(56,189,248,0.08)'"
+        onmouseout="this.style.background=''">
+        <span data-ko="→ GitHub" data-en="→ GitHub">→ GitHub</span>
+      </a>
+      <a href="#install" style="background:linear-gradient(135deg,var(--sky),var(--cyan));color:var(--bg);padding:0.5rem 1.5rem;font-size:0.8rem;font-weight:bold;">
+        <span data-ko="설치하기" data-en="INSTALL">설치하기</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL PREVIEW -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-lg mb-6 neon-sky" data-ko="// OCEAN SESSION" data-en="// OCEAN SESSION">// OCEAN SESSION</h2>
+  <div class="terminal">
+    <div class="comment"># ocean × synthwave · anthropic claude-3-5-sonnet</div>
+    <div class="prompt">$ hanimo --theme ocean --mode super</div>
+    <div class="out">hanimo v0.1.0 [ocean] | session: synthwave-047</div>
+    <div class="prompt">&gt; /auto implement WebSocket real-time notifications</div>
+    <div class="ok">  READING: 8 files · hash-indexing</div>
+    <div class="out">  PLAN: hub pattern, broadcast channel, heartbeat</div>
+    <div class="ok">  WRITE: ws/hub.go [MD5:f2a1c9] anchored</div>
+    <div class="ok">  WRITE: ws/client.go [MD5:b8e4d2] anchored</div>
+    <div class="ok">  PATCH: main.go:47 · 0 conflicts</div>
+    <div class="ok">  DONE 3.2s · 3 files · 0 stale</div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="max-w-6xl mx-auto px-6 py-16">
+  <h2 class="text-lg mb-8 neon-sky" data-ko="// 핵심 기능" data-en="// CORE FEATURES">// 핵심 기능</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="feat-card">
+      <div class="text-xs mb-2 neon-sky">HASH-ANCHORED EDITING</div>
+      <p class="text-xs" style="color:#334155;font-family:'JetBrains Mono',monospace;">
+        <span data-ko="라인별 MD5. 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 충돌 없음.</span>
+      </p>
+    </div>
+    <div class="feat-card">
+      <div class="text-xs mb-2 neon-sky">14+ PROVIDERS</div>
+      <p class="text-xs" style="color:#334155;font-family:'JetBrains Mono',monospace;">
+        <span data-ko="Ollama·OpenAI·Anthropic 등." data-en="Ollama to OpenRouter. Any model.">Ollama·OpenAI·Anthropic 등.</span>
+      </p>
+    </div>
+    <div class="feat-card">
+      <div class="text-xs mb-2 neon-sky">SMART COMPACTION</div>
+      <p class="text-xs" style="color:#334155;font-family:'JetBrains Mono',monospace;">
+        <span data-ko="자동 압축. 비용 절감." data-en="Auto-compress. Cut costs.">자동 압축. 비용 절감.</span>
+      </p>
+    </div>
+    <div class="feat-card">
+      <div class="text-xs mb-2 neon-sky">/AUTO MODE</div>
+      <p class="text-xs" style="color:#334155;font-family:'JetBrains Mono',monospace;">
+        <span data-ko="자율 루프. 목표까지 실행." data-en="Autonomous loop. Runs to goal.">자율 루프. 목표까지 실행.</span>
+      </p>
+    </div>
+    <div class="feat-card">
+      <div class="text-xs mb-2 neon-sky">SQLITE SESSIONS</div>
+      <p class="text-xs" style="color:#334155;font-family:'JetBrains Mono',monospace;">
+        <span data-ko="세션 영구 저장. 언제든 재개." data-en="Persist sessions. Resume anytime.">세션 영구 저장. 언제든 재개.</span>
+      </p>
+    </div>
+    <div class="feat-card">
+      <div class="text-xs mb-2 neon-sky">MCP SUPPORT</div>
+      <p class="text-xs" style="color:#334155;font-family:'JetBrains Mono',monospace;">
+        <span data-ko="MCP 도구 연동. 확장 무제한." data-en="MCP tools. Unlimited extension.">MCP 도구 연동. 확장 무제한.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-lg mb-6 neon-sky" data-ko="// 비교" data-en="// COMPARISON">// 비교</h2>
+  <div class="overflow-x-auto">
+    <table>
+      <thead>
+        <tr>
+          <th data-ko="항목" data-en="Feature">항목</th>
+          <th class="neon-sky">hanimo</th>
+          <th>Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-ko="해시 앵커" data-en="Hash anchor">해시 앵커</td>
+          <td style="color:var(--cyan)">✓ native</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+        </tr>
+        <tr>
+          <td data-ko="로컬 모델" data-en="Local models">로컬 모델</td>
+          <td style="color:var(--cyan)">✓ Ollama</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="제한적" data-en="Limited">제한적</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td data-ko="비용" data-en="Cost">비용</td>
+          <td style="color:var(--cyan)" data-ko="무료" data-en="Free">무료</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="구독" data-en="Paid">구독</td>
+          <td data-ko="무료" data-en="Free">무료</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install" class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-lg mb-6 neon-sky" data-ko="// 설치" data-en="// INSTALL">// 설치</h2>
+  <div class="space-y-4">
+    <div class="terminal"><div class="comment"># curl</div><div class="prompt">$ curl -sSL hanimo.dev/install | bash</div></div>
+    <div class="terminal"><div class="comment"># homebrew</div><div class="prompt">$ brew install flykimjiwon/tap/hanimo</div></div>
+    <div class="terminal"><div class="comment"># go</div><div class="prompt">$ go install github.com/flykimjiwon/hanimo@latest</div></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t px-6 py-10 text-center" style="border-color:var(--surface)">
+  <p class="text-sm mb-1 neon-sky">hanimo · flykimjiwon/hanimo · hanimo.dev</p>
+  <p class="text-xs" style="color:var(--surface2)">Apache-2.0 · <span data-ko="오픈소스" data-en="Open Source">오픈소스</span></p>
+</footer>
+
+<script>
+  let lang = 'ko';
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+
+  function toggleLang() {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+  }
+
+  (function() {
+    const saved = localStorage.getItem('hanimo-theme') || 'dark';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

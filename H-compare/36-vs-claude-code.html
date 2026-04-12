@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo vs Claude Code</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cr: #c0392b;
+    --cd: #140806;
+    --hg: #d4a017;
+    --ha: #f5c842;
+    --hv: #5b3fa6;
+    --hd: #0b0916;
+    --w: #f2ede4;
+    --dim: #888;
+    --rule: #1e1e1e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: #0a0a0a; color: var(--w); overflow-x: hidden; }
+
+  /* light theme */
+  [data-theme="light"] body { background: #f5f0e8; color: #1a1410; }
+  [data-theme="light"] .mast { background: #f5f0e8; border-bottom-color: #d0c8b8; }
+  [data-theme="light"] .hero { background: #f5f0e8; }
+  [data-theme="light"] .hero::before { opacity: 0.15; }
+  /* LANG + THEME TOGGLE */
+  .lang-bar {
+    position: fixed; top: 0; right: 0; z-index: 200;
+    display: flex; gap: 0;
+  }
+  .lang-btn, .theme-btn {
+    background: #111; border: 1px solid #333; color: #666;
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    letter-spacing: 0.1em; padding: 0.5rem 0.8rem;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .lang-btn.active, .theme-btn.active { background: var(--hg); color: #000; border-color: var(--hg); }
+  [data-theme="light"] .lang-btn, [data-theme="light"] .theme-btn { background: #e8e0d0; border-color: #c8c0b0; color: #888; }
+  [data-theme="light"] .lang-btn.active, [data-theme="light"] .theme-btn.active { background: var(--hg); color: #000; }
+
+  /* MASTHEAD */
+  .mast {
+    background: #0a0a0a; border-bottom: 2px solid var(--rule);
+    padding: 0.9rem 2rem; display: flex; align-items: center; gap: 1rem;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .mast-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--hg); letter-spacing: 0.08em; }
+  .mast-tag { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: #444; letter-spacing: 0.15em; }
+  .mast-badge { margin-left: auto; background: #1a1a1a; border: 1px solid #333; padding: 0.3rem 0.7rem; font-family: 'DM Mono', monospace; font-size: 0.6rem; color: #555; letter-spacing: 0.1em; }
+
+  /* HERO */
+  .hero { padding: 5rem 2rem 3.5rem; text-align: center; position: relative; background: #0a0a0a; }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 39px,#111 39px,#111 40px),
+                repeating-linear-gradient(90deg,transparent,transparent 39px,#111 39px,#111 40px);
+    opacity: 0.4;
+  }
+  .hero-eye { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: #555; letter-spacing: 0.35em; text-transform: uppercase; margin-bottom: 1.5rem; position: relative; }
+  .hero-h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3.5rem, 10vw, 8rem); line-height: 0.88; position: relative; margin-bottom: 1.5rem; }
+  .h1-red { color: var(--cr); display: block; }
+  .h1-vs  { color: #333; font-size: 0.38em; display: block; letter-spacing: 0.3em; padding: 0.2em 0; }
+  .h1-gold { color: var(--hg); display: block; }
+  .hero-sub { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: #555; letter-spacing: 0.15em; position: relative; margin-bottom: 1rem; }
+  .hero-kor { font-size: 0.95rem; color: #444; position: relative; }
+
+  /* INSTALL */
+  .install { background: #0d0d0d; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 0.7rem 2rem; display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+  .install-lbl { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #444; letter-spacing: 0.15em; flex-shrink: 0; }
+  .install-cmd { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--ha); background: #151515; border: 1px solid #2a2a2a; padding: 0.28rem 0.7rem; cursor: pointer; white-space: nowrap; transition: border-color 0.15s; }
+  .install-cmd:hover { border-color: var(--hg); }
+
+  /* COLUMN HEADERS */
+  .col-heads { display: grid; grid-template-columns: 1fr 60px 1fr; max-width: 1060px; margin: 3rem auto 0; padding: 0 1.5rem; }
+  .ch { padding: 1.2rem 1.5rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.08em; }
+  .ch-c { background: var(--cd); color: var(--cr); border-top: 3px solid var(--cr); }
+  .ch-h { background: var(--hd); color: var(--hg); border-top: 3px solid var(--hg); text-align: right; }
+  .ch-m { background: #0f0f0f; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #333; font-family: 'Bebas Neue', sans-serif; border-top: 3px solid #2a2a2a; }
+  .ch-meta { font-family: 'DM Mono', monospace; font-size: 0.58rem; display: block; letter-spacing: 0.1em; margin-top: 0.25rem; color: #5a3020; }
+  .ch-meta-h { color: #6a4c10; }
+
+  /* ROWS */
+  .rows { max-width: 1060px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  .row { display: grid; grid-template-columns: 1fr 60px 1fr; border-bottom: 1px solid #141414; opacity: 0; transform: translateY(8px); transition: opacity 0.35s ease, transform 0.35s ease; }
+  .row.vis { opacity: 1; transform: translateY(0); }
+  .row:hover .cell-c { background: #1a0c0a; }
+  .row:hover .cell-h { background: #0c0a1a; }
+
+  .cell { padding: 1.3rem 1.5rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  .cell-c { background: var(--cd); }
+  .cell-h { background: var(--hd); align-items: flex-end; text-align: right; }
+  .cell-mid { background: #0f0f0f; display: flex; align-items: center; justify-content: center; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; }
+  .cat-tag { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: #333; letter-spacing: 0.2em; text-transform: uppercase; text-align: center; writing-mode: vertical-rl; transform: rotate(180deg); }
+
+  .row-lbl { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: #444; letter-spacing: 0.2em; text-transform: uppercase; }
+  .row-val { font-size: 0.95rem; font-weight: 600; line-height: 1.25; }
+  .row-note { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: #666; line-height: 1.45; }
+
+  .price-big { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; line-height: 1; }
+  .price-period { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #777; }
+  .col-red { color: var(--cr); }
+  .col-gold { color: var(--hg); }
+  .col-amber { color: var(--ha); }
+
+  .mark { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 0.75rem; font-weight: 700; font-family: 'DM Mono', monospace; }
+  .mark-x { background: var(--cr); color: #fff; }
+  .mark-c { background: #1d5c1d; color: #5eff5e; }
+  .mark-p { background: #3a3000; color: #ffcc00; }
+  .mark-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.3rem; }
+  .mark-row-r { justify-content: flex-end; }
+  .verdict { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: #555; }
+
+  /* WINNER */
+  .winner { background: var(--hd); border-top: 3px solid var(--hg); border-bottom: 3px solid var(--hg); padding: 5rem 2rem; text-align: center; position: relative; overflow: hidden; }
+  .winner::before { content: 'WIN'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Bebas Neue', sans-serif; font-size: clamp(8rem,22vw,18rem); color: rgba(212,160,23,0.04); pointer-events: none; white-space: nowrap; }
+  .w-eye { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--hg); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 1rem; position: relative; }
+  .w-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 7vw, 6rem); color: var(--ha); line-height: 0.92; position: relative; margin-bottom: 1.5rem; }
+  .score-row { display: flex; align-items: center; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; position: relative; }
+  .score-box { text-align: center; }
+  .score-n { font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; line-height: 1; }
+  .score-l { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: #666; letter-spacing: 0.15em; text-transform: uppercase; }
+  .score-sep { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: #2a2a2a; }
+  .w-note { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: #555; max-width: 480px; margin: 0 auto; line-height: 1.7; }
+
+  /* TERMINAL */
+  .term-section { max-width: 860px; margin: 5rem auto; padding: 0 1.5rem; }
+  .sec-lbl { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.3em; color: #444; text-transform: uppercase; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.8rem; }
+  .sec-lbl::after { content: ''; flex: 1; height: 1px; background: #1a1a1a; }
+  .term { background: #080808; border: 1px solid #222; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+  .term-bar { background: #141414; padding: 0.5rem 0.9rem; display: flex; align-items: center; gap: 0.35rem; border-bottom: 1px solid #1e1e1e; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot-r { background: #c0392b; } .dot-y { background: #d4a017; } .dot-g { background: #2d6a2d; }
+  .term-ttl { margin-left: auto; font-size: 0.6rem; color: #444; }
+  .term-body { padding: 1.2rem 1.4rem; line-height: 1.85; }
+  .t-p { color: var(--hg); } .t-c { color: var(--w); } .t-o { color: #666; }
+  .t-s { color: #5eff5e; } .t-i { color: #5eb8ff; } .t-h { color: #a07820; }
+  .t-cur { display: inline-block; width: 7px; height: 1em; background: var(--hg); vertical-align: text-bottom; animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* PROVIDERS */
+  .prov-section { max-width: 1060px; margin: 0 auto 5rem; padding: 0 1.5rem; }
+  .prov-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .prov-tag { background: #0f0f0f; border: 1px solid #1e1e1e; padding: 0.25rem 0.7rem; font-family: 'DM Mono', monospace; font-size: 0.67rem; color: #666; transition: all 0.12s; }
+  .prov-tag:hover { border-color: var(--hg); color: var(--ha); background: #120f00; }
+
+  /* FOOTER */
+  footer { background: #050505; border-top: 1px solid #141414; padding: 2.5rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-family: 'DM Mono', monospace; font-size: 0.68rem; color: #3a3a3a; }
+  footer a { color: #444; text-decoration: none; } footer a:hover { color: var(--hg); }
+  .f-brand { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--hg); letter-spacing: 0.08em; }
+
+  @media (max-width: 640px) {
+    .col-heads, .row { grid-template-columns: 1fr; }
+    .ch-m, .cell-mid { display: none; }
+    .ch-h, .cell-h { text-align: left; align-items: flex-start; }
+    .mark-row-r { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Language Toggle -->
+<div class="lang-bar">
+  <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+  <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  <button class="lang-btn active" data-lang="ko" onclick="setLang('ko')">KO</button>
+  <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- Masthead -->
+<header class="mast">
+  <div class="mast-name">hanimo</div>
+  <div class="mast-tag" data-ko="비교 리포트 001" data-en="Battle Report 001">비교 리포트 001</div>
+  <div class="mast-badge" data-ko="2026년 4월" data-en="April 2026">2026년 4월</div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-eye" data-ko="직접 비교 · 2026" data-en="Direct Comparison · 2026">직접 비교 · 2026</div>
+  <h1 class="hero-h1">
+    <span class="h1-red">Claude Code</span>
+    <span class="h1-vs">vs</span>
+    <span class="h1-gold">hanimo</span>
+  </h1>
+  <p class="hero-sub" data-ko="하나는 월 $100. 다른 하나는 $0. 데이터로 말한다." data-en="One costs $100/mo. One costs $0. The data speaks.">하나는 월 $100. 다른 하나는 $0. 데이터로 말한다.</p>
+  <p class="hero-kor" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding agent">오픈소스를 위한 AI 코딩 에이전트</p>
+</section>
+
+<!-- Install -->
+<div class="install">
+  <span class="install-lbl" data-ko="설치하기 →" data-en="install →">설치하기 →</span>
+  <code class="install-cmd" data-copy="curl -sSL https://hanimo.dev/install | sh">curl -sSL https://hanimo.dev/install | sh</code>
+  <code class="install-cmd" data-copy="brew install hanimo">brew install hanimo</code>
+  <code class="install-cmd" data-copy="go install github.com/flykimjiwon/hanimo@latest">go install github.com/flykimjiwon/hanimo@latest</code>
+</div>
+
+<!-- Column Headers -->
+<div class="col-heads">
+  <div class="ch ch-c">
+    Claude Code
+    <span class="ch-meta" data-ko="Anthropic · 클로즈드 소스 · 클라우드" data-en="Anthropic · Closed Source · Cloud">Anthropic · 클로즈드 소스 · 클라우드</span>
+  </div>
+  <div class="ch ch-m">vs</div>
+  <div class="ch ch-h">
+    hanimo
+    <span class="ch-meta ch-meta-h" data-ko="Apache-2.0 · Go · 로컬 우선" data-en="Apache-2.0 · Go · Local-First">Apache-2.0 · Go · 로컬 우선</span>
+  </div>
+</div>
+
+<!-- Comparison Rows -->
+<div class="rows">
+
+  <!-- PRICE -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="월 비용" data-en="Monthly Cost">월 비용</div>
+      <div class="price-big col-red">$100<span class="price-period">/mo</span></div>
+      <div class="row-note" data-ko="Max 플랜. Pro는 $20. API 별도." data-en="Max plan. Pro $20. API billed separately.">Max 플랜. Pro는 $20. API 별도.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span><span class="verdict" data-ko="구독 필요" data-en="Subscription required">구독 필요</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="가격" data-en="Price">가격</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="월 비용" data-en="Monthly Cost">월 비용</div>
+      <div class="price-big col-gold">$0<span class="price-period">/mo</span></div>
+      <div class="row-note" data-ko="영구 무료. API 비용만 본인 부담 (Ollama 사용 시 $0)." data-en="Free forever. Pay only your API provider (Ollama = $0).">영구 무료. Ollama 사용 시 $0.</div>
+      <div class="mark-row mark-row-r"><span class="verdict" data-ko="영구 무료" data-en="Free forever">영구 무료</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- OPEN SOURCE -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="소스 공개" data-en="Source Code">소스 공개</div>
+      <div class="row-val col-red" data-ko="클로즈드 소스" data-en="Closed Source">클로즈드 소스</div>
+      <div class="row-note" data-ko="감사·포크·기여 불가." data-en="Cannot audit, fork, or contribute.">감사·포크·기여 불가.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span><span class="verdict" data-ko="라이선스 없음" data-en="No license">라이선스 없음</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="라이선스" data-en="License">라이선스</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="소스 공개" data-en="Source Code">소스 공개</div>
+      <div class="row-val col-amber">Apache-2.0</div>
+      <div class="row-note" data-ko="특허 허여 포함. 포크·배포 자유." data-en="Patent grant included. Fork and ship freely.">특허 허여 포함. 포크·배포 자유.</div>
+      <div class="mark-row mark-row-r"><span class="verdict">github.com/flykimjiwon/hanimo</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- MODELS -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="AI 모델" data-en="AI Models">AI 모델</div>
+      <div class="row-val col-red" data-ko="Anthropic 전용" data-en="Anthropic Only">Anthropic 전용</div>
+      <div class="row-note" data-ko="Claude만 지원. GPT·Gemini·로컬 모델 없음." data-en="Claude only. No GPT, Gemini, or local models.">Claude만 지원. GPT·Gemini·로컬 없음.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span><span class="verdict" data-ko="선택 없음" data-en="No choice">선택 없음</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="모델" data-en="Models">모델</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="AI 모델" data-en="AI Models">AI 모델</div>
+      <div class="row-val col-amber" data-ko="14개+ 프로바이더" data-en="14+ Providers">14개+ 프로바이더</div>
+      <div class="row-note" data-ko="Anthropic·OpenAI·Gemini·Ollama·vLLM 등. 진정한 BYOM." data-en="Anthropic, OpenAI, Gemini, Ollama, vLLM and more. True BYOM.">Anthropic·OpenAI·Gemini·Ollama 등.</div>
+      <div class="mark-row mark-row-r"><span class="verdict" data-ko="언제든 전환 가능" data-en="Switch anytime">언제든 전환</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- LOCAL -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="로컬/오프라인" data-en="Local / Offline">로컬/오프라인</div>
+      <div class="row-val col-red" data-ko="클라우드 전용" data-en="Cloud-Only">클라우드 전용</div>
+      <div class="row-note" data-ko="모든 요청이 Anthropic 서버로 전송." data-en="Every request goes to Anthropic servers.">모든 요청이 Anthropic 서버 경유.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span><span class="verdict" data-ko="코드가 외부로 나감" data-en="Code leaves your machine">코드가 외부로 나감</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="프라이버시" data-en="Privacy">프라이버시</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="로컬/오프라인" data-en="Local / Offline">로컬/오프라인</div>
+      <div class="row-val col-amber" data-ko="로컬 우선" data-en="Local-First">로컬 우선</div>
+      <div class="row-note" data-ko="Ollama/vLLM으로 완전 로컬 실행 가능." data-en="Fully local with Ollama or vLLM.">Ollama/vLLM으로 완전 로컬 실행.</div>
+      <div class="mark-row mark-row-r"><span class="verdict" data-ko="100% 로컬 가능" data-en="100% local possible">100% 로컬 가능</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- HASH ANCHORING -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="편집 안전성" data-en="Edit Safety">편집 안전성</div>
+      <div class="row-val col-red" data-ko="텍스트 diff" data-en="Text Diff">텍스트 diff</div>
+      <div class="row-note" data-ko="중복 코드에서 편집 위치 오류 가능." data-en="Edit can land at wrong location with duplicate code.">중복 코드에서 위치 오류 가능.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span><span class="verdict" data-ko="드리프트 발생 가능" data-en="Drift-prone">드리프트 발생 가능</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="안전성" data-en="Safety">안전성</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="편집 안전성" data-en="Edit Safety">편집 안전성</div>
+      <div class="row-val col-amber" data-ko="해시 앵커 편집™" data-en="Hash-Anchored Editing™">해시 앵커 편집™</div>
+      <div class="row-note" data-ko="편집 대상을 콘텐츠 해시로 검증. 업계 유일." data-en="Every edit target content-hashed. Industry-unique.">편집 대상 해시 검증. 업계 유일.</div>
+      <div class="mark-row mark-row-r"><span class="verdict" data-ko="위치 오류 없음" data-en="Zero wrong-location edits">위치 오류 없음</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- SESSIONS -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="세션 관리" data-en="Session Management">세션 관리</div>
+      <div class="row-val" style="color:#888;" data-ko="기본 재시작" data-en="Basic Resume">기본 재시작</div>
+      <div class="row-note" data-ko="세션 포크·검색·브랜치 없음." data-en="No fork, search, or branch.">포크·검색·브랜치 없음.</div>
+      <div class="mark-row"><span class="mark mark-p">~</span><span class="verdict" data-ko="최소 기능" data-en="Minimal">최소 기능</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="세션" data-en="Sessions">세션</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="세션 관리" data-en="Session Management">세션 관리</div>
+      <div class="row-val col-amber" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+      <div class="row-note" data-ko="포크·전문 검색·브랜치. 재부팅 후에도 지속." data-en="Fork, full-text search, branch. Persistent across reboots.">포크·전문 검색·브랜치. 영구 저장.</div>
+      <div class="mark-row mark-row-r"><span class="verdict" data-ko="컨텍스트의 Git" data-en="Git for context">컨텍스트의 Git</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- MODES -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="에이전트 모드" data-en="Agent Modes">에이전트 모드</div>
+      <div class="row-val col-red" data-ko="1가지" data-en="1 Mode">1가지</div>
+      <div class="row-note" data-ko="계획과 실행 분리 없음." data-en="No separation of planning and execution.">계획·실행 분리 없음.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="모드" data-en="Modes">모드</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="에이전트 모드" data-en="Agent Modes">에이전트 모드</div>
+      <div class="row-val col-amber" data-ko="3가지 모드" data-en="3 Modes">3가지 모드</div>
+      <div class="row-note" data-ko="Super·Dev·Plan. 목적에 맞는 도구." data-en="Super, Dev, Plan. Right tool for each job.">Super·Dev·Plan 모드.</div>
+      <div class="mark-row mark-row-r"><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- MCP -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl">MCP</div>
+      <div class="row-val col-amber">Yes</div>
+      <div class="row-note" data-ko="Anthropic이 MCP를 개발. Claude Code 지원." data-en="Anthropic invented MCP. Claude Code supports it.">Anthropic이 MCP 개발. 지원함.</div>
+      <div class="mark-row"><span class="mark mark-c">✓</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag">MCP</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl">MCP</div>
+      <div class="row-val col-amber">Yes</div>
+      <div class="row-note" data-ko="MCP stdio 완전 지원. 어떤 서버든 가능." data-en="Full MCP stdio. Any server, any provider.">MCP stdio 완전 지원.</div>
+      <div class="mark-row mark-row-r"><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- BINARY SIZE -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="설치" data-en="Installation">설치</div>
+      <div class="row-val col-red">npm / Node.js</div>
+      <div class="row-note" data-ko="Node.js 런타임 필요. ~200MB 의존성." data-en="Requires Node.js. ~200MB dependencies.">Node.js 필요. 의존성 ~200MB.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span><span class="verdict" data-ko="런타임 의존성" data-en="Runtime dependency">런타임 의존성</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="설치" data-en="Install">설치</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="설치" data-en="Installation">설치</div>
+      <div class="row-val col-amber" data-ko="단일 바이너리 ~20MB" data-en="Single Binary ~20MB">단일 바이너리 ~20MB</div>
+      <div class="row-note" data-ko="Go 바이너리 하나. 런타임 없음. curl | sh 끝." data-en="One Go binary. No runtime. curl | sh done.">런타임 없음. curl | sh 완료.</div>
+      <div class="mark-row mark-row-r"><span class="verdict" data-ko="의존성 없음" data-en="Zero deps">의존성 없음</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- I18N -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="다국어" data-en="i18n">다국어</div>
+      <div class="row-val col-red" data-ko="영어 전용" data-en="English Only">영어 전용</div>
+      <div class="row-note" data-ko="공식 i18n 미지원." data-en="No official i18n support.">공식 다국어 미지원.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag">i18n</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="다국어" data-en="i18n">다국어</div>
+      <div class="row-val col-amber" data-ko="한국어 지원" data-en="Korean i18n">한국어 지원</div>
+      <div class="row-note" data-ko="한국어 네이티브 UI. 추가 언어 예정." data-en="Native Korean UI. More languages planned.">한국어 네이티브. 추가 예정.</div>
+      <div class="mark-row mark-row-r"><span class="verdict">한국어 지원</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+  <!-- VENDOR LOCK -->
+  <div class="row">
+    <div class="cell cell-c">
+      <div class="row-lbl" data-ko="벤더 종속" data-en="Vendor Lock-in">벤더 종속</div>
+      <div class="row-val col-red" data-ko="완전 종속" data-en="Complete">완전 종속</div>
+      <div class="row-note" data-ko="Anthropic 가격 인상? 서비스 중단? 대안 없음." data-en="Anthropic raises prices? Service down? No exit.">가격 인상·중단 시 대안 없음.</div>
+      <div class="mark-row"><span class="mark mark-x">✕</span></div>
+    </div>
+    <div class="cell-mid"><span class="cat-tag" data-ko="리스크" data-en="Risk">리스크</span></div>
+    <div class="cell cell-h">
+      <div class="row-lbl" data-ko="벤더 종속" data-en="Vendor Lock-in">벤더 종속</div>
+      <div class="row-val col-amber" data-ko="없음" data-en="Zero">없음</div>
+      <div class="row-note" data-ko="설정 한 줄로 프로바이더 교체. Apache-2.0 특허 보호." data-en="Switch providers in one config line. Apache-2.0 patent protection.">설정 한 줄로 교체. 특허 보호.</div>
+      <div class="mark-row mark-row-r"><span class="verdict" data-ko="스택을 직접 소유" data-en="Own your stack">스택 직접 소유</span><span class="mark mark-c">✓</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Winner -->
+<section class="winner">
+  <div class="w-eye" data-ko="최종 결론" data-en="The Verdict">최종 결론</div>
+  <div class="w-title" data-ko="hanimo 승.<br>모든 중요 기준에서." data-en="hanimo wins.<br>On every axis that matters.">hanimo 승.<br>모든 중요 기준에서.</div>
+  <div class="score-row">
+    <div class="score-box">
+      <div class="score-n col-red">1</div>
+      <div class="score-l">Claude Code</div>
+    </div>
+    <div class="score-sep">—</div>
+    <div class="score-box">
+      <div class="score-n col-amber">10</div>
+      <div class="score-l">hanimo</div>
+    </div>
+  </div>
+  <p class="w-note" data-ko="MCP 지원은 동점(둘 다 완전 지원). 나머지 10개 항목에서 hanimo 승: 가격, 라이선스, 모델, 로컬, 해시 앵커, 세션, 모드, 바이너리 크기, 다국어, 벤더 자유." data-en="MCP is tied (both full support). hanimo wins 10: price, license, models, local, hash-anchored edits, sessions, modes, binary size, i18n, vendor freedom.">MCP 동점. 나머지 10개 항목 hanimo 승.</p>
+</section>
+
+<!-- Terminal -->
+<section class="term-section">
+  <div class="sec-lbl" data-ko="터미널 미리보기" data-en="Live Terminal Preview">터미널 미리보기</div>
+  <div class="term">
+    <div class="term-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      <div class="term-ttl">hanimo — zsh</div>
+    </div>
+    <div class="term-body">
+      <div><span class="t-p">~/project $</span> <span class="t-c">hanimo --mode super "refactor auth module"</span></div>
+      <div class="t-i">⚡ hanimo v0.9.0 · ollama/llama3.2 · SUPER mode</div>
+      <div class="t-o">  847 files indexed</div>
+      <div class="t-h">  [HASH-ANCHOR] src/auth/jwt.go → sha256:a3f9d2...</div>
+      <div class="t-h">  [HASH-ANCHOR] src/auth/middleware.go → sha256:b7c1e4...</div>
+      <div class="t-s">  ✓ 3 files edited — hash verified, no drift</div>
+      <div><span class="t-p">~/project $</span> <span class="t-cur"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Providers -->
+<section class="prov-section">
+  <div class="sec-lbl" data-ko="14개+ 지원 프로바이더" data-en="14+ Supported Providers">14개+ 지원 프로바이더</div>
+  <div class="prov-grid">
+    <div class="prov-tag">Anthropic Claude</div><div class="prov-tag">OpenAI GPT-4o</div>
+    <div class="prov-tag">Google Gemini</div><div class="prov-tag">Mistral</div>
+    <div class="prov-tag">Ollama (local)</div><div class="prov-tag">vLLM (local)</div>
+    <div class="prov-tag">Groq</div><div class="prov-tag">Cohere</div>
+    <div class="prov-tag">Together AI</div><div class="prov-tag">Fireworks</div>
+    <div class="prov-tag">Perplexity</div><div class="prov-tag">DeepSeek</div>
+    <div class="prov-tag">xAI Grok</div><div class="prov-tag">+ More</div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div>
+    <div class="f-brand">hanimo</div>
+    <div style="margin-top:0.3rem;" data-ko="오픈소스를 위한 AI 코딩 에이전트" data-en="The open-source AI coding agent">오픈소스를 위한 AI 코딩 에이전트</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.25rem;text-align:center;">
+    <a href="https://hanimo.dev">hanimo.dev</a>
+    <a href="https://github.com/flykimjiwon/hanimo">github.com/flykimjiwon/hanimo</a>
+  </div>
+  <div style="text-align:right;">
+    <div>Apache-2.0</div>
+    <div style="margin-top:0.2rem;" data-ko="영구 무료 · 로컬 우선 · 종속 없음" data-en="Free forever · Local-first · No lock-in">영구 무료 · 로컬 우선 · 종속 없음</div>
+  </div>
+</footer>
+
+<script>
+// ── LANG TOGGLE ──
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  // Update innerHTML elements (hero h1 stays as-is since it uses spans)
+}
+
+(function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+// ── SCROLL REVEAL ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); observer.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.row').forEach((r, i) => {
+  r.style.transitionDelay = (i * 0.04) + 's';
+  observer.observe(r);
+});
+
+// ── COPY INSTALL ──
+document.querySelectorAll('.install-cmd').forEach(cmd => {
+  cmd.title = 'Click to copy';
+  cmd.addEventListener('click', () => {
+    navigator.clipboard.writeText(cmd.dataset.copy || cmd.textContent).then(() => {
+      const orig = cmd.textContent;
+      cmd.textContent = '✓ Copied!';
+      cmd.style.color = '#5eff5e';
+      setTimeout(() => { cmd.textContent = orig; cmd.style.color = ''; }, 1500);
+    });
+  });
+});
+</script>
+</body>
+</html>

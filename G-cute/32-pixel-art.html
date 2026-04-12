@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HANIMO — 8-BIT AI CODING AGENT</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'dark';document.documentElement.dataset.theme=t;})();</script>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gb0: #9bbc0f; --gb1: #8bac0f; --gb2: #306230; --gb3: #0f380f;
+    --gb-screen: #81a000;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'VT323', monospace;
+    background: var(--gb3); color: var(--gb0);
+    image-rendering: pixelated; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: 9999;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+    pointer-events: none;
+  }
+
+  /* light theme — Game Boy LCD warm */
+  [data-theme="light"] body { background: var(--gb0); color: var(--gb3); }
+  [data-theme="light"] nav { background: var(--gb1); border-bottom-color: var(--gb2); }
+  [data-theme="light"] .pixel-btn { background: var(--gb3); color: var(--gb0); box-shadow: 3px 3px 0 var(--gb2); }
+  [data-theme="light"] .pixel-btn-o { background: transparent; color: var(--gb3); box-shadow: 3px 3px 0 var(--gb2), inset 0 0 0 2px var(--gb2); }
+  /* Lang + theme toggle */
+  .ctrl-bar {
+    position: fixed; top: 14px; right: 8px; z-index: 300;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .lang-toggle { display: flex; border: 2px solid var(--gb1); overflow: hidden; }
+  .theme-toggle { display: flex; border: 2px solid var(--gb1); overflow: hidden; }
+  .lang-btn, .theme-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 0.45rem;
+    padding: 6px 10px; border: none; cursor: pointer; transition: all 0.1s;
+  }
+  .lang-btn.active, .theme-btn.active { background: var(--gb0); color: var(--gb3); }
+  .lang-btn:not(.active), .theme-btn:not(.active) { background: var(--gb3); color: var(--gb1); }
+  [data-theme="light"] .lang-btn.active, [data-theme="light"] .theme-btn.active { background: var(--gb3); color: var(--gb0); }
+  [data-theme="light"] .lang-btn:not(.active), [data-theme="light"] .theme-btn:not(.active) { background: var(--gb0); color: var(--gb3); }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--gb3); border-bottom: 4px solid var(--gb1);
+    padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-family: 'Press Start 2P', monospace; font-size: 0.85rem; color: var(--gb0); text-decoration: none; }
+  .nav-links { display: flex; gap: 8px; }
+  .pixel-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 0.45rem;
+    color: var(--gb3); background: var(--gb0); border: none; cursor: pointer;
+    padding: 7px 10px; text-decoration: none; display: inline-block;
+    box-shadow: 3px 3px 0 var(--gb2); transition: transform 0.05s, box-shadow 0.05s;
+  }
+  .pixel-btn:hover { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--gb2); }
+  .pixel-btn-o { background: transparent; color: var(--gb0); box-shadow: 3px 3px 0 var(--gb2), inset 0 0 0 2px var(--gb1); }
+
+  main { padding-top: 60px; }
+
+  /* Stat bar */
+  .sbar-bg { background: var(--gb3); border: 2px solid var(--gb1); height: 11px; display: inline-block; width: 110px; vertical-align: middle; }
+  .sbar-fill { height: 100%; background: var(--gb0); display: block; }
+
+  /* Hero */
+  .hero { min-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 20px; }
+
+  /* CSS pixel sprite — robot face via box-shadow */
+  .pixel-sprite {
+    width: 8px; height: 8px; position: relative; display: inline-block;
+    margin-bottom: 64px;
+    box-shadow:
+      /* antenna */
+      32px -16px 0 var(--gb1),
+      24px -8px 0 var(--gb0), 32px -8px 0 var(--gb0), 40px -8px 0 var(--gb0),
+      /* head */
+      16px 0 0 var(--gb2), 24px 0 0 var(--gb0), 32px 0 0 var(--gb0), 40px 0 0 var(--gb0), 48px 0 0 var(--gb2),
+      16px 8px 0 var(--gb2), 24px 8px 0 var(--gb3), 32px 8px 0 var(--gb0), 40px 8px 0 var(--gb3), 48px 8px 0 var(--gb2),
+      /* eyes */
+      16px 16px 0 var(--gb0), 24px 16px 0 var(--gb-screen), 32px 16px 0 var(--gb0), 40px 16px 0 var(--gb-screen), 48px 16px 0 var(--gb0),
+      16px 24px 0 var(--gb2), 24px 24px 0 var(--gb3), 32px 24px 0 var(--gb0), 40px 24px 0 var(--gb3), 48px 24px 0 var(--gb2),
+      /* mouth */
+      16px 32px 0 var(--gb2), 24px 32px 0 var(--gb0), 32px 32px 0 var(--gb3), 40px 32px 0 var(--gb0), 48px 32px 0 var(--gb2),
+      24px 40px 0 var(--gb0), 32px 40px 0 var(--gb0), 40px 40px 0 var(--gb0),
+      /* chin */
+      16px 48px 0 var(--gb2), 24px 48px 0 var(--gb2), 32px 48px 0 var(--gb2), 40px 48px 0 var(--gb2), 48px 48px 0 var(--gb2);
+    animation: sprite-idle 1s steps(1) infinite;
+  }
+  @keyframes sprite-idle { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.15)} }
+
+  .hero h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(1.5rem, 5vw, 3rem); color: var(--gb0);
+    margin-bottom: 8px; line-height: 1.4;
+    text-shadow: 4px 4px 0 var(--gb2), 6px 6px 0 var(--gb3);
+  }
+  .hero-sub { font-size: 1.5rem; color: var(--gb1); margin-bottom: 4px; }
+  .hero-sub-kr { font-size: 1.3rem; color: var(--gb-screen); margin-bottom: 28px; }
+
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* Stats panel */
+  .stats-panel {
+    background: var(--gb3); border: 4px solid var(--gb1);
+    padding: 14px 20px; margin: 20px auto; max-width: 440px; text-align: left;
+    box-shadow: 6px 6px 0 var(--gb2); font-size: 1.25rem;
+  }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; gap: 12px; }
+  .stat-lbl { color: var(--gb1); min-width: 100px; }
+
+  /* Install block */
+  .install-block {
+    background: var(--gb2); border: 4px solid var(--gb0);
+    padding: 18px 24px; margin: 20px auto; max-width: 540px;
+    box-shadow: 6px 6px 0 var(--gb3); position: relative; font-size: 1.15rem;
+  }
+  .install-block::before {
+    content: '[ INSTALL ]'; font-family: 'Press Start 2P', monospace; font-size: 0.42rem;
+    color: var(--gb3); background: var(--gb0);
+    position: absolute; top: -11px; left: 14px; padding: 2px 7px;
+  }
+  .install-line { color: var(--gb-screen); margin-bottom: 5px; display: flex; gap: 8px; }
+  .install-prompt { color: var(--gb0); }
+
+  /* Sections */
+  section { padding: 52px 20px; }
+  .sec-hdr {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.6rem, 2vw, 0.9rem); color: var(--gb0);
+    text-align: center; margin-bottom: 40px;
+    text-shadow: 3px 3px 0 var(--gb2);
+  }
+  .sec-hdr::before,.sec-hdr::after { content: '══'; color: var(--gb2); margin: 0 12px; }
+
+  /* Feature panels */
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; max-width: 980px; margin: 0 auto; }
+  .feature-panel {
+    background: var(--gb3); border: 4px solid var(--gb1);
+    padding: 18px; box-shadow: 5px 5px 0 var(--gb2);
+    transition: transform 0.05s, box-shadow 0.05s;
+  }
+  .feature-panel:hover { transform: translate(2px,2px); box-shadow: 3px 3px 0 var(--gb2); }
+  .fi-title { font-family: 'Press Start 2P', monospace; font-size: 0.48rem; color: var(--gb0); margin-bottom: 10px; line-height: 1.7; }
+  .feature-panel p { font-size: 1.1rem; color: var(--gb1); line-height: 1.6; }
+  .fi-icon { font-size: 1.4rem; margin-bottom: 8px; }
+  .hp-row { margin-top: 10px; }
+  .hp-lbl { font-size: 0.9rem; color: var(--gb-screen); }
+
+  /* Providers */
+  .prov-bg { background: var(--gb2); }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 860px; margin: 0 auto; }
+  .prov-badge {
+    font-size: 1.1rem; color: var(--gb3); background: var(--gb0);
+    padding: 5px 12px; box-shadow: 3px 3px 0 var(--gb2);
+    transition: transform 0.05s; cursor: default;
+  }
+  .prov-badge:hover { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--gb2); }
+
+  /* Comparison */
+  .compare-panel { max-width: 820px; margin: 0 auto; border: 4px solid var(--gb1); box-shadow: 8px 8px 0 var(--gb2); overflow: hidden; }
+  .cmp-hdr { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; background: var(--gb2); padding: 12px 18px; font-family: 'Press Start 2P', monospace; font-size: 0.4rem; color: var(--gb0); gap: 6px; align-items: center; }
+  .cmp-hdr span:not(:first-child) { text-align: center; }
+  .cmp-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 10px 18px; gap: 6px; align-items: center; border-top: 2px solid var(--gb2); font-size: 1.05rem; transition: background 0.1s; }
+  .cmp-row:hover { background: var(--gb2); }
+  .cmp-row span:not(:first-child) { text-align: center; font-size: 1.2rem; }
+  .cy { color: var(--gb0); } .cn { color: var(--gb2); }
+
+  /* Terminal */
+  .retro-term { background: var(--gb3); border: 4px solid var(--gb1); max-width: 660px; width: 100%; margin: 0 auto; box-shadow: 10px 10px 0 var(--gb2); }
+  .rt-hdr { background: var(--gb2); padding: 9px 14px; font-family: 'Press Start 2P', monospace; font-size: 0.45rem; color: var(--gb0); border-bottom: 4px solid var(--gb1); display: flex; justify-content: space-between; }
+  .rt-body { padding: 18px; font-size: 1.15rem; line-height: 1.9; color: var(--gb-screen); }
+  .rt-p { color: var(--gb0); } .rt-o { color: var(--gb0); }
+  .cursor-blk { display: inline-block; width: 11px; height: 17px; background: var(--gb0); vertical-align: middle; animation: blink 0.8s step-end infinite; }
+
+  /* Install methods */
+  .install-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; max-width: 820px; margin: 0 auto; }
+  .install-method { background: var(--gb3); border: 4px solid var(--gb1); padding: 18px; box-shadow: 5px 5px 0 var(--gb2); }
+  .im-title { font-family: 'Press Start 2P', monospace; font-size: 0.46rem; color: var(--gb0); margin-bottom: 12px; line-height: 1.7; }
+  .code-line { color: var(--gb-screen); font-size: 1rem; word-break: break-all; line-height: 1.9; }
+
+  footer { background: var(--gb3); border-top: 4px solid var(--gb1); padding: 36px 20px; text-align: center; }
+  .ft-title { font-family: 'Press Start 2P', monospace; font-size: 0.8rem; color: var(--gb0); text-shadow: 3px 3px 0 var(--gb2); margin-bottom: 14px; }
+  .ft-info { font-size: 1.2rem; color: var(--gb1); margin-bottom: 6px; }
+  .ft-copy { font-size: 1rem; color: var(--gb2); }
+
+  @media (max-width:640px) {
+    .cmp-hdr,.cmp-row { grid-template-columns: 2fr 1fr 1fr; }
+    .cmp-hdr span:nth-child(4),.cmp-hdr span:nth-child(5),
+    .cmp-row span:nth-child(4),.cmp-row span:nth-child(5) { display: none; }
+    .nav-links { display: none; }
+    .lang-toggle { right: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ctrl-bar">
+  <div class="theme-toggle">
+    <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="theme-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<nav>
+  <a href="#" class="nav-logo">▶ HANIMO</a>
+  <div class="nav-links">
+    <a href="#features" class="pixel-btn pixel-btn-o" data-ko="기능" data-en="FEATURES">기능</a>
+    <a href="#install" class="pixel-btn" data-ko="설치" data-en="INSTALL">설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo" class="pixel-btn">★ GITHUB</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="pixel-sprite"></div>
+
+    <h1>HANIMO</h1>
+    <p class="hero-sub" data-ko="오픈소스 AI 코딩 에이전트" data-en="OPEN-SOURCE AI CODING AGENT">오픈소스 AI 코딩 에이전트</p>
+    <p class="hero-sub-kr" data-ko="터미널에서 바로 — 무료 · Apache-2.0" data-en="LIVES IN YOUR TERMINAL — FREE · APACHE-2.0">터미널에서 바로 — 무료 · Apache-2.0</p>
+
+    <div class="stats-panel">
+      <div class="stat-row">
+        <span class="stat-lbl" data-ko="제공자" data-en="PROVIDERS">제공자</span>
+        <div class="sbar-bg"><div class="sbar-fill" style="width:100%"></div></div>
+        <span>14/14</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-lbl" data-ko="컨텍스트" data-en="CONTEXT">컨텍스트</span>
+        <div class="sbar-bg"><div class="sbar-fill" style="width:7%"></div></div>
+        <span>14K/200K</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-lbl" data-ko="라이선스" data-en="LICENSE">라이선스</span>
+        <span>APACHE-2.0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-lbl" data-ko="가격" data-en="COST">가격</span>
+        <span style="color:var(--gb-screen)" data-ko="무료 ★★★" data-en="FREE ★★★">무료 ★★★</span>
+      </div>
+    </div>
+
+    <div class="install-block">
+      <div class="install-line"><span class="install-prompt">$</span><span>curl -fsSL https://hanimo.dev/install.sh | sh</span></div>
+      <div class="install-line"><span class="install-prompt">$</span><span>brew install hanimo</span></div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px">
+      <a href="#install" class="pixel-btn" style="font-family:'Press Start 2P';font-size:0.52rem" data-ko="▶ 시작하기" data-en="▶ START">▶ 시작하기</a>
+      <a href="https://github.com/flykimjiwon/hanimo" class="pixel-btn pixel-btn-o" style="font-family:'Press Start 2P';font-size:0.52rem">★ GITHUB</a>
+    </div>
+    <div style="margin-top:20px;font-size:1rem;color:var(--gb2)" data-ko="PRESS ANY KEY TO CONTINUE █" data-en="PRESS ANY KEY TO CONTINUE █">PRESS ANY KEY TO CONTINUE <span class="blink">█</span></div>
+  </section>
+
+  <section style="background:var(--gb2);padding:40px 20px">
+    <div class="sec-hdr" data-ko="터미널 미리보기" data-en="BATTLE SCREEN">터미널 미리보기</div>
+    <div class="retro-term">
+      <div class="rt-hdr">
+        <span>HANIMO v1.0 — AI CODING RPG</span>
+        <span>HP: ██████████ 100/100</span>
+      </div>
+      <div class="rt-body">
+        <div><span class="rt-p">$ </span>hanimo --provider claude</div>
+        <div class="rt-o">  CONNECTING... OK · 14K/200K</div>
+        <br>
+        <div style="color:var(--gb2)">&gt; auth.go 버그 수정</div>
+        <div class="rt-o">  HASH: #a3f92b · PATCH: ★ OK</div>
+        <br>
+        <div><span class="rt-p">$ </span>hanimo /auto "REST API 완성"</div>
+        <div class="rt-o">  AUTO MODE: ON</div>
+        <div style="color:var(--gb-screen)">  ▶▶ COMPLETE! EXP +500 ★</div>
+        <br>
+        <div><span class="rt-p">$ </span><span class="cursor-blk"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="sec-hdr" data-ko="능력 선택" data-en="SELECT ABILITY">능력 선택</div>
+    <div class="features-grid">
+      <div class="feature-panel">
+        <div class="fi-icon">⚓</div>
+        <div class="fi-title" data-ko="해시 앵커 편집" data-en="HASH-ANCHORED EDITING">해시 앵커 편집</div>
+        <p data-ko="라인별 MD5. 수정 충돌 방지." data-en="MD5 per line. No stale edits.">라인별 MD5. 수정 충돌 방지.</p>
+        <div class="hp-row"><span class="hp-lbl" data-ko="정확도 " data-en="PRECISION ">정확도 </span><div class="sbar-bg"><div class="sbar-fill" style="width:100%"></div></div></div>
+      </div>
+      <div class="feature-panel">
+        <div class="fi-icon">🤖</div>
+        <div class="fi-title" data-ko="14+ LLM 제공자" data-en="14+ LLM PROVIDERS">14+ LLM 제공자</div>
+        <p data-ko="Claude, GPT, Gemini, Ollama 등." data-en="Claude, GPT, Gemini, Ollama & more.">Claude, GPT, Gemini, Ollama 등.</p>
+        <div class="hp-row"><span class="hp-lbl" data-ko="선택지 " data-en="CHOICES ">선택지 </span><div class="sbar-bg"><div class="sbar-fill" style="width:100%"></div></div></div>
+      </div>
+      <div class="feature-panel">
+        <div class="fi-icon">🪄</div>
+        <div class="fi-title" data-ko="스마트 컴팩션" data-en="SMART COMPACTION">스마트 컴팩션</div>
+        <p data-ko="컨텍스트 자동 요약. 토큰 한계 없이." data-en="Auto-summarize context. No token walls.">컨텍스트 자동 요약. 토큰 한계 없이.</p>
+        <div class="hp-row"><span class="hp-lbl" data-ko="메모리 " data-en="MEMORY ">메모리 </span><div class="sbar-bg"><div class="sbar-fill" style="width:90%"></div></div></div>
+      </div>
+      <div class="feature-panel">
+        <div class="fi-icon">🚀</div>
+        <div class="fi-title" data-ko="/auto 자율 모드" data-en="/AUTO AUTONOMOUS">/auto 자율 모드</div>
+        <p data-ko="계획→코딩→테스트 자동 실행." data-en="Plan, code, test — fully automatic.">계획→코딩→테스트 자동 실행.</p>
+        <div class="hp-row"><span class="hp-lbl" data-ko="자율성 " data-en="AUTONOMY ">자율성 </span><div class="sbar-bg"><div class="sbar-fill" style="width:95%"></div></div></div>
+      </div>
+      <div class="feature-panel">
+        <div class="fi-icon">💾</div>
+        <div class="fi-title" data-ko="SQLite 세션" data-en="SQLITE SESSIONS">SQLite 세션</div>
+        <p data-ko="로컬 저장. 언제든 재개 가능." data-en="Local storage. Resume anytime.">로컬 저장. 언제든 재개 가능.</p>
+        <div class="hp-row"><span class="hp-lbl" data-ko="지속성 " data-en="PERSIST ">지속성 </span><div class="sbar-bg"><div class="sbar-fill" style="width:100%"></div></div></div>
+      </div>
+      <div class="feature-panel">
+        <div class="fi-icon">🔌</div>
+        <div class="fi-title" data-ko="MCP 지원" data-en="MCP SUPPORT">MCP 지원</div>
+        <p data-ko="외부 도구·서버 자유롭게 연결." data-en="Connect any tool or server freely.">외부 도구·서버 자유롭게 연결.</p>
+        <div class="hp-row"><span class="hp-lbl" data-ko="확장성 " data-en="EXTEND ">확장성 </span><div class="sbar-bg"><div class="sbar-fill" style="width:88%"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="prov-bg">
+    <div class="sec-hdr" data-ko="수집된 제공자" data-en="COLLECTED PROVIDERS">수집된 제공자</div>
+    <div class="badge-row">
+      <div class="prov-badge">[CLAUDE]</div><div class="prov-badge">[OPENAI]</div>
+      <div class="prov-badge">[GEMINI]</div><div class="prov-badge">[OLLAMA]</div>
+      <div class="prov-badge">[GROQ]</div><div class="prov-badge">[DEEPSEEK]</div>
+      <div class="prov-badge">[MISTRAL]</div><div class="prov-badge">[AZURE OAI]</div>
+      <div class="prov-badge">[COHERE]</div><div class="prov-badge">[HUGGINGFACE]</div>
+      <div class="prov-badge">[TOGETHER AI]</div><div class="prov-badge">[PERPLEXITY]</div>
+      <div class="prov-badge">[REPLICATE]</div><div class="prov-badge">[LOCAL LLM]</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-hdr" data-ko="VS 배틀" data-en="VS BATTLE">VS 배틀</div>
+    <div class="compare-panel">
+      <div class="cmp-hdr">
+        <span data-ko="기능" data-en="FEATURE">기능</span>
+        <span>HANIMO</span><span>CL.CODE</span><span>CURSOR</span><span>AIDER</span>
+      </div>
+      <div class="cmp-row"><span data-ko="무료 오픈소스" data-en="Free & Open Source">무료 오픈소스</span><span class="cy">YES</span><span class="cn">NO</span><span class="cn">NO</span><span class="cy">YES</span></div>
+      <div class="cmp-row"><span data-ko="14+ LLM" data-en="14+ LLM">14+ LLM</span><span class="cy">YES</span><span class="cn">NO</span><span class="cn">NO</span><span class="cy">YES</span></div>
+      <div class="cmp-row"><span data-ko="해시 앵커" data-en="Hash-Anchor">해시 앵커</span><span class="cy">YES</span><span class="cn">NO</span><span class="cn">NO</span><span class="cn">NO</span></div>
+      <div class="cmp-row"><span>SQLite</span><span class="cy">YES</span><span class="cn">NO</span><span class="cn">NO</span><span class="cn">NO</span></div>
+      <div class="cmp-row"><span data-ko="스마트 컴팩션" data-en="Compaction">스마트 컴팩션</span><span class="cy">YES</span><span class="cy">YES</span><span class="cn">NO</span><span class="cn">NO</span></div>
+      <div class="cmp-row"><span>MCP</span><span class="cy">YES</span><span class="cy">YES</span><span class="cn">NO</span><span class="cn">NO</span></div>
+    </div>
+  </section>
+
+  <section id="install" style="background:var(--gb2)">
+    <div class="sec-hdr" data-ko="설치" data-en="INSTALL">설치</div>
+    <div class="install-grid">
+      <div class="install-method">
+        <div class="im-title" data-ko="CURL (Linux/macOS)" data-en="CURL (LINUX/MACOS)">CURL (Linux/macOS)</div>
+        <div class="code-line">$ curl -fsSL<br>  https://hanimo.dev/<br>  install.sh | sh</div>
+      </div>
+      <div class="install-method">
+        <div class="im-title">HOMEBREW (macOS)</div>
+        <div class="code-line">$ brew tap<br>  flykimjiwon/hanimo<br>$ brew install hanimo</div>
+      </div>
+      <div class="install-method">
+        <div class="im-title" data-ko="소스 빌드 (Go)" data-en="BUILD FROM SOURCE (GO)">소스 빌드 (Go)</div>
+        <div class="code-line">$ git clone<br>  github.com/flykimjiwon/<br>  hanimo && go build .</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:28px">
+      <a href="https://github.com/flykimjiwon/hanimo" class="pixel-btn" style="font-family:'Press Start 2P';font-size:0.52rem">★ VIEW ON GITHUB ★</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="ft-title">★ HANIMO ★</div>
+  <div class="ft-info" data-ko="오픈소스 커뮤니티가 ♥ 로 제작" data-en="MADE WITH ♥ BY OPEN SOURCE COMMUNITY">오픈소스 커뮤니티가 ♥ 로 제작</div>
+  <div class="ft-info">flykimjiwon/hanimo · hanimo.dev</div>
+  <div class="ft-copy">APACHE-2.0 · 2025 · INSERT COIN <span class="blink">█</span></div>
+</footer>
+
+<script>
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.querySelectorAll('[data-ko]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.documentElement.lang = lang;
+}
+(function(){ setTheme(document.documentElement.dataset.theme || 'dark'); })();
+</script>
+</body>
+</html>

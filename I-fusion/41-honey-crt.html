@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — Honey × CRT Phosphor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --honey: #F9E2AF;
+    --honey-dim: #e8c87a;
+    --honey-dark: #c4973a;
+    --bg: #1e1e2e;
+    --bg2: #181825;
+    --surface: #313244;
+    /* theme tokens */
+    --t-bg: #1e1e2e;
+    --t-surface: #313244;
+    --t-border: #c4973a;
+    --t-text: #F9E2AF;
+    --t-muted: #e8c87a;
+    --t-accent: #F9E2AF;
+  }
+  [data-theme="light"] {
+    --t-bg: #fff8e8;
+    --t-surface: #fef3d3;
+    --t-border: #c4973a;
+    --t-text: #3a2800;
+    --t-muted: #7a5200;
+    --t-accent: #c4973a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: hidden;
+  }
+
+  /* CRT phosphor glow */
+  .honey-glow {
+    color: var(--honey);
+    text-shadow:
+      0 0 5px #fff8e0,
+      0 0 10px var(--honey),
+      0 0 20px var(--honey),
+      0 0 40px var(--honey-dim),
+      0 0 80px var(--honey-dark);
+  }
+  .honey-glow-sm {
+    text-shadow:
+      0 0 4px #fff8e0,
+      0 0 10px var(--honey),
+      0 0 20px var(--honey-dim);
+  }
+
+  /* CRT scanlines overlay */
+  .crt-wrap {
+    position: relative;
+  }
+  .crt-wrap::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.13),
+      rgba(0,0,0,0.13) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Barrel distortion via CSS perspective */
+  .crt-screen {
+    border-radius: 12px;
+    transform: perspective(1200px) rotateX(1.5deg);
+    box-shadow:
+      inset 0 0 60px rgba(249,226,175,0.08),
+      0 0 30px rgba(249,226,175,0.15);
+  }
+
+  /* Boot sequence animation */
+  @keyframes typewriter {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.97; }
+    52% { opacity: 1; }
+    54% { opacity: 0.93; }
+    56% { opacity: 1; }
+  }
+  @keyframes bootLine {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .flicker { animation: flicker 4s infinite; }
+  .cursor::after {
+    content: '█';
+    animation: blink 1s infinite;
+    margin-left: 2px;
+  }
+
+  .boot-line {
+    opacity: 0;
+    animation: bootLine 0.3s forwards;
+  }
+  .boot-line:nth-child(1) { animation-delay: 0.2s; }
+  .boot-line:nth-child(2) { animation-delay: 0.5s; }
+  .boot-line:nth-child(3) { animation-delay: 0.8s; }
+  .boot-line:nth-child(4) { animation-delay: 1.1s; }
+  .boot-line:nth-child(5) { animation-delay: 1.4s; }
+  .boot-line:nth-child(6) { animation-delay: 1.7s; }
+
+  /* Controls row (lang + theme toggles) */
+  .ctrl-row {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10000;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  /* Lang toggle */
+  #lang-toggle {
+    background: var(--t-surface);
+    border: 1px solid var(--honey-dark);
+    color: var(--t-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: all 0.2s;
+  }
+  #lang-toggle:hover {
+    background: var(--honey-dark);
+    color: var(--t-bg);
+    box-shadow: 0 0 10px var(--honey-dark);
+  }
+  /* Theme segmented control */
+  .theme-ctrl {
+    display: flex;
+    background: var(--t-surface);
+    border: 1px solid var(--honey-dark);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    overflow: hidden;
+  }
+  .theme-btn {
+    padding: 0.3rem 0.55rem;
+    background: none;
+    border: none;
+    color: var(--t-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    transition: all 0.15s;
+  }
+  .theme-btn.active {
+    background: var(--honey-dark);
+    color: var(--t-bg);
+  }
+  .theme-btn:not(.active):hover { color: var(--t-text); }
+
+  /* Box borders */
+  .box-border-honey {
+    border: 1px solid var(--honey-dark);
+    box-shadow: 0 0 8px rgba(249,226,175,0.1), inset 0 0 8px rgba(249,226,175,0.03);
+  }
+
+  /* Terminal block */
+  .terminal {
+    background: var(--t-surface);
+    border: 1px solid var(--honey-dark);
+    border-radius: 4px;
+    padding: 1.5rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    box-shadow: 0 0 20px rgba(249,226,175,0.08);
+  }
+  .terminal .prompt { color: var(--t-accent); }
+  .terminal .comment { color: var(--honey-dark); }
+  .terminal .output { color: var(--t-muted); }
+
+  /* Feature card */
+  .feat-card {
+    background: var(--t-surface);
+    border: 1px solid var(--t-border);
+    padding: 1.25rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .feat-card:hover {
+    border-color: var(--honey-dark);
+    box-shadow: 0 0 12px rgba(249,226,175,0.1);
+  }
+
+  /* CRT vignette */
+  .vignette::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* Comparison table */
+  table { border-collapse: collapse; width: 100%; }
+  th, td {
+    border: 1px solid var(--t-border);
+    padding: 0.6rem 1rem;
+    text-align: left;
+    font-size: 0.85rem;
+  }
+  th { color: var(--t-text); background: var(--t-surface); }
+  td { color: var(--t-muted); }
+  tr:hover td { background: rgba(249,226,175,0.03); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flicker, .boot-line { animation: none; opacity: 1; }
+    .cursor::after { animation: none; }
+  }
+</style>
+</head>
+<body class="crt-wrap vignette flicker">
+
+<div class="ctrl-row">
+  <div class="theme-ctrl">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <button id="lang-toggle" onclick="toggleLang()" aria-label="언어 전환 / Switch language">KO/EN</button>
+</div>
+
+<!-- HERO -->
+<section class="crt-screen min-h-screen flex flex-col items-center justify-center px-6 py-20 text-center mx-4 mt-4">
+  <div class="mb-6 text-sm tracking-widest" style="color: var(--honey-dark)">
+    <span data-ko="[ 터미널 AI 코딩 에이전트 초기화 중... ]" data-en="[ INITIALIZING TERMINAL AI CODING AGENT... ]">[ 터미널 AI 코딩 에이전트 초기화 중... ]</span>
+  </div>
+
+  <!-- Boot sequence -->
+  <div class="terminal w-full max-w-2xl mb-8 text-left">
+    <div class="boot-line comment"># hanimo v0.1.0 boot sequence</div>
+    <div class="boot-line output">[OK] loading providers... 14 active</div>
+    <div class="boot-line output">[OK] mounting SQLite session store</div>
+    <div class="boot-line output">[OK] hash-anchor engine ready</div>
+    <div class="boot-line output">[OK] MCP bridge initialized</div>
+    <div class="boot-line output">[READY] <span class="prompt honey-glow-sm">hanimo</span> — SYSTEM ONLINE<span class="cursor"></span></div>
+  </div>
+
+  <h1 class="text-6xl md:text-8xl font-bold honey-glow mb-4" style="font-family: 'VT323', monospace; letter-spacing: 0.05em;">
+    HANIMO
+  </h1>
+  <p class="text-xl md:text-2xl mb-2 honey-glow-sm" style="font-family: 'VT323', monospace;">
+    <span data-ko="터미널에서 실행되는 Go AI 코딩 에이전트" data-en="Go-powered AI coding agent for your terminal">터미널에서 실행되는 Go AI 코딩 에이전트</span>
+  </p>
+  <p class="text-sm mb-8" style="color: var(--honey-dark)">
+    <span data-ko="오픈소스 · Apache-2.0 · 14개 프로바이더 지원" data-en="Open-source · Apache-2.0 · 14 providers">오픈소스 · Apache-2.0 · 14개 프로바이더 지원</span>
+  </p>
+
+  <div class="terminal mb-8 text-sm" style="max-width: 420px; width: 100%;">
+    <div class="prompt">$ curl -sSL hanimo.dev/install | bash</div>
+  </div>
+
+  <div class="flex gap-4 flex-wrap justify-center">
+    <a href="https://github.com/flykimjiwon/hanimo" class="box-border-honey px-6 py-2 text-sm tracking-widest hover:bg-yellow-900/20 transition" style="color: var(--honey)">
+      <span data-ko="→ 깃허브 보기" data-en="→ VIEW ON GITHUB">→ 깃허브 보기</span>
+    </a>
+    <a href="#install" class="px-6 py-2 text-sm tracking-widest transition" style="background: var(--honey-dark); color: var(--bg)">
+      <span data-ko="설치하기" data-en="INSTALL">설치하기</span>
+    </a>
+  </div>
+</section>
+
+<!-- TERMINAL PREVIEW -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-2xl mb-6 honey-glow-sm" style="font-family: 'VT323', monospace;" data-ko="// 터미널 미리보기" data-en="// TERMINAL PREVIEW">// 터미널 미리보기</h2>
+  <div class="terminal">
+    <div class="comment"># Super 모드로 시작</div>
+    <div class="prompt">$ hanimo --mode super</div>
+    <div class="output">hanimo v0.1.0 [honey] | provider: anthropic | session: auth-refactor-2026</div>
+    <div class="output">SQLite: ~/.hanimo/sessions/auth-refactor-2026.db</div>
+    <div class="output">&gt; /auto fix the auth token refresh race condition</div>
+    <div class="output" style="color: var(--honey)">  READING: src/auth/refresh.go [MD5: a3f9...]</div>
+    <div class="output">  HASH-ANCHOR: line 47 modified</div>
+    <div class="output">  PATCH: applied 3 hunks, 0 conflicts</div>
+    <div class="output" style="color: #a6e3a1">  [DONE] 14ms · 0 stale edits</div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="max-w-6xl mx-auto px-6 py-16">
+  <h2 class="text-2xl mb-8 honey-glow-sm" style="font-family: 'VT323', monospace;" data-ko="// 핵심 기능" data-en="// CORE FEATURES">// 핵심 기능</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--honey-dark)">01 ·</div>
+      <div class="text-base font-bold mb-1 honey-glow-sm" style="font-family: 'VT323', monospace;">HASH-ANCHORED EDITING</div>
+      <p class="text-xs" style="color: var(--honey-dim)">
+        <span data-ko="라인별 MD5. 충돌 없음." data-en="MD5 per line. No stale edits.">라인별 MD5. 충돌 없음.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--honey-dark)">02 ·</div>
+      <div class="text-base font-bold mb-1 honey-glow-sm" style="font-family: 'VT323', monospace;">14+ PROVIDERS</div>
+      <p class="text-xs" style="color: var(--honey-dim)">
+        <span data-ko="Ollama부터 OpenRouter까지. 전환 즉시." data-en="Ollama to OpenRouter. Switch instantly.">Ollama부터 OpenRouter까지. 전환 즉시.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--honey-dark)">03 ·</div>
+      <div class="text-base font-bold mb-1 honey-glow-sm" style="font-family: 'VT323', monospace;">SMART COMPACTION</div>
+      <p class="text-xs" style="color: var(--honey-dim)">
+        <span data-ko="컨텍스트 자동 압축. 비용 절감." data-en="Auto-compress context. Cut costs.">컨텍스트 자동 압축. 비용 절감.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--honey-dark)">04 ·</div>
+      <div class="text-base font-bold mb-1 honey-glow-sm" style="font-family: 'VT323', monospace;">/AUTO MODE</div>
+      <p class="text-xs" style="color: var(--honey-dim)">
+        <span data-ko="자율 루프. 목표까지 실행." data-en="Autonomous loop. Runs to goal.">자율 루프. 목표까지 실행.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--honey-dark)">05 ·</div>
+      <div class="text-base font-bold mb-1 honey-glow-sm" style="font-family: 'VT323', monospace;">SQLITE SESSIONS</div>
+      <p class="text-xs" style="color: var(--honey-dim)">
+        <span data-ko="세션 영구 저장. 언제든 재개." data-en="Persist sessions. Resume anytime.">세션 영구 저장. 언제든 재개.</span>
+      </p>
+    </div>
+
+    <div class="feat-card">
+      <div class="text-xs mb-2" style="color: var(--honey-dark)">06 ·</div>
+      <div class="text-base font-bold mb-1 honey-glow-sm" style="font-family: 'VT323', monospace;">MCP SUPPORT</div>
+      <p class="text-xs" style="color: var(--honey-dim)">
+        <span data-ko="MCP 도구 연동. 확장 무제한." data-en="MCP tools. Unlimited extension.">MCP 도구 연동. 확장 무제한.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-2xl mb-6 honey-glow-sm" style="font-family: 'VT323', monospace;" data-ko="// 비교" data-en="// COMPARISON">// 비교</h2>
+  <div class="overflow-x-auto">
+    <table>
+      <thead>
+        <tr>
+          <th data-ko="항목" data-en="Feature">항목</th>
+          <th style="color: var(--honey)">hanimo</th>
+          <th data-ko="Claude Code" data-en="Claude Code">Claude Code</th>
+          <th>Cursor</th>
+          <th>Aider</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-ko="해시 앵커" data-en="Hash anchor">해시 앵커</td>
+          <td style="color: #a6e3a1">✓ 기본</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+        </tr>
+        <tr>
+          <td data-ko="로컬 모델" data-en="Local models">로컬 모델</td>
+          <td style="color: #a6e3a1">✓ Ollama</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="제한적" data-en="Limited">제한적</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td data-ko="SQLite 세션" data-en="SQLite sessions">SQLite 세션</td>
+          <td style="color: #a6e3a1">✓ 내장</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+          <td data-ko="없음" data-en="None">없음</td>
+        </tr>
+        <tr>
+          <td data-ko="비용" data-en="Cost">비용</td>
+          <td style="color: #a6e3a1" data-ko="무료" data-en="Free">무료</td>
+          <td data-ko="구독" data-en="Subscription">구독</td>
+          <td data-ko="구독" data-en="Subscription">구독</td>
+          <td data-ko="무료" data-en="Free">무료</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install" class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-2xl mb-6 honey-glow-sm" style="font-family: 'VT323', monospace;" data-ko="// 설치" data-en="// INSTALL">// 설치</h2>
+  <div class="space-y-4">
+    <div class="terminal">
+      <div class="comment"># curl</div>
+      <div class="prompt">$ curl -sSL hanimo.dev/install | bash</div>
+    </div>
+    <div class="terminal">
+      <div class="comment"># homebrew</div>
+      <div class="prompt">$ brew install flykimjiwon/tap/hanimo</div>
+    </div>
+    <div class="terminal">
+      <div class="comment"># go build</div>
+      <div class="prompt">$ go install github.com/flykimjiwon/hanimo@latest</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t px-6 py-10 text-center" style="border-color: var(--surface); color: var(--honey-dark)">
+  <p class="text-sm font-mono mb-2">hanimo · flykimjiwon/hanimo · hanimo.dev</p>
+  <p class="text-xs">Apache-2.0 License · <span data-ko="오픈소스" data-en="Open Source">오픈소스</span></p>
+</footer>
+
+<script>
+  let lang = 'ko';
+
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+
+  function toggleLang() {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+    document.getElementById('lang-toggle').textContent = lang === 'ko' ? 'KO/EN' : 'EN/KO';
+  }
+
+  // Init theme
+  (function() {
+    const saved = localStorage.getItem('hanimo-theme') || 'dark';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

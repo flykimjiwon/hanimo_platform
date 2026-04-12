@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hanimo — AI Coding Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --amber: #FFB000;
+    --amber-bright: #FFD060;
+    --amber-mid: #CC8800;
+    --amber-dim: #7a5200;
+    --amber-faint: #2e1e00;
+    --bg: #0a0800;
+    --bg-panel: #100d00;
+    --bg-card: #150f00;
+    /* theme tokens */
+    --surface: #100d00;
+    --border: #7a5200;
+    --text: #FFB000;
+    --muted: #CC8800;
+    --accent: #FFB000;
+  }
+
+  [data-theme="light"] {
+    --bg: #fff8e8;
+    --bg-panel: #fff3d0;
+    --bg-card: #ffedb8;
+    --surface: #fff3d0;
+    --border: #cc8800;
+    --amber: #8a5a00;
+    --amber-bright: #6b4400;
+    --amber-mid: #a06600;
+    --amber-dim: #b87800;
+    --amber-faint: #f0d080;
+    --text: #4a2e00;
+    --muted: #8a5a00;
+    --accent: #8a5a00;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--amber);
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* CRT scanlines */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.12),
+      rgba(0, 0, 0, 0.12) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Amber glow vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center,
+      transparent 50%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @keyframes flicker {
+    0%, 96%, 100% { opacity: 1; }
+    97% { opacity: 0.88; }
+    98% { opacity: 1; }
+    99% { opacity: 0.93; }
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 9px; height: 1em;
+    background: var(--amber);
+    vertical-align: text-bottom;
+    animation: blink 1.1s step-end infinite;
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .page { animation: flicker 10s infinite; }
+
+  /* ═══════════════════════════════════
+     MODEM CONNECT BANNER
+     ═══════════════════════════════════ */
+  .modem-banner {
+    background: var(--bg-panel);
+    border-bottom: 2px solid var(--amber-dim);
+    padding: 8px 0;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .modem-text {
+    font-size: 12px;
+    color: var(--amber-mid);
+    letter-spacing: 0.08em;
+    display: inline-block;
+    animation: marquee 30s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+  }
+
+  .modem-sep { color: var(--amber-dim); margin: 0 16px; }
+
+  /* ═══════════════════════════════════
+     DOUBLE-LINE BORDER SYSTEM HEADER
+     ═══════════════════════════════════ */
+  .bbs-header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--amber-dim);
+  }
+
+  .bbs-topbar {
+    background: var(--amber-dim);
+    padding: 4px 24px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--bg);
+    letter-spacing: 0.1em;
+  }
+
+  .bbs-nav {
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .bbs-logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--amber-bright);
+    text-shadow: 0 0 12px var(--amber), 0 0 28px var(--amber-mid);
+  }
+
+  .bbs-menu {
+    display: flex;
+    gap: 0;
+    font-size: 12px;
+  }
+
+  .bbs-menu-item {
+    padding: 4px 16px;
+    color: var(--amber-dim);
+    text-decoration: none;
+    border: 1px solid transparent;
+    letter-spacing: 0.08em;
+    transition: all 0.15s;
+  }
+
+  .bbs-menu-item:hover {
+    color: var(--amber);
+    border-color: var(--amber-dim);
+    text-shadow: 0 0 8px var(--amber);
+  }
+
+  .bbs-status {
+    font-size: 11px;
+    color: var(--amber-dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* ═══════════════════════════════════
+     ANSI SECTION HEADERS
+     ═══════════════════════════════════ */
+  .ansi-header {
+    padding: 0 24px;
+    margin: 40px 0 24px;
+  }
+
+  .ansi-title-block {
+    display: inline-block;
+    padding: 6px 20px 6px 16px;
+    background: var(--amber-dim);
+    color: var(--bg);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    margin-right: 8px;
+  }
+
+  .ansi-title-arrow {
+    color: var(--amber-mid);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+  }
+
+  .ansi-hr {
+    border: none;
+    border-top: 2px solid var(--amber-faint);
+    position: relative;
+    margin: 0 0 32px;
+  }
+
+  .ansi-hr::before {
+    content: '═══════════════════════════════════════════════════════════════════════════════════════';
+    position: absolute;
+    top: -11px;
+    left: 24px;
+    font-size: 14px;
+    color: var(--amber-faint);
+    overflow: hidden;
+    white-space: nowrap;
+    width: calc(100% - 48px);
+    display: block;
+  }
+
+  /* ═══════════════════════════════════
+     HERO / WELCOME SCREEN
+     ═══════════════════════════════════ */
+  .hero {
+    padding: 0 24px 40px;
+    border-bottom: 1px solid var(--amber-faint);
+  }
+
+  .hero-box {
+    border: 2px solid var(--amber-dim);
+    border-style: solid;
+    padding: 32px 40px;
+    background: var(--bg-panel);
+    position: relative;
+    max-width: 900px;
+    box-shadow: 0 0 30px rgba(255, 176, 0, 0.06), inset 0 0 30px rgba(255, 176, 0, 0.02);
+  }
+
+  /* Double-line border using pseudo-element */
+  .hero-box::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid var(--amber-faint);
+    pointer-events: none;
+  }
+
+  .hero-box-title {
+    position: absolute;
+    top: -11px;
+    left: 32px;
+    background: var(--bg-panel);
+    padding: 0 12px;
+    font-size: 11px;
+    color: var(--amber-mid);
+    letter-spacing: 0.2em;
+  }
+
+  .hero-ascii-art {
+    font-size: clamp(7px, 1.5vw, 13px);
+    line-height: 1.2;
+    white-space: pre;
+    color: var(--amber);
+    text-shadow: 0 0 6px var(--amber-mid);
+    margin-bottom: 32px;
+    overflow-x: auto;
+  }
+
+  .hero-tagline {
+    font-size: clamp(15px, 2.5vw, 22px);
+    font-weight: 700;
+    color: var(--amber-bright);
+    text-shadow: 0 0 12px var(--amber);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .hero-sub {
+    font-size: 12px;
+    color: var(--amber-dim);
+    margin-bottom: 32px;
+    letter-spacing: 0.12em;
+  }
+
+  .hero-spec {
+    font-size: 12px;
+    color: var(--amber-mid);
+    line-height: 1.9;
+    margin-bottom: 32px;
+  }
+
+  .hero-spec-row { display: flex; gap: 8px; }
+  .spec-bar { color: var(--amber-dim); }
+  .spec-k { color: var(--amber-dim); }
+  .spec-v { color: var(--amber); }
+
+  .install-cmd-box {
+    background: var(--bg-card);
+    border: 1px solid var(--amber-dim);
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    max-width: 560px;
+    position: relative;
+  }
+
+  .install-cmd-box::before {
+    content: '╔ INSTALL ╗';
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--bg-panel);
+    padding: 0 8px;
+    font-size: 10px;
+    color: var(--amber-dim);
+    letter-spacing: 0.15em;
+  }
+
+  .install-cmd-text {
+    font-size: 12px;
+    color: var(--amber);
+  }
+
+  .install-cmd-text .p { color: var(--amber-dim); }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .btn-bbs {
+    background: var(--amber-dim);
+    color: var(--bg);
+    padding: 8px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.15s;
+    border: none;
+  }
+
+  .btn-bbs:hover {
+    background: var(--amber);
+    box-shadow: 0 0 16px rgba(255, 176, 0, 0.3);
+  }
+
+  .btn-bbs-ghost {
+    background: transparent;
+    color: var(--amber-dim);
+    padding: 8px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.15s;
+    border: 1px solid var(--amber-faint);
+  }
+
+  .btn-bbs-ghost:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+  /* ═══════════════════════════════════
+     MAIN LAYOUT
+     ═══════════════════════════════════ */
+  .page-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  /* ═══════════════════════════════════
+     TERMINAL PREVIEW
+     ═══════════════════════════════════ */
+  .term-outer {
+    padding: 0 24px;
+    margin-bottom: 40px;
+  }
+
+  .term-frame {
+    border: 2px solid var(--amber-dim);
+    background: var(--bg-panel);
+    max-width: 780px;
+    position: relative;
+  }
+
+  .term-frame::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid var(--amber-faint);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .term-titlebar {
+    background: var(--amber-dim);
+    padding: 5px 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--bg);
+    letter-spacing: 0.1em;
+    position: relative;
+    z-index: 1;
+  }
+
+  .term-body-bbs {
+    padding: 20px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .t-row { margin-bottom: 4px; font-size: 12px; }
+  .t-p { color: var(--amber-dim); }
+  .t-c { color: var(--amber); }
+  .t-o { color: var(--amber-mid); }
+  .t-d { color: var(--amber-faint); }
+  .t-sp { height: 10px; }
+
+  .theme-bbs {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--amber-faint);
+    font-size: 11px;
+    color: var(--amber-faint);
+    letter-spacing: 0.08em;
+  }
+
+  .t-tag-bbs {
+    display: inline-block;
+    padding: 2px 10px;
+    border: 1px solid var(--amber-faint);
+    margin: 4px 4px 0 0;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.08em;
+  }
+
+  .t-tag-bbs.on {
+    background: var(--amber-dim);
+    color: var(--bg);
+    border-color: var(--amber-mid);
+  }
+
+  /* ═══════════════════════════════════
+     FEATURES - BBS FILE LIST STYLE
+     ═══════════════════════════════════ */
+  .feat-bbs {
+    padding: 0 24px;
+  }
+
+  .feat-table {
+    width: 100%;
+    font-size: 12px;
+    border-collapse: collapse;
+  }
+
+  .feat-table-header {
+    background: var(--amber-dim);
+    color: var(--bg);
+  }
+
+  .feat-table-header th {
+    padding: 6px 16px;
+    text-align: left;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .feat-row {
+    border-bottom: 1px solid var(--amber-faint);
+    transition: background 0.15s;
+  }
+
+  .feat-row:hover { background: rgba(255, 176, 0, 0.04); }
+
+  .feat-row td {
+    padding: 14px 16px;
+    vertical-align: top;
+  }
+
+  .feat-row .feat-id-bbs {
+    color: var(--amber-mid);
+    white-space: nowrap;
+    width: 120px;
+  }
+
+  .feat-row .feat-name-bbs {
+    color: var(--amber);
+    font-weight: 700;
+    width: 220px;
+  }
+
+  .feat-row .feat-desc-bbs {
+    color: var(--amber-dim);
+    line-height: 1.7;
+  }
+
+  .feat-row .feat-tag {
+    font-size: 10px;
+    background: var(--amber-faint);
+    color: var(--amber-dim);
+    padding: 2px 8px;
+    white-space: nowrap;
+    text-align: center;
+    width: 80px;
+  }
+
+  /* ═══════════════════════════════════
+     COMPARISON - BBS TABLE STYLE
+     ═══════════════════════════════════ */
+  .comp-section {
+    padding: 0 24px;
+  }
+
+  .comp-bbs {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .comp-bbs th {
+    background: var(--amber-faint);
+    padding: 8px 16px;
+    text-align: center;
+    border: 1px solid var(--amber-dim);
+    color: var(--amber-mid);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .comp-bbs th.main-col {
+    background: var(--amber-dim);
+    color: var(--bg);
+    font-weight: 700;
+  }
+
+  .comp-bbs th:first-child {
+    text-align: left;
+    background: var(--bg-panel);
+    border-color: var(--amber-faint);
+    color: var(--amber-dim);
+  }
+
+  .comp-bbs td {
+    padding: 9px 16px;
+    border: 1px solid var(--amber-faint);
+    text-align: center;
+    color: var(--amber-dim);
+    font-size: 11px;
+  }
+
+  .comp-bbs td:first-child {
+    text-align: left;
+    color: var(--amber-mid);
+  }
+
+  .comp-bbs tr:hover td { background: rgba(255, 176, 0, 0.02); }
+
+  .yes-bbs { color: var(--amber); text-shadow: 0 0 6px var(--amber-mid); }
+  .no-bbs { color: var(--amber-faint); }
+  .part-bbs { color: var(--amber-mid); }
+
+  /* ═══════════════════════════════════
+     INSTALL SECTION - BBS MENU STYLE
+     ═══════════════════════════════════ */
+  .install-section {
+    padding: 0 24px;
+  }
+
+  .install-bbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0;
+    border: 2px solid var(--amber-dim);
+  }
+
+  .install-bbs-panel {
+    padding: 24px 20px;
+    border-right: 1px solid var(--amber-faint);
+    background: var(--bg-panel);
+  }
+
+  .install-bbs-panel:last-child { border-right: none; }
+
+  .ibp-header {
+    background: var(--amber-faint);
+    margin: -24px -20px 20px;
+    padding: 6px 16px;
+    font-size: 10px;
+    color: var(--amber-mid);
+    letter-spacing: 0.2em;
+    border-bottom: 1px solid var(--amber-dim);
+  }
+
+  .ibp-code {
+    font-size: 11px;
+    line-height: 2;
+    color: var(--amber-mid);
+  }
+
+  .ibp-code .p { color: var(--amber-faint); }
+  .ibp-code .c { color: var(--amber-faint); font-style: italic; }
+  .ibp-code .cmd { color: var(--amber); }
+
+  /* ═══════════════════════════════════
+     FOOTER - BBS SIGN-OFF STYLE
+     ═══════════════════════════════════ */
+  .bbs-footer {
+    border-top: 2px solid var(--amber-dim);
+    margin-top: 48px;
+  }
+
+  .bbs-footer-bar {
+    background: var(--amber-dim);
+    padding: 6px 24px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--bg);
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+
+  .bbs-footer-body {
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--amber-faint);
+    letter-spacing: 0.08em;
+  }
+
+  .bbs-footer-body a { color: var(--amber-dim); text-decoration: none; }
+  .bbs-footer-body a:hover { color: var(--amber); }
+
+  .footer-logo-bbs {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--amber);
+    text-shadow: 0 0 10px var(--amber-mid);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--amber-faint); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--amber-dim); }
+
+  @media (max-width: 768px) {
+    .bbs-nav { padding: 8px 16px; }
+    .bbs-menu { display: none; }
+    .hero { padding: 0 16px 32px; }
+    .hero-box { padding: 24px 20px; }
+    .hero-ascii-art { font-size: 6px; }
+    .term-outer, .feat-bbs, .comp-section, .install-section { padding: 0 16px; }
+    .feat-table th:last-child, .feat-row .feat-tag { display: none; }
+    .bbs-footer-body { flex-direction: column; align-items: flex-start; padding: 20px 16px; }
+  }
+
+  /* ── TOGGLE CONTROLS ── */
+  .ctl-group {
+    position: fixed; top: 56px; right: 16px; z-index: 10000;
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  }
+  .ctl-row { display: flex; border: 1px solid var(--amber-dim); background: var(--bg-panel); }
+  .ctl-btn {
+    background: transparent; border: none; color: var(--amber-dim);
+    padding: 4px 10px; cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.1em; transition: all 0.15s;
+  }
+  .ctl-btn + .ctl-btn { border-left: 1px solid var(--amber-faint); }
+  .ctl-btn.active { background: var(--amber-faint); color: var(--amber); text-shadow: 0 0 6px var(--amber-mid); }
+</style>
+</head>
+<body>
+
+<!-- TOGGLE CONTROLS -->
+<div class="ctl-group">
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-dark" onclick="setTheme('dark')" data-ko="다크" data-en="DARK">다크</button>
+    <button class="ctl-btn" id="btn-light" onclick="setTheme('light')" data-ko="라이트" data-en="LIGHT">라이트</button>
+  </div>
+  <div class="ctl-row">
+    <button class="ctl-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+    <button class="ctl-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- MODEM CONNECT BANNER -->
+<div class="modem-banner">
+  <span class="modem-text">
+    CONNECT 14400 &nbsp;<span class="modem-sep">░░░░░░░░░░</span>&nbsp;
+    CARRIER DETECT &nbsp;<span class="modem-sep">░</span>&nbsp;
+    ONLINE MODE &nbsp;<span class="modem-sep">░</span>&nbsp;
+    HANIMO BBS v0.9.4 &nbsp;<span class="modem-sep">░</span>&nbsp;
+    SYSOP: flykimjiwon &nbsp;<span class="modem-sep">░</span>&nbsp;
+    PROTOCOL: ZMODEM &nbsp;<span class="modem-sep">░</span>&nbsp;
+    NODES: 64 AVAILABLE &nbsp;<span class="modem-sep">░</span>&nbsp;
+    CALLERS TODAY: 2847 &nbsp;<span class="modem-sep">░░░░░░░░░░</span>&nbsp;
+    CONNECT 14400
+  </span>
+</div>
+
+<!-- BBS HEADER -->
+<div class="bbs-header">
+  <div class="bbs-topbar">
+    <span>╔══ HANIMO CODING BBS ══╗ &nbsp; Node: 001 &nbsp; User: GUEST</span>
+    <span>SYS TIME: 14:32:07 &nbsp; CALLS: 2,847 &nbsp; FILES: 847</span>
+  </div>
+  <div class="bbs-nav">
+    <div class="bbs-logo">HANIMO</div>
+    <nav class="bbs-menu">
+      <a href="#features" class="bbs-menu-item">[F]EATURES</a>
+      <a href="#compare" class="bbs-menu-item">[C]OMPARE</a>
+      <a href="#install" class="bbs-menu-item">[I]NSTALL</a>
+      <a href="https://github.com/flykimjiwon/hanimo" class="bbs-menu-item">[G]ITHUB</a>
+      <a href="https://hanimo.dev" class="bbs-menu-item">[D]OCS</a>
+    </nav>
+    <div class="bbs-status">Apache-2.0 · Go 1.22+</div>
+  </div>
+</div>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+
+  <!-- HERO -->
+  <div class="ansi-header">
+    <span class="ansi-title-block">WELCOME SCREEN</span>
+    <span class="ansi-title-arrow">══════════════════════════════════════════════════════</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-box">
+      <div class="hero-box-title">╔═ HANIMO AI CODING AGENT ═╗</div>
+
+      <div class="hero-ascii-art">
+ ██╗  ██╗ █████╗ ███╗   ██╗██╗███╗   ███╗ ██████╗
+ ██║  ██║██╔══██╗████╗  ██║██║████╗ ████║██╔═══██╗
+ ███████║███████║██╔██╗ ██║██║██╔████╔██║██║   ██║
+ ██╔══██║██╔══██║██║╚██╗██║██║██║╚██╔╝██║██║   ██║
+ ██║  ██║██║  ██║██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝
+ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝</div>
+
+      <div class="hero-tagline" data-ko="오픈소스 AI 코딩 플랫폼" data-en="Open-source AI coding platform">오픈소스 AI 코딩 플랫폼</div>
+      <div class="hero-sub" data-ko="Go로 제작 · 어디서나 실행" data-en="Built in Go · Runs anywhere">Go로 제작 · 어디서나 실행</div>
+
+      <div class="hero-spec">
+        <div class="hero-spec-row"><span class="spec-bar">║</span> <span class="spec-k">VERSION   </span><span class="spec-v">v0.9.4</span></div>
+        <div class="hero-spec-row"><span class="spec-bar">║</span> <span class="spec-k">LICENSE   </span><span class="spec-v">Apache-2.0 (Open Source)</span></div>
+        <div class="hero-spec-row"><span class="spec-bar">║</span> <span class="spec-k">PROVIDERS </span><span class="spec-v">14+ (Ollama, OpenAI, Anthropic, Groq, Mistral…)</span></div>
+        <div class="hero-spec-row"><span class="spec-bar">║</span> <span class="spec-k">MODES     </span><span class="spec-v">Super · Dev · Plan</span></div>
+        <div class="hero-spec-row"><span class="spec-bar">║</span> <span class="spec-k">STORAGE   </span><span class="spec-v">SQLite (local, no cloud)</span></div>
+        <div class="hero-spec-row"><span class="spec-bar">║</span> <span class="spec-k">PROTOCOL  </span><span class="spec-v">MCP supported</span></div>
+        <div class="hero-spec-row"><span class="spec-bar">╚</span> <span class="spec-k">REPO      </span><span class="spec-v">github.com/flykimjiwon/hanimo</span></div>
+      </div>
+
+      <div class="install-cmd-box">
+        <div class="install-cmd-text">
+          <span class="p">$ </span>curl -fsSL https://hanimo.dev/install.sh | sh<span class="cursor"></span>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-bbs" data-ko="[ 시작하기 ]" data-en="[ GET STARTED ]">[ 시작하기 ]</a>
+        <a href="https://hanimo.dev" class="btn-bbs-ghost" data-ko="[ 문서 ]" data-en="[ DOCUMENTATION ]">[ 문서 ]</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMINAL PREVIEW -->
+  <div class="ansi-header">
+    <span class="ansi-title-block">LIVE SESSION</span>
+    <span class="ansi-title-arrow">═══════════════════════════════════════════════════════</span>
+  </div>
+
+  <div class="term-outer" id="demo">
+    <div class="term-frame">
+      <div class="term-titlebar">
+        <span>╔ HANIMO TERMINAL ╗</span>
+        <span>SESSION: f7a2c9 · claude-sonnet-4 · Super</span>
+        <span>120×40</span>
+      </div>
+      <div class="term-body-bbs">
+        <div class="t-row"><span class="t-p">ATDT hanimo.dev ...</span></div>
+        <div class="t-row t-o">CONNECT 14400</div>
+        <div class="t-sp"></div>
+        <div class="t-row"><span class="t-p">$ </span><span class="t-c">hanimo --provider anthropic --model claude-sonnet-4</span></div>
+        <div class="t-sp"></div>
+        <div class="t-row t-o">╔══════════════════════════════════════════════════════╗</div>
+        <div class="t-row t-o">║  HANIMO v0.9.4 BBS EDITION                           ║</div>
+        <div class="t-row t-o">║  Model: claude-sonnet-4  Mode: Super  Tokens: 0/200K ║</div>
+        <div class="t-row t-o">║  Session: f7a2c9  MCP Tools: 3  SQLite: ACTIVE        ║</div>
+        <div class="t-row t-o">╚══════════════════════════════════════════════════════╝</div>
+        <div class="t-sp"></div>
+        <div class="t-row"><span class="t-p">you&gt; </span><span class="t-c">add GraphQL subscriptions to the WebSocket handler</span></div>
+        <div class="t-sp"></div>
+        <div class="t-row t-o">READING  src/api/ws.go</div>
+        <div class="t-row t-o">READING  src/graphql/schema.go</div>
+        <div class="t-row t-c">WRITING  src/graphql/subscriptions.go  [NEW +71 lines]</div>
+        <div class="t-row t-c">PATCHING src/api/ws.go                 [+28 -6 hash-anchored]</div>
+        <div class="t-row t-c">WRITING  src/graphql/resolvers.go      [+14 -0]</div>
+        <div class="t-sp"></div>
+        <div class="t-row t-o">COMPLETE — 3 files modified · /diagnostics CLEAN</div>
+        <div class="t-sp"></div>
+        <div class="t-row t-d">COMMANDS: /auto  /save  /remember  /diagnostics  /plan  /?</div>
+        <div class="t-row"><span class="t-p">you&gt; </span><span class="cursor"></span></div>
+
+        <div class="theme-bbs">
+          THEME:&nbsp;
+          <span class="t-tag-bbs on">HONEY</span>
+          <span class="t-tag-bbs">OCEAN</span>
+          <span class="t-tag-bbs">DRACULA</span>
+          <span class="t-tag-bbs">AMBER</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="ansi-header" id="features">
+    <span class="ansi-title-block">FILE AREA: FEATURES</span>
+    <span class="ansi-title-arrow">══════════════════════════════════════════════════════</span>
+  </div>
+
+  <div class="feat-bbs">
+    <table class="feat-table">
+      <thead class="feat-table-header">
+        <tr>
+          <th>ID</th>
+          <th>MODULE</th>
+          <th>DESCRIPTION</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="feat-row">
+          <td class="feat-id-bbs">01-EDIT</td>
+          <td class="feat-name-bbs" data-ko="해시 기반 편집" data-en="Hash-Anchored Editing">해시 기반 편집</td>
+          <td class="feat-desc-bbs" data-ko="콘텐츠 해시로 정밀 편집. 오류 없는 수술적 수정." data-en="Hash-anchored edits. Surgical precision, no phantom rewrites.">콘텐츠 해시로 정밀 편집. 오류 없는 수술적 수정.</td>
+          <td class="feat-tag">STABLE</td>
+        </tr>
+        <tr class="feat-row">
+          <td class="feat-id-bbs">02-LLM</td>
+          <td class="feat-name-bbs" data-ko="14+ LLM 프로바이더" data-en="14+ LLM Providers">14+ LLM 프로바이더</td>
+          <td class="feat-desc-bbs" data-ko="Ollama, OpenAI, Anthropic 등. 세션 중 전환 가능." data-en="Ollama, OpenAI, Anthropic and more. Switch mid-session.">Ollama, OpenAI, Anthropic 등. 세션 중 전환 가능.</td>
+          <td class="feat-tag">STABLE</td>
+        </tr>
+        <tr class="feat-row">
+          <td class="feat-id-bbs">03-MEM</td>
+          <td class="feat-name-bbs" data-ko="스마트 압축" data-en="Smart Compaction">스마트 압축</td>
+          <td class="feat-desc-bbs" data-ko="컨텍스트 한계 시 자동 요약. 200K 토큰 이상 작업." data-en="Auto-summarizes at context limits. Work past 200K tokens.">컨텍스트 한계 시 자동 요약. 200K 토큰 이상 작업.</td>
+          <td class="feat-tag">STABLE</td>
+        </tr>
+        <tr class="feat-row">
+          <td class="feat-id-bbs">04-AUTO</td>
+          <td class="feat-name-bbs" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</td>
+          <td class="feat-desc-bbs" data-ko="작업 위임 후 자율 실행. 전체 감사 추적 제공." data-en="Delegate tasks. Autonomous execution with full auditability.">작업 위임 후 자율 실행. 전체 감사 추적 제공.</td>
+          <td class="feat-tag">BETA</td>
+        </tr>
+        <tr class="feat-row">
+          <td class="feat-id-bbs">05-DB</td>
+          <td class="feat-name-bbs" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</td>
+          <td class="feat-desc-bbs" data-ko="로컬 SQLite에 대화 저장. 데이터는 내 기기에." data-en="Sessions stored locally in SQLite. Your data, your machine.">로컬 SQLite에 대화 저장. 데이터는 내 기기에.</td>
+          <td class="feat-tag">STABLE</td>
+        </tr>
+        <tr class="feat-row">
+          <td class="feat-id-bbs">06-MCP</td>
+          <td class="feat-name-bbs" data-ko="MCP 프로토콜 지원" data-en="MCP Protocol Support">MCP 프로토콜 지원</td>
+          <td class="feat-desc-bbs" data-ko="외부 도구·DB·API를 컨텍스트로. 포크 없이 확장." data-en="Connect tools, DBs, APIs as context providers. No forking.">외부 도구·DB·API를 컨텍스트로. 포크 없이 확장.</td>
+          <td class="feat-tag">STABLE</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- COMPARISON -->
+  <div class="ansi-header" id="compare">
+    <span class="ansi-title-block">COMPARISON MATRIX</span>
+    <span class="ansi-title-arrow">══════════════════════════════════════════════════════</span>
+  </div>
+
+  <div class="comp-section">
+    <table class="comp-bbs">
+      <thead>
+        <tr>
+          <th>CAPABILITY</th>
+          <th class="main-col">HANIMO</th>
+          <th>CLAUDE CODE</th>
+          <th>CURSOR</th>
+          <th>AIDER</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Open Source (Apache-2.0)</td>
+          <td class="yes-bbs">YES</td>
+          <td class="no-bbs">NO</td>
+          <td class="no-bbs">NO</td>
+          <td class="yes-bbs">YES</td>
+        </tr>
+        <tr>
+          <td>Local LLM (Ollama)</td>
+          <td class="yes-bbs">YES</td>
+          <td class="no-bbs">NO</td>
+          <td class="part-bbs">PARTIAL</td>
+          <td class="yes-bbs">YES</td>
+        </tr>
+        <tr>
+          <td>Hash-Anchored Edits</td>
+          <td class="yes-bbs">YES</td>
+          <td class="part-bbs">PARTIAL</td>
+          <td class="no-bbs">NO</td>
+          <td class="part-bbs">PARTIAL</td>
+        </tr>
+        <tr>
+          <td>SQLite Session Store</td>
+          <td class="yes-bbs">YES</td>
+          <td class="no-bbs">NO</td>
+          <td class="no-bbs">NO</td>
+          <td class="no-bbs">NO</td>
+        </tr>
+        <tr>
+          <td>MCP Protocol Support</td>
+          <td class="yes-bbs">YES</td>
+          <td class="yes-bbs">YES</td>
+          <td class="no-bbs">NO</td>
+          <td class="no-bbs">NO</td>
+        </tr>
+        <tr>
+          <td>IDE-Free Operation</td>
+          <td class="yes-bbs">YES</td>
+          <td class="yes-bbs">YES</td>
+          <td class="no-bbs">NO</td>
+          <td class="yes-bbs">YES</td>
+        </tr>
+        <tr>
+          <td>Smart Context Compaction</td>
+          <td class="yes-bbs">YES</td>
+          <td class="yes-bbs">YES</td>
+          <td class="no-bbs">NO</td>
+          <td class="no-bbs">NO</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- INSTALL -->
+  <div class="ansi-header" id="install">
+    <span class="ansi-title-block">INSTALL OPTIONS</span>
+    <span class="ansi-title-arrow">════════════════════════════════════════════════════════</span>
+  </div>
+
+  <div class="install-section">
+    <div class="install-bbs">
+      <div class="install-bbs-panel">
+        <div class="ibp-header">╔═ OPTION A: CURL BINARY ═╗</div>
+        <div class="ibp-code">
+          <div><span class="c"># Linux / macOS</span></div>
+          <div><span class="p">$ </span><span class="cmd">curl -fsSL https://hanimo.dev/install.sh | sh</span></div>
+          <br>
+          <div><span class="c"># Verify</span></div>
+          <div><span class="p">$ </span><span class="cmd">hanimo --version</span></div>
+          <div style="color: var(--amber-faint)">hanimo v0.9.4 (darwin/arm64)</div>
+        </div>
+      </div>
+      <div class="install-bbs-panel">
+        <div class="ibp-header">╔═ OPTION B: GO BUILD ═╗</div>
+        <div class="ibp-code">
+          <div><span class="c"># From source</span></div>
+          <div><span class="p">$ </span><span class="cmd">git clone github.com/flykimjiwon/hanimo</span></div>
+          <div><span class="p">$ </span><span class="cmd">cd hanimo</span></div>
+          <div><span class="p">$ </span><span class="cmd">go build -o hanimo ./cmd/hanimo</span></div>
+          <div><span class="p">$ </span><span class="cmd">./hanimo --help</span></div>
+        </div>
+      </div>
+      <div class="install-bbs-panel">
+        <div class="ibp-header">╔═ OPTION C: PROVIDERS ═╗</div>
+        <div class="ibp-code">
+          <div><span class="c"># Anthropic (claude-sonnet-4)</span></div>
+          <div><span class="p">$ </span><span class="cmd">ANTHROPIC_API_KEY=sk-... hanimo</span></div>
+          <br>
+          <div><span class="c"># Local Ollama (qwen3:8b)</span></div>
+          <div><span class="p">$ </span><span class="cmd">hanimo --provider ollama --model qwen3:8b</span></div>
+          <br>
+          <div><span class="c"># OpenAI (gpt-4o)</span></div>
+          <div><span class="p">$ </span><span class="cmd">OPENAI_API_KEY=sk-... hanimo --provider openai --model gpt-4o</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end page-body -->
+
+<!-- FOOTER -->
+<div class="bbs-footer">
+  <div class="bbs-footer-bar">
+    <span>╚══ END OF BULLETIN ══╝</span>
+    <span>HANIMO BBS · SYSOP: flykimjiwon · Apache-2.0</span>
+    <span>GOODBYE, CALLER</span>
+  </div>
+  <div class="bbs-footer-body">
+    <div class="footer-logo-bbs">HANIMO</div>
+    <div style="display: flex; gap: 24px;">
+      <a href="https://github.com/flykimjiwon/hanimo">github.com/flykimjiwon/hanimo</a>
+      <a href="https://hanimo.dev">hanimo.dev</a>
+    </div>
+    <div style="font-size: 10px; letter-spacing: 0.12em;">
+      APACHE-2.0 &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; GO 1.22+
+    </div>
+  </div>
+</div>
+
+</div><!-- end page -->
+
+<script>
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hanimo-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+}
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  localStorage.setItem('hanimo-lang', lang);
+  document.querySelectorAll('[data-ko][data-en]').forEach(el => {
+    el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+  });
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+}
+(function init() {
+  const theme = localStorage.getItem('hanimo-theme') || 'dark';
+  const lang = localStorage.getItem('hanimo-lang') || 'ko';
+  setTheme(theme);
+  setLang(lang);
+})();
+</script>
+</body>
+</html>

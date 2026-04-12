@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hanimo — The open-source AI coding platform</title>
+<script>(function(){var t=localStorage.getItem('hanimo-theme')||'light';document.documentElement.dataset.theme=t;})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --indigo-dark: #0A2540;
+    --indigo-mid: #0D3361;
+    --indigo-light: #1A4480;
+    --purple: #635BFF;
+    --purple-light: #7B73FF;
+    --cyan: #00D4FF;
+    --teal: #00BFAD;
+    --white: #ffffff;
+    --off-white: #F6F9FC;
+    --gray-100: #E3E8EF;
+    --gray-200: #C4CDD6;
+    --gray-300: #8898AA;
+    --gray-400: #525F7F;
+    --gray-dark: #32325D;
+    --text-body: #425466;
+    --sans: 'Inter', -apple-system, 'Helvetica Neue', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --shadow-sm: 0 2px 6px rgba(50,50,93,0.11), 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 6px 20px rgba(50,50,93,0.15), 0 2px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 20px 60px rgba(50,50,93,0.18), 0 8px 20px rgba(0,0,0,0.12);
+    --r: 6px;
+    --r-lg: 10px;
+    --t-bg: #0A2540;
+    --t-bg2: #0D3361;
+    --t-bg3: #1A4480;
+    --t-border: rgba(255,255,255,0.12);
+    --t-text: #ffffff;
+    --t-text2: rgba(255,255,255,0.7);
+    --t-text3: rgba(255,255,255,0.4);
+    --t-accent: #635BFF;
+    --t-accent-fg: #ffffff;
+  }
+  [data-theme="light"] {
+    --t-bg: #F6F9FC;
+    --t-bg2: #ffffff;
+    --t-bg3: #E3E8EF;
+    --t-border: #C4CDD6;
+    --t-text: #0A2540;
+    --t-text2: #425466;
+    --t-text3: #8898AA;
+    --t-accent: #635BFF;
+    --t-accent-fg: #ffffff;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--t-bg);
+    color: var(--t-text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* CTRL ROW */
+  .ctrl-row {
+    position: fixed;
+    top: 16px; right: 24px;
+    z-index: 300;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  /* LANG TOGGLE */
+  .lang-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+    backdrop-filter: blur(8px);
+  }
+  .lang-btn {
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--t-text2);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .lang-btn.active {
+    background: var(--t-accent);
+    color: var(--t-accent-fg);
+  }
+  /* THEME TOGGLE */
+  .theme-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+    backdrop-filter: blur(8px);
+  }
+  .theme-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--t-text2);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .theme-btn.active {
+    background: var(--t-accent);
+    color: var(--t-accent-fg);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 200;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px;
+    height: 62px;
+    background: rgba(10,37,64,0.92);
+    backdrop-filter: blur(16px);
+  }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+  }
+
+  .nav-logo-mark {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--purple) 0%, var(--cyan) 100%);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+    color: #fff;
+  }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-links a {
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    border-radius: var(--r);
+    transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+  .nav-links a:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+
+  .btn-nav-ghost {
+    padding: 7px 16px;
+    border-radius: var(--r);
+    border: 1px solid rgba(255,255,255,0.25);
+    background: transparent;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.8); cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn-nav-ghost:hover { border-color: rgba(255,255,255,0.4); color: var(--white); }
+
+  .btn-nav-white {
+    padding: 7px 16px;
+    border-radius: var(--r);
+    border: none;
+    background: var(--white);
+    font-size: 13px; font-weight: 600;
+    color: var(--indigo-dark); cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-nav-white:hover { background: #f0f4ff; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+  /* HERO — Stripe dark diagonal */
+  .hero {
+    background: linear-gradient(160deg, var(--indigo-dark) 0%, #0D3361 40%, #1A237E 70%, #4527A0 100%);
+    padding: 140px 40px 120px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Stripe-style decorative gradient orbs */
+  .hero-orb-1 {
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(99,91,255,0.25) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-orb-2 {
+    position: absolute;
+    bottom: -100px; left: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(0,212,255,0.15) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Diagonal bottom clip */
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 80px;
+    background: var(--white);
+    clip-path: polygon(0 100%, 100% 100%, 100% 0);
+  }
+
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-left {}
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 14px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 30px;
+    font-size: 12px; font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 28px;
+    letter-spacing: -0.01em;
+    backdrop-filter: blur(8px);
+  }
+
+  .badge-arrow {
+    color: var(--cyan);
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
+    color: var(--white);
+    margin-bottom: 24px;
+  }
+
+  h1 em {
+    font-style: normal;
+    background: linear-gradient(90deg, #7B9FFF, #00D4FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.7;
+    margin-bottom: 40px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    max-width: 440px;
+  }
+
+  .hero-ctas {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+
+  .btn-white {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 12px 24px;
+    background: var(--white);
+    border: none;
+    border-radius: var(--r);
+    font-size: 14px; font-weight: 700;
+    color: var(--indigo-dark);
+    text-decoration: none;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s;
+    letter-spacing: -0.01em;
+  }
+  .btn-white:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+  .btn-outline-white {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 12px 24px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: var(--r);
+    font-size: 14px; font-weight: 600;
+    color: var(--white);
+    text-decoration: none;
+    transition: all 0.2s;
+    letter-spacing: -0.01em;
+  }
+  .btn-outline-white:hover { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.08); }
+
+  /* Terminal card on hero right */
+  .hero-terminal {
+    background: #0D0F14;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.06);
+    position: relative;
+  }
+
+  .terminal-topbar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 12px 16px;
+    background: #1a1d24;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .t-dot:nth-child(1) { background: #FF5F57; }
+  .t-dot:nth-child(2) { background: #FEBC2E; }
+  .t-dot:nth-child(3) { background: #28C840; }
+
+  .t-label {
+    margin-left: 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    font-family: var(--mono);
+  }
+
+  .terminal-content {
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.85;
+  }
+
+  .tc-dim { color: rgba(255,255,255,0.25); }
+  .tc-prompt { color: var(--purple-light); }
+  .tc-cmd { color: rgba(255,255,255,0.9); }
+  .tc-success { color: #34D399; }
+  .tc-info { color: var(--cyan); }
+  .tc-cursor {
+    display: inline-block;
+    width: 7px; height: 13px;
+    background: var(--purple-light);
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* WHITE CONTENT SECTIONS */
+  .white-section {
+    background: var(--white);
+    padding: 100px 40px;
+  }
+
+  .section-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-eyebrow {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--purple);
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: clamp(28px, 4vw, 46px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    color: var(--gray-dark);
+    margin-bottom: 56px;
+  }
+
+  .section-sub {
+    font-size: 17px;
+    color: var(--text-body);
+    max-width: 560px;
+    margin-bottom: 48px;
+    line-height: 1.65;
+    letter-spacing: -0.01em;
+  }
+
+  /* FEATURES: Stripe card grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .feature-card {
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-lg);
+    padding: 32px 28px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+  }
+  .feature-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+    border-color: var(--gray-200);
+  }
+
+  .feature-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, rgba(99,91,255,0.12), rgba(0,212,255,0.08));
+    border: 1px solid rgba(99,91,255,0.15);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 18px;
+  }
+
+  .feature-title {
+    font-size: 15px; font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--gray-dark);
+    margin-bottom: 9px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--text-body);
+    line-height: 1.65;
+  }
+
+  /* ALTERNATING DARK SECTION */
+  .dark-section {
+    background: var(--indigo-dark);
+    padding: 100px 40px;
+    position: relative;
+  }
+
+  .dark-section .section-eyebrow { color: var(--cyan); }
+  .dark-section .section-title { color: var(--white); }
+  .dark-section .section-sub { color: rgba(255,255,255,0.65); }
+
+  /* PROVIDERS: Stripe-style pill grid on white */
+  .providers-wrap {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-top: 40px;
+  }
+
+  .provider-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: 30px;
+    box-shadow: var(--shadow-sm);
+    font-size: 14px; font-weight: 500;
+    color: var(--gray-dark);
+    transition: all 0.2s;
+  }
+  .provider-pill:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(99,91,255,0.25);
+    color: var(--purple);
+    transform: translateY(-2px);
+  }
+  .provider-pill-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+  }
+
+  /* MODES */
+  .modes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  .mode-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--r-lg);
+    padding: 32px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+  .mode-card:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+  .mode-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+  }
+
+  .mode-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    background: rgba(99,91,255,0.2);
+    border: 1px solid rgba(99,91,255,0.35);
+    border-radius: 20px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: #9B8FFF;
+    margin-bottom: 14px;
+  }
+
+  .mode-name {
+    font-size: 22px; font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  .mode-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.65;
+  }
+
+  /* COMPARISON */
+  .comparison-wrap {
+    margin-top: 40px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .comparison-table thead tr {
+    background: var(--off-white);
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .comparison-table th {
+    padding: 14px 20px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--gray-300);
+    text-align: left;
+  }
+  .comparison-table th:not(:first-child) { text-align: center; }
+  .comparison-table th.h-col { color: var(--purple); }
+
+  .comparison-table td {
+    padding: 13px 20px;
+    font-size: 14px;
+    color: var(--text-body);
+    border-bottom: 1px solid var(--gray-100);
+    transition: background 0.1s;
+  }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table td:not(:first-child) { text-align: center; }
+  .comparison-table tbody tr:hover td { background: var(--off-white); }
+
+  .check { color: #00875A; font-weight: 700; font-size: 15px; }
+  .cross { color: var(--gray-200); font-size: 16px; }
+  .h-yes { color: var(--purple); font-weight: 700; font-size: 15px; }
+
+  /* INSTALL — Stripe CTA section */
+  .install-section {
+    background: linear-gradient(160deg, #0A2540 0%, #1A237E 60%, #4527A0 100%);
+    padding: 100px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .install-section::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: 0; right: 0;
+    height: 80px;
+    background: var(--white);
+    clip-path: polygon(0 0, 100% 100%, 0 100%);
+  }
+
+  .install-section .section-eyebrow { color: var(--cyan); }
+  .install-section .section-title { color: var(--white); }
+
+  .install-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .install-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 40px;
+  }
+
+  .install-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+  .install-card:hover { background: rgba(255,255,255,0.09); }
+
+  .install-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .install-card-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    font-family: var(--mono);
+  }
+
+  .install-copy-btn {
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    font-size: 10px; font-weight: 600;
+    color: rgba(255,255,255,0.5); cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .install-copy-btn:hover { color: rgba(255,255,255,0.8); }
+
+  .install-card-code {
+    padding: 16px 14px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .ic-prompt { color: rgba(99,91,255,0.8); }
+  .ic-comment { color: rgba(255,255,255,0.3); }
+
+  /* FOOTER */
+  footer {
+    background: var(--indigo-dark);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 48px 40px;
+  }
+
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 24px;
+  }
+
+  .footer-brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .footer-brand-name {
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--white);
+  }
+
+  .footer-license-badge {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px;
+    background: rgba(99,91,255,0.2);
+    border: 1px solid rgba(99,91,255,0.3);
+    border-radius: 4px;
+    color: #9B8FFF;
+    font-family: var(--mono);
+  }
+
+  .footer-links {
+    display: flex; gap: 24px;
+  }
+  .footer-links a {
+    font-size: 13px;
+    color: rgba(255,255,255,0.45); text-decoration: none;
+    transition: color 0.15s; letter-spacing: -0.01em;
+  }
+  .footer-links a:hover { color: rgba(255,255,255,0.75); }
+
+  /* THEME TOGGLE */
+  .ctrl-row {
+    position: fixed;
+    top: 16px; right: 24px;
+    z-index: 300;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .theme-toggle {
+    display: flex;
+    background: rgba(10,37,64,0.85);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+    backdrop-filter: blur(8px);
+  }
+  .theme-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .theme-btn.active {
+    background: var(--white);
+    color: var(--indigo-dark);
+  }
+  [data-theme="dark"] body { background: #0d1b2e; color: #e8eaf0; }
+  [data-theme="dark"] nav { background: rgba(10,37,64,0.95); }
+  [data-theme="dark"] .feature-card { background: #0d2040; border-color: rgba(255,255,255,0.08); }
+  [data-theme="dark"] .feature-title { color: #e8eaf0; }
+  [data-theme="dark"] .feature-desc { color: #8898aa; }
+  [data-theme="dark"] .dark-section { background: #060f1a; }
+  [data-theme="dark"] .white-section { background: #0d1b2e; }
+  [data-theme="dark"] .section-h2 { color: #e8eaf0; }
+  [data-theme="dark"] .section-sub { color: #8898aa; }
+  [data-theme="dark"] footer { background: #060f1a; color: #8898aa; }
+
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+    .hero-terminal { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .hero, .white-section, .dark-section, .install-section { padding-left: 20px; padding-right: 20px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .modes-grid { grid-template-columns: 1fr; }
+    .install-cards { grid-template-columns: 1fr; }
+    footer { padding: 32px 20px; }
+    .ctrl-row { top: 16px; right: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Lang toggle -->
+<div class="ctrl-row">
+  <div class="theme-toggle">
+    <button class="theme-btn active" data-ko="다크" data-en="DARK" onclick="setTheme('dark')">다크</button>
+    <button class="theme-btn" data-ko="라이트" data-en="LIGHT" onclick="setTheme('light')">라이트</button>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('ko')">KO</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">H</div>
+    hanimo
+  </a>
+  <div class="nav-links">
+    <a href="#features" data-ko="기능" data-en="Features">기능</a>
+    <a href="#install" data-ko="설치" data-en="Install">설치</a>
+    <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+    <a href="#" data-ko="문서" data-en="Docs">문서</a>
+  </div>
+  <div class="nav-right">
+    <a href="https://github.com/flykimjiwon/hanimo" class="btn-nav-ghost">GitHub</a>
+    <a href="#install" class="btn-nav-white" data-ko="시작하기" data-en="Get started">시작하기</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-orb-1"></div>
+  <div class="hero-orb-2"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-badge">
+        <span class="badge-arrow">→</span>
+        <span data-ko="Modol의 후계자 · Apache-2.0 · Go 기반" data-en="Successor to Modol · Apache-2.0 · Built in Go">Modol의 후계자 · Apache-2.0 · Go 기반</span>
+      </div>
+      <h1 data-ko="오픈소스를 위한<br><em>AI 코딩 에이전트</em>" data-en="The open-source<br><em>AI coding platform</em>">오픈소스를 위한<br><em>AI 코딩 에이전트</em></h1>
+      <p class="hero-sub" data-ko="14개 이상의 LLM 공급자. 로컬 우선. 해시 앵커 편집. SQLite 세션. 개발자를 위해 개발자가 만든 코딩 에이전트." data-en="14+ LLM providers. Local-first. Hash-anchored editing. SQLite sessions. Built by developers, for developers.">14개 이상의 LLM 공급자. 로컬 우선. 해시 앵커 편집. SQLite 세션. 개발자를 위해 개발자가 만든 코딩 에이전트.</p>
+      <div class="hero-ctas">
+        <a href="#install" class="btn-white" data-ko="지금 설치 →" data-en="Install now →">지금 설치 →</a>
+        <a href="https://github.com/flykimjiwon/hanimo" class="btn-outline-white" data-ko="소스 코드" data-en="Source code">소스 코드</a>
+      </div>
+    </div>
+    <div class="hero-terminal">
+      <div class="terminal-topbar">
+        <div class="t-dot"></div>
+        <div class="t-dot"></div>
+        <div class="t-dot"></div>
+        <span class="t-label">hanimo — ~/myproject</span>
+      </div>
+      <div class="terminal-content">
+        <div><span class="tc-dim">$ </span><span class="tc-cmd">hanimo --mode super</span></div>
+        <div><span class="tc-info">  ✦ hanimo v0.1.0 · Apache-2.0</span></div>
+        <div><span class="tc-dim">  ────────────────────────────</span></div>
+        <div><span class="tc-dim">  provider  </span><span class="tc-cmd">anthropic/claude-opus-4</span></div>
+        <div><span class="tc-dim">  mode      </span><span class="tc-prompt">super</span></div>
+        <div><span class="tc-dim">  session   </span><span class="tc-dim">~/.hanimo/sessions.db</span></div>
+        <div>&nbsp;</div>
+        <div><span class="tc-prompt">you › </span><span class="tc-cmd" data-ko="auth 모듈 리팩터링" data-en="refactor auth module">auth 모듈 리팩터링</span></div>
+        <div><span class="tc-dim">  ⠿ </span><span data-ko="분석 중..." data-en="analyzing...">분석 중...</span></div>
+        <div><span class="tc-success">  ✓ </span><span class="tc-cmd" data-ko="auth/handler.go 수정" data-en="auth/handler.go patched">auth/handler.go 수정</span></div>
+        <div><span class="tc-success">  ✓ </span><span class="tc-cmd" data-ko="auth/middleware.go 수정" data-en="auth/middleware.go patched">auth/middleware.go 수정</span></div>
+        <div><span class="tc-info">  ⚓ </span><span data-ko="앵커 #a3f9b2 저장됨" data-en="anchor #a3f9b2 saved">앵커 #a3f9b2 저장됨</span></div>
+        <div><span class="tc-prompt">you › </span><span class="tc-cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="white-section" id="features">
+  <div class="section-inner">
+    <div class="section-eyebrow" data-ko="핵심 기능" data-en="Core Features">핵심 기능</div>
+    <h2 class="section-title" data-ko="더 스마트한 코딩을<br>가능하게 합니다" data-en="Everything you need<br>to code smarter">더 스마트한 코딩을<br>가능하게 합니다</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚓</div>
+        <div class="feature-title" data-ko="해시 앵커 편집" data-en="Hash-Anchored Editing">해시 앵커 편집</div>
+        <p class="feature-desc" data-ko="해시 기반 정밀 편집으로 충돌 없는 파일 수정." data-en="Hash-based precise edits with zero conflicts.">해시 기반 정밀 편집으로 충돌 없는 파일 수정.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <div class="feature-title" data-ko="14개 이상의 LLM 공급자" data-en="14+ LLM Providers">14개 이상의 LLM 공급자</div>
+        <p class="feature-desc" data-ko="Ollama부터 Anthropic까지. 모든 모델을 지원합니다." data-en="From Ollama to Anthropic. Every model supported.">Ollama부터 Anthropic까지. 모든 모델을 지원합니다.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗜</div>
+        <div class="feature-title" data-ko="스마트 컴팩션" data-en="Smart Compaction">스마트 컴팩션</div>
+        <p class="feature-desc" data-ko="자동 컨텍스트 압축으로 API 비용을 절감합니다." data-en="Auto compression cuts API costs significantly.">자동 컨텍스트 압축으로 API 비용을 절감합니다.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title" data-ko="/auto 자율 모드" data-en="/auto Autonomous Mode">/auto 자율 모드</div>
+        <p class="feature-desc" data-ko="완전 자율 코딩. 개입을 최소화합니다." data-en="Fully autonomous coding. Minimal intervention.">완전 자율 코딩. 개입을 최소화합니다.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗄</div>
+        <div class="feature-title" data-ko="SQLite 세션" data-en="SQLite Sessions">SQLite 세션</div>
+        <p class="feature-desc" data-ko="모든 대화를 로컬에 저장. 영구 기억." data-en="All conversations stored locally. Persistent memory.">모든 대화를 로컬에 저장. 영구 기억.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <div class="feature-title" data-ko="MCP 지원" data-en="MCP Support">MCP 지원</div>
+        <p class="feature-desc" data-ko="Model Context Protocol 완전 지원." data-en="Full Model Context Protocol support.">Model Context Protocol 완전 지원.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Providers (dark) -->
+<section class="dark-section">
+  <div class="section-inner">
+    <div class="section-eyebrow" data-ko="LLM 공급자" data-en="LLM Providers">LLM 공급자</div>
+    <h2 class="section-title" data-ko="14개 이상의 공급자.<br>하나의 도구로." data-en="14+ providers.<br>One tool.">14개 이상의 공급자.<br>하나의 도구로.</h2>
+    <div class="providers-wrap">
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>Ollama</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>OpenAI</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>Anthropic</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>Google</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>DeepSeek</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>Groq</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>Novita</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>OpenRouter</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>Mistral</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>Fireworks</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>vLLM</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>LM Studio</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span>Together</div>
+      <div class="provider-pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);"><span class="provider-pill-dot"></span><span data-ko="커스텀" data-en="Custom">커스텀</span></div>
+    </div>
+
+    <!-- Modes in dark section -->
+    <div style="margin-top:80px;">
+      <div class="section-eyebrow" data-ko="실행 모드" data-en="Execution Modes">실행 모드</div>
+      <h2 class="section-title" data-ko="상황에 맞는 모드 선택" data-en="Choose the right mode">상황에 맞는 모드 선택</h2>
+      <div class="modes-grid">
+        <div class="mode-card">
+          <div class="mode-chip">Super</div>
+          <div class="mode-name" data-ko="전체 권한" data-en="Full Access">전체 권한</div>
+          <p class="mode-desc" data-ko="파일 제한 없는 최대 효율 모드." data-en="Unrestricted access. Maximum efficiency.">파일 제한 없는 최대 효율 모드.</p>
+        </div>
+        <div class="mode-card">
+          <div class="mode-chip">Dev</div>
+          <div class="mode-name" data-ko="개발자 모드" data-en="Developer">개발자 모드</div>
+          <p class="mode-desc" data-ko="균형잡힌 기본 모드. 일상 작업에 최적." data-en="Balanced defaults. Perfect for daily work.">균형잡힌 기본 모드. 일상 작업에 최적.</p>
+        </div>
+        <div class="mode-card">
+          <div class="mode-chip">Plan</div>
+          <div class="mode-name" data-ko="계획 모드" data-en="Plan Mode">계획 모드</div>
+          <p class="mode-desc" data-ko="실행 전 계획. 안전하고 신중한 변경." data-en="Plan before execution. Safe, deliberate changes.">실행 전 계획. 안전하고 신중한 변경.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison (white) -->
+<section class="white-section">
+  <div class="section-inner" style="max-width:900px;">
+    <div class="section-eyebrow" data-ko="비교" data-en="Comparison">비교</div>
+    <h2 class="section-title" data-ko="다른 도구와의 차이" data-en="How it compares">다른 도구와의 차이</h2>
+    <div class="comparison-wrap">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th data-ko="기능" data-en="Feature">기능</th>
+            <th class="h-col">Hanimo</th>
+            <th>Claude Code</th>
+            <th>Cursor</th>
+            <th>Aider</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-ko="오픈소스" data-en="Open source">오픈소스</td>
+            <td class="h-yes">✓</td>
+            <td class="cross">—</td>
+            <td class="cross">—</td>
+            <td class="check">✓</td>
+          </tr>
+          <tr>
+            <td data-ko="로컬 LLM 지원" data-en="Local LLM support">로컬 LLM 지원</td>
+            <td class="h-yes">✓</td>
+            <td class="cross">—</td>
+            <td class="cross">—</td>
+            <td class="check">✓</td>
+          </tr>
+          <tr>
+            <td data-ko="해시 앵커 편집" data-en="Hash-anchored editing">해시 앵커 편집</td>
+            <td class="h-yes">✓</td>
+            <td class="cross">—</td>
+            <td class="cross">—</td>
+            <td class="cross">—</td>
+          </tr>
+          <tr>
+            <td data-ko="SQLite 세션 저장" data-en="SQLite session storage">SQLite 세션 저장</td>
+            <td class="h-yes">✓</td>
+            <td class="cross">—</td>
+            <td class="cross">—</td>
+            <td class="cross">—</td>
+          </tr>
+          <tr>
+            <td data-ko="MCP 지원" data-en="MCP support">MCP 지원</td>
+            <td class="h-yes">✓</td>
+            <td class="check">✓</td>
+            <td class="cross">—</td>
+            <td class="cross">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Install -->
+<section class="install-section" id="install">
+  <div class="install-inner">
+    <div class="section-eyebrow" data-ko="설치" data-en="Installation">설치</div>
+    <h2 class="section-title" data-ko="30초 안에 시작하세요" data-en="Start in 30 seconds">30초 안에 시작하세요</h2>
+    <div class="install-cards">
+      <div class="install-card">
+        <div class="install-card-head">
+          <span class="install-card-label">curl</span>
+          <button class="install-copy-btn" onclick="copyCard(this)">copy</button>
+        </div>
+        <div class="install-card-code">
+          <div><span class="ic-prompt">$ </span>curl -L https://hanimo.dev/<br>&nbsp;&nbsp;install/hanimo-darwin-arm64 -o hanimo</div>
+          <div><span class="ic-prompt">$ </span>chmod +x hanimo</div>
+          <div><span class="ic-prompt">$ </span>mv hanimo /usr/local/bin/</div>
+          <div><span class="ic-prompt">$ </span>hanimo</div>
+        </div>
+      </div>
+      <div class="install-card">
+        <div class="install-card-head">
+          <span class="install-card-label">homebrew</span>
+          <button class="install-copy-btn" onclick="copyCard(this)">copy</button>
+        </div>
+        <div class="install-card-code">
+          <div><span class="ic-comment"># Homebrew</span></div>
+          <div><span class="ic-prompt">$ </span>brew install hanimo</div>
+          <div>&nbsp;</div>
+          <div><span class="ic-prompt">$ </span>hanimo</div>
+        </div>
+      </div>
+      <div class="install-card">
+        <div class="install-card-head">
+          <span class="install-card-label">go build</span>
+          <button class="install-copy-btn" onclick="copyCard(this)">copy</button>
+        </div>
+        <div class="install-card-code">
+          <div><span class="ic-prompt">$ </span>git clone github.com/<br>&nbsp;&nbsp;flykimjiwon/hanimo</div>
+          <div><span class="ic-prompt">$ </span>cd hanimo</div>
+          <div><span class="ic-prompt">$ </span>go build ./cmd/hanimo</div>
+          <div><span class="ic-prompt">$ </span>./hanimo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="nav-logo-mark">H</div>
+      <span class="footer-brand-name">hanimo</span>
+      <span class="footer-license-badge">Apache-2.0</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/flykimjiwon/hanimo">GitHub</a>
+      <a href="https://hanimo.dev" data-ko="문서" data-en="Docs">문서</a>
+      <a href="https://hanimo.dev">hanimo.dev</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('hanimo-theme', t);
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-en') === t.toUpperCase());
+    });
+  }
+  (function() { setTheme(localStorage.getItem('hanimo-theme') || 'dark'); })();
+
+  let currentLang = 'ko';
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      const text = el.getAttribute('data-' + lang);
+      if (text) el.innerHTML = text;
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+    });
+  }
+
+  function copyCard(btn) {
+    const code = btn.closest('.install-card').querySelector('.install-card-code');
+    const text = Array.from(code.querySelectorAll('div')).map(d => d.textContent.replace(/^\$\s*/, '').trim()).filter(Boolean).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = 'copy', 1500);
+    });
+  }
+</script>
+</body>
+</html>
