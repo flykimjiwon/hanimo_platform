@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>hanimo · community · the hive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #08090a;
+    --bg-2:     #101215;
+    --bg-3:     #171a1f;
+    --border:   #1f2329;
+    --border-2: #2c3138;
+    --text:     #d9e0e6;
+    --muted:    #737d88;
+    --muted-2:  #454b54;
+    --green:    #3ecf8e;
+    --green-d:  #249e6b;
+    --green-g:  #a6ffcb;
+    --green-deep: #064e3b;
+    --amber:    #fbbf24;
+    --red:      #f87171;
+    --cyan:     #67e8f9;
+    --violet:   #a78bfa;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'IBM Plex Sans KR', ui-monospace, monospace;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-feature-settings: 'ss02','cv11';
+  }
+  .korean { font-family: 'IBM Plex Sans KR', 'JetBrains Mono', sans-serif; }
+
+  /* phosphor dot grid + CRT scanlines */
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(62,207,142,0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 85% 70% at 50% 20%, black 30%, transparent 88%);
+    -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 20%, black 30%, transparent 88%);
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 48% 38% at 18% 12%, rgba(62,207,142,0.22), transparent 60%),
+      radial-gradient(ellipse 40% 35% at 82% 18%, rgba(103,232,249,0.10), transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(62,207,142,0.018) 3px, rgba(62,207,142,0.018) 4px);
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+  /* -------- NAV -------- */
+  header {
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+  .logo-mark {
+    width: 26px; height: 26px; border-radius: 5px;
+    background: #0b1512;
+    border: 1px solid var(--green);
+    color: var(--green);
+    display: grid; place-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    box-shadow: inset 0 0 8px rgba(62,207,142,0.25), 0 0 10px rgba(62,207,142,0.32);
+    text-shadow: 0 0 4px var(--green);
+  }
+  .logo .brand { letter-spacing: -0.02em; }
+  .logo .brand em { font-style: normal; color: var(--green); }
+  .logo .ver {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--muted-2);
+    padding: 2px 6px; border: 1px solid var(--border-2); border-radius: 4px;
+  }
+  .nav-links { display: none; gap: 22px; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+  .nav-links a { color: var(--muted); text-decoration: none; transition: color .15s ease; }
+  .nav-links a:hover { color: var(--green); }
+  .nav-links a .sl { color: var(--muted-2); margin-right: 2px; }
+  @media (min-width: 860px) { .nav-links { display: flex; } }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-login { font-size: 12.5px; color: var(--muted); text-decoration: none; font-family: 'JetBrains Mono', monospace; }
+  .nav-cta {
+    padding: 7px 14px; border-radius: 5px;
+    background: transparent; color: var(--green);
+    border: 1px solid var(--green);
+    font-size: 12.5px; font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 0 12px rgba(62,207,142,0.35), inset 0 0 10px rgba(62,207,142,0.08);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0;
+  }
+  .nav-cta:hover { background: color-mix(in srgb, var(--green) 12%, transparent); }
+
+  /* -------- STATUSBAR -------- */
+  .statusbar {
+    display: flex; align-items: center; gap: 18px; overflow-x: auto; scrollbar-width: none;
+    padding: 9px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .statusbar::-webkit-scrollbar { display: none; }
+  .statusbar .item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s ease-in-out infinite; box-shadow: 0 0 8px var(--green); }
+  .pulse.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* -------- HERO -------- */
+  .hero { padding: 48px 0 72px; position: relative; }
+  @media (min-width: 900px) { .hero { padding: 80px 0 100px; } }
+
+  .hero-grid { display: grid; gap: 40px; align-items: start; }
+  @media (min-width: 1024px) { .hero-grid { grid-template-columns: 1fr 1.05fr; gap: 56px; } }
+
+  .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 36px 0 22px; }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 5px 10px; border-radius: 5px;
+    border: 1px solid var(--border-2);
+    background: var(--bg-2);
+    color: var(--muted);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .tag.green {
+    color: var(--green);
+    border-color: color-mix(in srgb, var(--green) 45%, var(--border-2));
+    background: color-mix(in srgb, var(--green) 9%, var(--bg-2));
+  }
+  .tag.amber {
+    color: var(--amber);
+    border-color: color-mix(in srgb, var(--amber) 45%, var(--border-2));
+    background: color-mix(in srgb, var(--amber) 8%, var(--bg-2));
+  }
+
+  .ascii-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; line-height: 1.15;
+    color: var(--green);
+    margin-bottom: 18px;
+    white-space: pre;
+    opacity: 0.78;
+    text-shadow: 0 0 8px rgba(62,207,142,0.4);
+  }
+
+  h1 {
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    font-size: 40px; line-height: 1.08;
+    font-weight: 700; letter-spacing: -0.03em;
+    margin: 0 0 22px;
+    color: var(--text);
+  }
+  h1 .mono-accent {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: var(--green);
+    font-size: 0.82em;
+    letter-spacing: -0.015em;
+  }
+  h1 .under {
+    background: linear-gradient(90deg, var(--green) 0%, var(--green-g) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  @media (min-width: 900px) { h1 { font-size: 60px; } }
+
+  .lede {
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    font-size: 15.5px; line-height: 1.62;
+    color: var(--muted);
+    margin: 0 0 30px;
+    max-width: 50ch;
+  }
+  @media (min-width: 900px) { .lede { font-size: 16.5px; } }
+  .lede code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.92em;
+    padding: 2px 6px; border-radius: 4px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    color: var(--green);
+  }
+  .lede strong { color: var(--text); font-weight: 500; }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 36px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 42px; padding: 0 16px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    text-decoration: none;
+    transition: all .15s ease;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--green); color: var(--bg);
+    box-shadow: 0 0 0 1px var(--green-d), 0 0 22px rgba(62,207,142,0.32);
+    font-weight: 700;
+  }
+  .btn-primary:hover { background: var(--green-g); box-shadow: 0 0 0 1px var(--green), 0 0 30px rgba(62,207,142,0.5); }
+  .btn-ghost {
+    background: var(--bg-2);
+    color: var(--text);
+    border-color: var(--border-2);
+  }
+  .btn-ghost:hover { border-color: var(--green); color: var(--green); }
+  .btn svg { width: 14px; height: 14px; }
+
+  /* -------- STATS -------- */
+  .stats {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  @media (min-width: 640px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+  .stat {
+    padding: 20px 16px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .stat:nth-child(2n) { border-right: none; }
+  @media (min-width: 640px) {
+    .stat { border-bottom: none; }
+    .stat:nth-child(2n) { border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: none; }
+  }
+  .stat::before {
+    content: ''; position: absolute; top: 12px; left: 16px;
+    width: 6px; height: 6px; background: var(--green); border-radius: 50%;
+    box-shadow: 0 0 8px var(--green); opacity: 0.55;
+  }
+  .stat-k {
+    font-size: 10.5px; color: var(--muted-2);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 6px; margin-top: 12px;
+  }
+  .stat-v {
+    font-size: 24px; font-weight: 600; letter-spacing: -0.02em;
+    color: var(--text); font-variant-numeric: tabular-nums;
+  }
+  .stat-v .unit { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 3px; }
+  .stat-v .up { color: var(--green); font-size: 13px; margin-left: 6px; }
+  .stat-v .dn { color: var(--red); font-size: 13px; margin-left: 6px; }
+
+  /* -------- BBS THREAD LIST -------- */
+  .bbs {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    box-shadow: 0 20px 60px -10px rgba(0,0,0,0.7), 0 0 70px -12px rgba(62,207,142,0.18);
+    position: relative;
+  }
+  .bbs::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(62,207,142,0.018) 2px, rgba(62,207,142,0.018) 4px);
+  }
+  .bbs-bar {
+    padding: 10px 14px;
+    background: var(--bg-3);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dots { display: flex; gap: 6px; }
+  .dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dots .r { background: #ff5f56; } .dots .y { background: var(--amber); } .dots .g { background: var(--green); }
+  .bbs-title { margin-left: 10px; font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+  .bbs-status { margin-left: auto; font-size: 11px; color: var(--green); display: flex; align-items: center; gap: 6px; }
+
+  .bbs-tabs {
+    display: flex; font-size: 11.5px; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+    padding: 0 6px;
+  }
+  .bbs-tabs .t {
+    padding: 10px 12px; cursor: default; position: relative;
+  }
+  .bbs-tabs .t.on { color: var(--green); }
+  .bbs-tabs .t.on::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .bbs-tabs .count { color: var(--muted-2); margin-left: 4px; }
+  .bbs-tabs .spacer { flex: 1; }
+  .bbs-tabs .filter { padding: 10px 12px; color: var(--muted-2); }
+
+  .thread {
+    display: grid;
+    grid-template-columns: 36px 1fr 56px 60px 72px;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: 12px;
+  }
+  .thread:last-child { border-bottom: none; }
+  .thread:hover { background: color-mix(in srgb, var(--green) 4%, var(--bg-2)); }
+  .thread .num { color: var(--muted-2); text-align: right; font-variant-numeric: tabular-nums; font-size: 11px; }
+  .thread .ttl { color: var(--text); }
+  .thread .ttl .tag-inline {
+    display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 3px;
+    background: var(--bg-3); color: var(--muted); margin-right: 6px;
+    border: 1px solid var(--border);
+  }
+  .thread .ttl .tag-inline.rfc { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, var(--border)); }
+  .thread .ttl .tag-inline.bug { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, var(--border)); }
+  .thread .ttl .tag-inline.show { color: var(--violet); border-color: color-mix(in srgb, var(--violet) 40%, var(--border)); }
+  .thread .ttl .tag-inline.help { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 40%, var(--border)); }
+  .thread .ttl .tag-inline.good { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 40%, var(--border)); }
+  .thread .ttl .sub { display: block; color: var(--muted-2); font-size: 10.5px; margin-top: 3px; }
+  .thread .replies { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .thread .react { color: var(--green); text-align: right; font-variant-numeric: tabular-nums; }
+  .thread .time { color: var(--muted-2); text-align: right; font-size: 11px; }
+  .thread .pin { color: var(--amber); }
+  .bbs-footer {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-3);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: var(--muted);
+  }
+  .bbs-footer a { color: var(--green); text-decoration: none; }
+
+  /* -------- SECTION HEAD -------- */
+  .sec { padding: 80px 0; border-top: 1px solid var(--border); }
+  .sec-head { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 16px; margin-bottom: 40px; }
+  .sec-kicker {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--green); letter-spacing: 0.14em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .sec-title {
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    font-size: 30px; letter-spacing: -0.025em; font-weight: 700;
+    margin: 0; color: var(--text); max-width: 22ch;
+  }
+  @media (min-width: 900px) { .sec-title { font-size: 38px; } }
+  .sec-sub { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 14px; color: var(--muted); max-width: 40ch; }
+
+  /* -------- CHANNELS GRID -------- */
+  .ch-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .ch-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1040px) { .ch-grid { grid-template-columns: repeat(4, 1fr); } }
+  .ch {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px 18px 20px;
+    position: relative; overflow: hidden;
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .ch:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--green) 40%, var(--border)); }
+  .ch .name { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--green); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .ch .name::before { content: '#'; color: var(--muted-2); }
+  .ch h4 { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 16px; margin: 0 0 6px; color: var(--text); letter-spacing: -0.015em; }
+  .ch p { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 12.5px; line-height: 1.55; color: var(--muted); margin: 0 0 14px; }
+  .ch .meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    color: var(--muted-2); display: flex; gap: 12px;
+    border-top: 1px dashed var(--border); padding-top: 10px;
+  }
+  .ch .meta b { color: var(--text); font-weight: 500; }
+
+  /* -------- CONTRIBUTOR STRIP -------- */
+  .hive {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 26px 24px 28px;
+  }
+  .hive-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);
+  }
+  .hive-head strong { color: var(--text); font-weight: 500; }
+  .bees {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  }
+  .bee {
+    aspect-ratio: 1;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: grid; place-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    position: relative;
+    overflow: hidden;
+  }
+  .bee.active { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, var(--border)); box-shadow: 0 0 10px rgba(62,207,142,0.2); }
+  .bee.hot { background: radial-gradient(circle at 50% 50%, rgba(62,207,142,0.18), var(--bg-3)); color: var(--green-g); border-color: var(--green); }
+
+  .hive-footer { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted-2); margin-top: 16px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  /* -------- RFC / SHOWCASE -------- */
+  .split { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .split { grid-template-columns: 1.1fr 1fr; } }
+
+  .panel {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 22px 22px;
+  }
+  .panel h3 {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--green); letter-spacing: 0.1em; text-transform: uppercase;
+    margin: 0 0 16px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .panel h3 .more { color: var(--muted-2); font-size: 11px; }
+  .rfc-list { list-style: none; margin: 0; padding: 0; }
+  .rfc-list li {
+    display: grid; grid-template-columns: 58px 1fr 64px;
+    gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--border);
+    font-size: 12.5px; align-items: baseline;
+  }
+  .rfc-list li:last-child { border-bottom: none; }
+  .rfc-list .id { font-family: 'JetBrains Mono', monospace; color: var(--muted-2); font-size: 11px; }
+  .rfc-list .ttl { color: var(--text); font-family: 'IBM Plex Sans KR', sans-serif; font-size: 14px; }
+  .rfc-list .ttl .by { color: var(--muted-2); font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-left: 6px; }
+  .rfc-list .state {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    padding: 3px 7px; border-radius: 999px; text-align: center;
+    border: 1px solid var(--border-2); color: var(--muted);
+  }
+  .rfc-list .state.accepted { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, var(--border-2)); }
+  .rfc-list .state.draft    { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 45%, var(--border-2)); }
+  .rfc-list .state.closed   { color: var(--muted-2); }
+  .rfc-list .state.review   { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 45%, var(--border-2)); }
+
+  .showcase { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .show-card {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px;
+    aspect-ratio: 4/3;
+    display: flex; flex-direction: column; justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    position: relative; overflow: hidden;
+  }
+  .show-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top left, color-mix(in srgb, var(--c, var(--green)) 20%, transparent), transparent 60%);
+    pointer-events: none;
+  }
+  .show-card .top { display: flex; justify-content: space-between; color: var(--muted-2); z-index: 1; position: relative; }
+  .show-card .mid { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 13px; color: var(--text); z-index: 1; position: relative; }
+  .show-card .bot { color: var(--muted); z-index: 1; position: relative; display: flex; justify-content: space-between; }
+  .show-card .bot b { color: var(--text); font-weight: 500; }
+  .show-card .ascii {
+    font-size: 9px; line-height: 1.1; color: var(--c, var(--green));
+    white-space: pre; opacity: 0.7; margin: 4px 0;
+    text-shadow: 0 0 6px color-mix(in srgb, var(--c, var(--green)) 60%, transparent);
+    z-index: 1; position: relative;
+  }
+
+  /* -------- EVENTS / CTA -------- */
+  .event-cta {
+    border: 1px dashed color-mix(in srgb, var(--green) 40%, var(--border));
+    border-radius: 10px;
+    padding: 28px 28px 30px;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--green) 5%, var(--bg-2)) 0%, var(--bg-2) 100%);
+    display: grid; gap: 24px;
+  }
+  @media (min-width: 780px) { .event-cta { grid-template-columns: 1.1fr 1fr; align-items: center; } }
+  .event-cta h3 { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 26px; letter-spacing: -0.02em; margin: 0 0 10px; }
+  .event-cta h3 .u { color: var(--green); }
+  .event-cta p { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0 0 16px; max-width: 46ch; }
+  .event-cta .joinrow { display: flex; gap: 10px; flex-wrap: wrap; }
+  .event-list { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .event-list .row {
+    display: grid; grid-template-columns: 68px 1fr auto;
+    gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--border);
+    align-items: baseline;
+  }
+  .event-list .row:last-child { border-bottom: none; }
+  .event-list .dt { color: var(--green); }
+  .event-list .ttl { color: var(--text); font-family: 'IBM Plex Sans KR', sans-serif; font-size: 13.5px; }
+  .event-list .ttl .w { color: var(--muted-2); display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .event-list .rsvp { color: var(--muted); font-size: 11px; }
+
+  /* -------- FOOTER -------- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 26px 0 34px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--muted-2);
+  }
+  footer .row { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space-between; align-items: center; }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--green); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .fade { opacity: 0; animation: fadeIn .7s cubic-bezier(0.2,0.8,0.2,1) forwards; }
+  .d1{animation-delay:.05s} .d2{animation-delay:.15s} .d3{animation-delay:.28s} .d4{animation-delay:.4s} .d5{animation-delay:.5s}
+
+  .cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: var(--green); margin-left: 2px;
+    vertical-align: middle; animation: blink 1s steps(2, start) infinite;
+    box-shadow: 0 0 6px var(--green);
+  }
+  @keyframes blink { to { visibility: hidden; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="logo">
+      <div class="logo-mark">h</div>
+      <span class="brand">hanimo<em>/</em>community</span>
+      <span class="ver">bbs · online</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#"><span class="sl">/</span>threads</a>
+      <a href="#"><span class="sl">/</span>rfcs</a>
+      <a href="#"><span class="sl">/</span>showcase</a>
+      <a href="#"><span class="sl">/</span>events</a>
+      <a href="#"><span class="sl">/</span>contributors</a>
+      <a href="#">discord ↗</a>
+    </nav>
+    <div class="nav-right">
+      <a href="#" class="nav-login">sign in</a>
+      <a href="#" class="nav-cta">$ join_the_hive</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+
+    <div class="statusbar">
+      <span class="item"><span class="pulse"></span>server <span style="color:var(--green)">online</span></span>
+      <span class="item">discord <span style="color:var(--text)">312</span> online</span>
+      <span class="item">active threads <span style="color:var(--text)">1,204</span></span>
+      <span class="item">contributors <span style="color:var(--text)">148</span></span>
+      <span class="item">prs.open <span style="color:var(--amber)">23</span></span>
+      <span class="item">cla <span style="color:var(--green)">auto</span></span>
+      <span class="item">last.commit <span style="color:var(--green)">6m</span></span>
+    </div>
+
+    <div class="hero-grid">
+
+      <div>
+        <div class="ascii-badge fade d1">
+// ------------------------------------------
+//   \\    /\\    hanimo · the hive
+//    )  ( ')     public good, written in the open.
+//   (  /  )      — MIT · 2026 ·
+//    \\(__)|
+// ------------------------------------------</div>
+
+        <div class="tag-row fade d2">
+          <span class="tag green"><span class="pulse"></span>community · online</span>
+          <span class="tag">// MIT · OSS</span>
+          <span class="tag amber">no paywalls, ever</span>
+        </div>
+
+        <h1 class="fade d3 korean">
+          모두가 고치는<br>
+          <span class="under">AI 코드 에디터</span><br>
+          <span class="mono-accent">~ ./join</span>
+        </h1>
+
+        <p class="lede fade d4 korean">
+          hanimo는 처음부터 끝까지 <strong>오픈소스</strong>입니다.
+          이슈·RFC·쇼케이스·오피스아워가 한 곳에 모여 있고,
+          커밋 한 줄도 <code>/hive</code> 채널에서 바로 얘기됩니다.
+          폐쇄망 쌍둥이 <strong>TECHAI</strong>도 여기서 맥락만 공유해요.
+        </p>
+
+        <div class="cta-row fade d5">
+          <a href="#" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 11v-5a3 3 0 0 0-6 0v5M3 11h18v10H3z"/></svg>
+            $ join.discord
+          </a>
+          <a href="#" class="btn btn-ghost">
+            browse rfcs
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-k">stars</div>
+            <div class="stat-v">1,482<span class="up">▲ 94</span></div>
+          </div>
+          <div class="stat">
+            <div class="stat-k">prs.week</div>
+            <div class="stat-v">37<span class="up">▲ 12</span></div>
+          </div>
+          <div class="stat">
+            <div class="stat-k">issues</div>
+            <div class="stat-v">68<span class="dn">▼ 14</span></div>
+          </div>
+          <div class="stat">
+            <div class="stat-k">rfc.live</div>
+            <div class="stat-v">9<span class="unit">open</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BBS / thread list visual -->
+      <div class="fade" style="animation-delay:.35s">
+        <div class="bbs">
+          <div class="bbs-bar">
+            <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+            <span class="bbs-title">~ / hive / threads · sort: hot</span>
+            <span class="bbs-status"><span class="pulse"></span>live</span>
+          </div>
+
+          <div class="bbs-tabs">
+            <div class="t on">/hot <span class="count">24</span></div>
+            <div class="t">/new <span class="count">41</span></div>
+            <div class="t">/rfc <span class="count">9</span></div>
+            <div class="t">/help <span class="count">16</span></div>
+            <div class="t">/showcase <span class="count">27</span></div>
+            <div class="spacer"></div>
+            <div class="filter">filter: all</div>
+          </div>
+
+          <div class="thread">
+            <div class="num pin">★</div>
+            <div class="ttl">
+              <span class="tag-inline rfc">rfc</span>
+              0031 · hanimo-ide의 멀티-에이전트 PR 리뷰 프로토콜
+              <span class="sub">@jiwon opened · tag: cloud, protocol · last: 14m</span>
+            </div>
+            <div class="replies">48</div>
+            <div class="react">▲ 127</div>
+            <div class="time">14m</div>
+          </div>
+
+          <div class="thread">
+            <div class="num">#1207</div>
+            <div class="ttl">
+              <span class="tag-inline bug">bug</span>
+              Windows에서 `hanimo run` 이 Go proxy 0x7a23 에러로 중단됨
+              <span class="sub">@daeho opened · repro: 3/3 · 2 comments</span>
+            </div>
+            <div class="replies">12</div>
+            <div class="react">▲ 34</div>
+            <div class="time">38m</div>
+          </div>
+
+          <div class="thread">
+            <div class="num">#1206</div>
+            <div class="ttl">
+              <span class="tag-inline show">show</span>
+              TECHAI를 신한 내부망에 설치한 리뷰 (air-gap 후기)
+              <span class="sub">@hanbit · showcase · image+video</span>
+            </div>
+            <div class="replies">22</div>
+            <div class="react">▲ 88</div>
+            <div class="time">1h</div>
+          </div>
+
+          <div class="thread">
+            <div class="num">#1205</div>
+            <div class="ttl">
+              <span class="tag-inline help">help</span>
+              VS Code 포크 대신 Zed 위에 올리는 안은 왜 기각됐나요?
+              <span class="sub">@nari · tag: ide, history</span>
+            </div>
+            <div class="replies">9</div>
+            <div class="react">▲ 21</div>
+            <div class="time">2h</div>
+          </div>
+
+          <div class="thread">
+            <div class="num">#1204</div>
+            <div class="ttl">
+              <span class="tag-inline good">good-first</span>
+              CLI 출력에서 컬러 대신 ASCII 박스를 쓰는 테마 추가
+              <span class="sub">@seoyun · scope: narrow · 12 lines</span>
+            </div>
+            <div class="replies">5</div>
+            <div class="react">▲ 16</div>
+            <div class="time">3h</div>
+          </div>
+
+          <div class="thread">
+            <div class="num">#1203</div>
+            <div class="ttl">
+              <span class="tag-inline rfc">rfc</span>
+              0029 · hive-cache: LSP 심볼을 ingest 단계에 고정하기
+              <span class="sub">@minseo · status: review · cc core</span>
+            </div>
+            <div class="replies">31</div>
+            <div class="react">▲ 74</div>
+            <div class="time">5h</div>
+          </div>
+
+          <div class="thread">
+            <div class="num">#1202</div>
+            <div class="ttl">
+              <span class="tag-inline show">show</span>
+              cron 없이 /loop만으로 PR 배스코치 만들기 — 2주 써본 후기
+              <span class="sub">@jisoo · showcase · tool: /loop</span>
+            </div>
+            <div class="replies">18</div>
+            <div class="react">▲ 63</div>
+            <div class="time">7h</div>
+          </div>
+
+          <div class="bbs-footer">
+            <span>showing 7 of 1,204 · <a href="#">$ more</a></span>
+            <span>updated 6s ago <span class="cursor"></span></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- -------- CHANNELS -------- -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="sec-kicker">// channels</div>
+        <h2 class="sec-title korean">관심 있는 곳에 <br>먼저 들러봐요.</h2>
+      </div>
+      <p class="sec-sub korean">
+        디스코드·Github Discussions·오피스아워까지. 모든 채널은 같은 로그로 흐릅니다.
+      </p>
+    </div>
+
+    <div class="ch-grid">
+      <div class="ch">
+        <div class="name">hive-core</div>
+        <h4 class="korean">설계 토의</h4>
+        <p class="korean">코어 팀과 외부 기여자가 섞여 있는 라운지. 거친 아이디어를 먼저 던지는 곳.</p>
+        <div class="meta"><span><b>312</b> online</span><span>slow-mode off</span></div>
+      </div>
+      <div class="ch">
+        <div class="name">help-desk</div>
+        <h4 class="korean">도움 요청</h4>
+        <p class="korean">설치·설정·오류 메시지. 10분 안에 누가 반응할 확률이 높은 곳.</p>
+        <div class="meta"><span><b>avg</b> reply 7m</span><span>ko · en</span></div>
+      </div>
+      <div class="ch">
+        <div class="name">rfc</div>
+        <h4 class="korean">공식 제안</h4>
+        <p class="korean">프로토콜·포맷·표면 확장 제안. 번호를 받고 2주 리뷰를 거침.</p>
+        <div class="meta"><span><b>9</b> open</span><span>template v2</span></div>
+      </div>
+      <div class="ch">
+        <div class="name">showcase</div>
+        <h4 class="korean">만든 것 자랑</h4>
+        <p class="korean">hanimo로 만든 툴·플러그인·워크플로 데모. 월간 하이라이트 선정.</p>
+        <div class="meta"><span><b>27</b> posts/wk</span><span>#monthly-pick</span></div>
+      </div>
+      <div class="ch">
+        <div class="name">techai-bridge</div>
+        <h4 class="korean">폐쇄망 브릿지</h4>
+        <p class="korean">TECHAI 사용자가 외부망에서 맥락을 공유하는 중립 채널. PII 삭제 필수.</p>
+        <div class="meta"><span><b>private</b></span><span>approval req</span></div>
+      </div>
+      <div class="ch">
+        <div class="name">office-hours</div>
+        <h4 class="korean">매주 목 20시</h4>
+        <p class="korean">코어 메인테이너가 라이브로 이슈를 팝니다. 아카이브는 유튜브.</p>
+        <div class="meta"><span><b>120+</b> avg</span><span>KST · online</span></div>
+      </div>
+      <div class="ch">
+        <div class="name">design</div>
+        <h4 class="korean">UX / 랜딩</h4>
+        <p class="korean">아이콘·시안·카피 리뷰. Figma 뷰어 링크 그대로 붙이세요.</p>
+        <div class="meta"><span><b>Figma</b> live</span><span>Fri 크리틱</span></div>
+      </div>
+      <div class="ch">
+        <div class="name">news</div>
+        <h4 class="korean">릴리즈 노트</h4>
+        <p class="korean">자동 게시. 읽기 전용. RSS 있음.</p>
+        <div class="meta"><span><b>RSS</b></span><span>weekly</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- -------- HIVE CONTRIBUTORS -------- -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="sec-kicker">// the hive</div>
+        <h2 class="sec-title korean">148명이 이미 <br>벌집을 짓고 있어요.</h2>
+      </div>
+      <p class="sec-sub korean">
+        한 칸은 한 명. 진한 칸은 최근 30일 동안 커밋·리뷰·RFC를 남긴 기여자.
+      </p>
+    </div>
+
+    <div class="hive">
+      <div class="hive-head">
+        <div><strong>contributors</strong> · <span style="color:var(--green)">148</span> total · <span style="color:var(--green)">42</span> active (30d)</div>
+        <div><a href="#" style="color:var(--green); text-decoration:none;">$ hanimo.contributors --sort=recent</a></div>
+      </div>
+      <div class="bees" id="bees"></div>
+      <div class="hive-footer">
+        <span>첫 PR 보내면 자동으로 칸이 켜집니다. CLA는 봇이 안내.</span>
+        <span>last.join · @yuna · 6m ago</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- -------- RFC + SHOWCASE -------- -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="sec-kicker">// what's shipping</div>
+        <h2 class="sec-title korean">활발한 RFC와 <br>커뮤니티 쇼케이스.</h2>
+      </div>
+      <p class="sec-sub korean">
+        제안은 문서로 남고, 만든 것은 링크로 공유됩니다.
+      </p>
+    </div>
+
+    <div class="split">
+      <div class="panel">
+        <h3>/rfc · active <span class="more">view all →</span></h3>
+        <ul class="rfc-list">
+          <li>
+            <span class="id">0031</span>
+            <span class="ttl">멀티 에이전트 PR 리뷰 프로토콜 <span class="by">@jiwon</span></span>
+            <span class="state review">review</span>
+          </li>
+          <li>
+            <span class="id">0029</span>
+            <span class="ttl">hive-cache: LSP 심볼 ingest 고정 <span class="by">@minseo</span></span>
+            <span class="state review">review</span>
+          </li>
+          <li>
+            <span class="id">0028</span>
+            <span class="ttl">TECHAI 브릿지에서 PII 자동 스크러빙 <span class="by">@hanbit</span></span>
+            <span class="state accepted">accepted</span>
+          </li>
+          <li>
+            <span class="id">0027</span>
+            <span class="ttl">hanimo-ide 테마 프로토콜 v2 <span class="by">@seoyun</span></span>
+            <span class="state draft">draft</span>
+          </li>
+          <li>
+            <span class="id">0026</span>
+            <span class="ttl">에이전트 팀 메모리 공유 포맷 <span class="by">@core</span></span>
+            <span class="state accepted">accepted</span>
+          </li>
+          <li>
+            <span class="id">0025</span>
+            <span class="ttl">브라우저용 웹-에이전트 런타임 <span class="by">@jisoo</span></span>
+            <span class="state closed">closed</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>/showcase · monthly picks <span class="more">all →</span></h3>
+        <div class="showcase">
+          <a href="#" class="show-card" style="--c: var(--green);">
+            <div class="top"><span>@jisoo</span><span>★ 312</span></div>
+            <div class="ascii">  ┌─[loop]─┐
+  │ 2주차 │
+  └───────┘</div>
+            <div class="mid korean">cron 없이 /loop만으로<br>PR 배스코치</div>
+            <div class="bot"><span>blog</span><span><b>14k</b> read</span></div>
+          </a>
+          <a href="#" class="show-card" style="--c: var(--cyan);">
+            <div class="top"><span>@hanbit</span><span>★ 208</span></div>
+            <div class="ascii">  ┌ air ┐
+  │ gap │
+  └─────┘</div>
+            <div class="mid korean">TECHAI 사내 도입기<br>(신한 그룹)</div>
+            <div class="bot"><span>video</span><span><b>8k</b> view</span></div>
+          </a>
+          <a href="#" class="show-card" style="--c: var(--violet);">
+            <div class="top"><span>@minseo</span><span>★ 157</span></div>
+            <div class="ascii">  ▣▣▣▣▢
+  ▣▣▣▢▢
+  ▣▣▢▢▢</div>
+            <div class="mid korean">LSP 심볼을 ingest에<br>고정한 후 p95 -38%</div>
+            <div class="bot"><span>post</span><span><b>+74</b> upvote</span></div>
+          </a>
+          <a href="#" class="show-card" style="--c: var(--amber);">
+            <div class="top"><span>@seoyun</span><span>★ 96</span></div>
+            <div class="ascii">  ░░▒▒▓▓
+  ▓▓▒▒░░
+  ░░▒▒▓▓</div>
+            <div class="mid korean">IDE 다이프 프리뷰<br>테마 'honey-dusk'</div>
+            <div class="bot"><span>theme</span><span><b>3.2k</b> dl</span></div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- -------- EVENTS + CTA -------- -->
+<section class="sec" style="padding-bottom: 100px;">
+  <div class="wrap">
+    <div class="event-cta">
+      <div>
+        <div class="sec-kicker">// come by</div>
+        <h3 class="korean">첫 커밋은 <span class="u">쉬워야</span> 해요.</h3>
+        <p class="korean">
+          <code style="font-family:'JetBrains Mono',monospace; color:var(--green);">good-first-issue</code>
+          라벨이 상시 16개 이상 열려 있고, 처음 PR을 여는 사람에겐 리뷰어가 붙습니다.
+          질문이 있으면 그냥 디스코드 <code style="font-family:'JetBrains Mono',monospace; color:var(--green);">#help-desk</code> 부터.
+        </p>
+        <div class="joinrow">
+          <a href="#" class="btn btn-primary">$ good-first-issue →</a>
+          <a href="#" class="btn btn-ghost">contributing.md</a>
+        </div>
+      </div>
+      <div>
+        <div class="event-list">
+          <div class="row">
+            <div class="dt">04/25 (목)</div>
+            <div class="ttl">office hours v17 <span class="w">@코어팀 · KST 20:00 · discord</span></div>
+            <div class="rsvp">rsvp 38</div>
+          </div>
+          <div class="row">
+            <div class="dt">05/02 (목)</div>
+            <div class="ttl">rfc 리뷰 데이 <span class="w">0029·0031 핵심 쟁점 · 1h</span></div>
+            <div class="rsvp">rsvp 24</div>
+          </div>
+          <div class="row">
+            <div class="dt">05/11 (토)</div>
+            <div class="ttl">서울 OSS 밋업 <span class="w">hanimo + TECHAI 패널 · 역삼</span></div>
+            <div class="rsvp">rsvp 72</div>
+          </div>
+          <div class="row">
+            <div class="dt">05/18 (토)</div>
+            <div class="ttl">first-pr hackday <span class="w">줌 · KST 10-18 · 멘토 8명</span></div>
+            <div class="rsvp">rsvp 41</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap row">
+    <div>
+      <span style="color:var(--muted)">hanimo / community</span> · © 2026 the hive · <span style="color:var(--green)">MIT</span>
+    </div>
+    <div style="display:flex; gap:18px;">
+      <a href="#">github</a>
+      <a href="#">discord</a>
+      <a href="#">rfc</a>
+      <a href="#">rss</a>
+      <a href="#">code of conduct</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // render 160 hive cells with a plausible "active / hot" distribution
+  (function(){
+    var el = document.getElementById('bees');
+    if (!el) return;
+    var total = 160;
+    var hot = [3, 7, 14, 22, 28, 35, 41, 49, 58, 67, 74, 82, 91, 99, 108, 117, 125, 134, 142, 151];
+    var active = new Set([
+      1,4,5,8,11,13,17,19,21,25,27,30,33,36,39,42,45,48,51,54,
+      57,61,64,69,72,77,81,85,89,93,97,101,105,111,115,119,123,127,131,137,141,145,149,153,157
+    ]);
+    var names = ['jiwon','daeho','hanbit','nari','seoyun','minseo','jisoo','yuna','sol','ren','kai','aro','doh','bin','jin','mu','ha','ro','nu','si'];
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < total; i++) {
+      var d = document.createElement('div');
+      d.className = 'bee';
+      if (hot.indexOf(i) !== -1) d.classList.add('active', 'hot');
+      else if (active.has(i)) d.classList.add('active');
+      d.textContent = '';
+      d.title = '@' + names[i % names.length];
+      frag.appendChild(d);
+    }
+    el.appendChild(frag);
+  })();
+</script>
+
+</body>
+</html>

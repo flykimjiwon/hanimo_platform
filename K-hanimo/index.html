@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>K-hanimo · viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #0a0908;
+    --bg-2:   #141210;
+    --border: #2a2318;
+    --text:   #ece4d1;
+    --muted:  #948872;
+    --honey:  #fbbf24;
+    --green:  #3ecf8e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    display: grid; grid-template-rows: auto 1fr;
+    overflow: hidden;
+  }
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 10px 18px;
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg-2);
+  }
+  .brand {
+    font-weight: 700; font-size: 13px; letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand .mark {
+    width: 22px; height: 22px; border-radius: 5px;
+    background: linear-gradient(135deg, #fde68a 0%, var(--honey) 45%, #d97706 100%);
+    color: var(--bg); display: grid; place-items: center;
+    font-size: 12px; font-weight: 800;
+    box-shadow: 0 0 10px rgba(251,191,36,0.4);
+  }
+  .brand .slash { color: var(--muted); margin: 0 6px; font-weight: 400; }
+  .brand .sub { color: var(--muted); font-weight: 400; font-size: 11.5px; }
+
+  .tabs { display: flex; gap: 4px; margin-left: auto; }
+  .tab {
+    padding: 6px 12px; border-radius: 5px;
+    font-size: 12px; color: var(--muted);
+    background: transparent; border: 1px solid transparent;
+    cursor: pointer; font-family: inherit;
+    transition: all .15s ease;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.on {
+    color: var(--bg); background: var(--honey);
+    border-color: var(--honey); font-weight: 700;
+    box-shadow: 0 0 12px rgba(251,191,36,0.35);
+  }
+  .tab.on.green { background: var(--green); border-color: var(--green); box-shadow: 0 0 12px rgba(62,207,142,0.35); }
+
+  .meta { margin-left: 14px; font-size: 11px; color: var(--muted); }
+  .meta a { color: var(--honey); text-decoration: none; }
+
+  iframe {
+    width: 100%; height: 100%;
+    border: 0; display: block;
+    background: var(--bg);
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="mark">h</div>
+    <span>K-hanimo</span>
+    <span class="slash">/</span>
+    <span class="sub">landing mockups · 2026-04-23</span>
+  </div>
+  <span class="meta">ref: <a href="file:///Users/jiwonkim/Desktop/kimjiwon/국가대표AI/app/public/designs/v4.html" target="_blank">v4.html</a></span>
+  <div class="tabs">
+    <button class="tab on" data-src="platform.html">/platform · hanimo.ai</button>
+    <button class="tab green" data-src="community.html">/community · the hive</button>
+  </div>
+</header>
+<iframe id="view" src="platform.html"></iframe>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const view = document.getElementById('view');
+  tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      tabs.forEach(x => { x.classList.remove('on'); x.classList.remove('green'); });
+      t.classList.add('on');
+      if (t.dataset.src === 'community.html') t.classList.add('green');
+      view.src = t.dataset.src;
+    });
+  });
+</script>
+</body>
+</html>
